@@ -1,66 +1,84 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+// 部署计时测试
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowRight, BookOpen, Code, Shield } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+      <header className="container mx-auto flex items-center justify-end p-4">
+        <ThemeToggle />
+      </header>
+
+      <main className="container mx-auto flex max-w-3xl flex-col items-center px-4 py-16 text-center">
+        <div className="mb-6 inline-flex items-center rounded-full border bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
+          <span className="mr-2 h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          RSC + Cloudflare Workers + D1
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        <h1 className="text-5xl font-bold tracking-tight md:text-6xl">
+          vinext Blog
+        </h1>
+        <p className="mt-6 max-w-xl text-lg text-muted-foreground">
+          A minimal blog running on{" "}
+          <span className="font-semibold text-foreground">vinext</span> · Vite
+          + React 19 + Cloudflare edge, with admin panel backed by D1.
+        </p>
+
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <Button asChild size="lg">
+            <Link href="/blog">
+              <BookOpen className="mr-2 h-4 w-4" />
+              Read the blog
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link href="/login">
+              <Shield className="mr-2 h-4 w-4" />
+              Admin
+            </Link>
+          </Button>
+        </div>
+
+        <Card className="mt-16 w-full text-left">
+          <CardContent className="grid gap-6 p-6 md:grid-cols-3">
+            <Feature
+              title="Edge RSC"
+              desc="React Server Components run on Cloudflare Workers, served from the edge."
             />
-            Deploy Now
-          </a>
+            <Feature
+              title="D1 Storage"
+              desc="Posts stored in Cloudflare D1 (SQLite at the edge), queried from RSC."
+            />
+            <Feature
+              title="Admin Panel"
+              desc="Password-gated admin with create / edit / delete posts via Server Actions."
+            />
+          </CardContent>
+        </Card>
+
+        <p className="mt-12 text-xs text-muted-foreground">
           <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="https://github.com/your-username/vinext"
+            className="inline-flex items-center hover:text-foreground"
           >
-            Documentation
+            <Code className="mr-1 h-3 w-3" />
+            Source
           </a>
-        </div>
+        </p>
       </main>
+    </div>
+  );
+}
+
+function Feature({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div>
+      <h3 className="font-semibold">{title}</h3>
+      <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
     </div>
   );
 }

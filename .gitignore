@@ -32,6 +32,17 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.dev.vars
+.dev.vars.*
+
+# wrangler local state & secrets
+.wrangler/
+.vinext/
+.agent-browser-home/
+.dbg/
+tmp-lh-*.json
+.tmp-lighthouse-*.json
+debug-turnstile-*.md
 
 # vercel
 .vercel
@@ -39,3 +50,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/dist/
