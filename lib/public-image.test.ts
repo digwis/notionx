@@ -4,11 +4,16 @@ import {
   buildResponsiveImageAttrs,
   getCoverImageLoading,
   isOptimizableCoverImage,
+  isPublicImageUrlAllowed,
 } from "./public-image.ts";
 
-test("isOptimizableCoverImage returns true for local CDN-backed images", () => {
+test("isOptimizableCoverImage returns true for local image proxy URLs", () => {
   assert.equal(
     isOptimizableCoverImage("/api/cdn/uploads/2026-06-06/cover.jpg"),
+    true
+  );
+  assert.equal(
+    isOptimizableCoverImage("/api/notion/media/page/page-1/property/%E6%B5%B7%E6%8A%A5"),
     true
   );
 });
@@ -17,6 +22,20 @@ test("isOptimizableCoverImage returns false for external images", () => {
   assert.equal(
     isOptimizableCoverImage("https://example.com/uploads/2026-06-06/cover.jpg"),
     false
+  );
+});
+
+test("isPublicImageUrlAllowed accepts stable Notion media proxy URLs", () => {
+  assert.equal(
+    isPublicImageUrlAllowed("/api/notion/media/page/page-1/cover"),
+    true
+  );
+});
+
+test("isPublicImageUrlAllowed accepts known Notion-hosted media URLs", () => {
+  assert.equal(
+    isPublicImageUrlAllowed("https://secure.notion-static.com/image.jpg"),
+    true
   );
 });
 
@@ -42,8 +61,12 @@ test("buildResponsiveImageAttrs returns the original src for non-optimizable ima
   assert.equal(attrs.srcSet, undefined);
 });
 
-test("getCoverImageLoading marks the first card as eager and high priority", () => {
+test("getCoverImageLoading marks above-the-fold cards as eager and high priority", () => {
   assert.deepEqual(getCoverImageLoading(0), {
+    loading: "eager",
+    fetchPriority: "high",
+  });
+  assert.deepEqual(getCoverImageLoading(2), {
     loading: "eager",
     fetchPriority: "high",
   });

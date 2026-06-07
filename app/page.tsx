@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, BookOpen, Code, Shield } from "lucide-react";
+import { ArrowRight, BookOpen, Code, Film, Shield } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Home() {
@@ -24,7 +24,7 @@ export default function Home() {
         <p className="mt-6 max-w-xl text-lg text-muted-foreground">
           A minimal blog running on{" "}
           <span className="font-semibold text-foreground">vinext</span> · Vite
-          + React 19 + Cloudflare edge, with admin panel backed by D1.
+          + React 19 + Cloudflare edge, with blog content backed by Notion.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
@@ -32,6 +32,13 @@ export default function Home() {
             <Link href="/blog">
               <BookOpen className="mr-2 h-4 w-4" />
               Read the blog
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <Button asChild variant="secondary" size="lg">
+            <Link href="/movies">
+              <Film className="mr-2 h-4 w-4" />
+              电影数据库
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -50,12 +57,16 @@ export default function Home() {
               desc="React Server Components run on Cloudflare Workers, served from the edge."
             />
             <Feature
-              title="D1 Storage"
-              desc="Posts stored in Cloudflare D1 (SQLite at the edge), queried from RSC."
+              title="Notion Content"
+              desc="Public posts come from a Notion data source and render rich article blocks."
+            />
+            <Feature
+              title="Movie Catalog"
+              desc="Film metadata is read from Notion and shown as a public catalog with detail pages."
             />
             <Feature
               title="Admin Panel"
-              desc="Password-gated admin with create / edit / delete posts via Server Actions."
+              desc="Password-gated admin with a read-only article index and Notion handoff."
             />
           </CardContent>
         </Card>

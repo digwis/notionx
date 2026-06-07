@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getPendingReviewCount } from "@/lib/posts";
 import { getAdminViewer } from "@/lib/admin-viewer";
 import { perfSpan } from "@/lib/perf-trace";
 import { logoutAction } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { LogOut, Shield, Settings, Inbox, UserCircle, Users } from "lucide-react";
+import { LogOut, Shield, Settings, UserCircle, Users } from "lucide-react";
 
 export default async function AdminLayout({
   children,
@@ -20,12 +19,6 @@ export default async function AdminLayout({
     () => getAdminViewer()
   );
   if (!user) redirect("/login");
-  const pendingCount = admin
-    ? await perfSpan(
-        { span: "posts.getPendingReviewCount", pageClass: "admin" },
-        () => getPendingReviewCount()
-      )
-    : 0;
 
   return (
     <div
@@ -50,19 +43,6 @@ export default async function AdminLayout({
             </Link>
             {admin && (
               <>
-                <Separator orientation="vertical" className="h-4" />
-                <Link
-                  href="/admin/review"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
-                >
-                  <Inbox className="h-3.5 w-3.5" />
-                  内容审核
-                  {pendingCount > 0 && (
-                    <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                      {pendingCount}
-                    </span>
-                  )}
-                </Link>
                 <Separator orientation="vertical" className="h-4" />
                 <Link
                   href="/admin/settings"

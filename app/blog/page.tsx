@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getAllPostsMeta } from "@/lib/posts";
+import { getNotionPostsMeta } from "@/lib/notion/posts";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PublicCoverImage } from "@/components/PublicCoverImage";
 import SubscribeFormLazy from "@/components/SubscribeFormLazy";
-import { ArrowRight, BookOpen, Shield } from "lucide-react";
+import { ArrowRight, BookOpen, Film, Shield } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Blog · vinext on Cloudflare",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function BlogIndexPage() {
-  const posts = await getAllPostsMeta();
+  const posts = await getNotionPostsMeta();
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,6 +38,12 @@ export default async function BlogIndexPage() {
             vinext Blog
           </Link>
           <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/movies">
+                <Film className="mr-1 h-3 w-3" />
+                Movies
+              </Link>
+            </Button>
             <Button asChild variant="ghost" size="sm">
               <Link href="/login">
                 <Shield className="mr-1 h-3 w-3" />
@@ -73,10 +79,10 @@ export default async function BlogIndexPage() {
                 className="group block"
               >
                 <Card className="flex h-full flex-col overflow-hidden transition-all group-hover:-translate-y-1 group-hover:border-foreground/30 group-hover:shadow-lg">
-                  {post.cover_image ? (
+                  {post.coverImage ? (
                     <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
                       <PublicCoverImage
-                        src={post.cover_image}
+                        src={post.coverImage}
                         alt={post.title}
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"

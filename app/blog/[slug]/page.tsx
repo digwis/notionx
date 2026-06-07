@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getPostBySlug, getPostSlugs } from "@/lib/posts";
+import NotionBlockRenderer from "@/components/NotionBlockRenderer";
+import { getNotionPostBySlug, getNotionPostSlugs } from "@/lib/notion/posts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PublicCoverImage } from "@/components/PublicCoverImage";
-import { ArrowLeft, BookOpen, Shield } from "lucide-react";
+import { ArrowLeft, BookOpen, Film, Shield } from "lucide-react";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -21,14 +22,14 @@ export const dynamicParams = true;
 
 // 预渲染构建时已知的 slug 路径
 export async function generateStaticParams() {
-  const slugs = await getPostSlugs();
+  const slugs = await getNotionPostSlugs();
   return slugs.map((slug) => ({ slug }));
 }
 
 // 动态 metadata，per-post 标题和描述（SEO）
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const post = await getNotionPostBySlug(slug);
   if (!post) return { title: "Not found" };
   return {
     title: post.title,
@@ -46,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const post = await getNotionPostBySlug(slug);
   if (!post) notFound();
 
   return (
@@ -61,6 +62,12 @@ export default async function BlogPostPage({ params }: Props) {
             vinext Blog
           </Link>
           <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/movies">
+                <Film className="mr-1 h-3 w-3" />
+                Movies
+              </Link>
+            </Button>
             <Button asChild variant="ghost" size="sm">
               <Link href="/login">
                 <Shield className="mr-1 h-3 w-3" />
@@ -81,10 +88,10 @@ export default async function BlogPostPage({ params }: Props) {
         </Button>
 
         <article>
-          {post.cover_image && (
+          {post.coverImage && (
             <div className="mb-8 aspect-[2/1] w-full overflow-hidden rounded-lg border bg-muted">
               <PublicCoverImage
-                src={post.cover_image}
+                src={post.coverImage}
                 alt={post.title}
                 sizes="(max-width: 768px) 100vw, 768px"
                 className="h-full w-full object-cover"
@@ -119,16 +126,7 @@ export default async function BlogPostPage({ params }: Props) {
 
           <Separator className="my-6" />
 
-          <div className="prose prose-neutral max-w-none dark:prose-invert">
-            {post.content.map((paragraph, i) => (
-              <p
-                key={i}
-                className="mb-5 leading-7 text-foreground/90"
-              >
-                {paragraph}
-              </p>
-            ))}
-          </div>
+          <NotionBlockRenderer blocks={post.blocks} />
         </article>
       </main>
     </div>

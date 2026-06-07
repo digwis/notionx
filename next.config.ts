@@ -27,6 +27,26 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: "/movies",
+        headers: [
+          {
+            key: "Cache-Control",
+            value:
+              "public, s-maxage=120, stale-while-revalidate=600",
+          },
+        ],
+      },
+      {
+        source: "/movies/:id",
+        headers: [
+          {
+            key: "Cache-Control",
+            value:
+              "public, s-maxage=120, stale-while-revalidate=600",
+          },
+        ],
+      },
     ];
   },
 };

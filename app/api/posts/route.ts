@@ -2,7 +2,7 @@
 // 用于第三方客户端（移动端、其他服务）拉取博客内容，无需走 HTML SSR
 
 import { NextResponse } from "next/server";
-import { getAllPosts } from "@/lib/posts";
+import { getNotionPostsMeta } from "@/lib/notion/posts";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const tag = searchParams.get("tag");
   const limit = Math.min(parseInt(searchParams.get("limit") ?? "20"), 100);
 
-  let posts = await getAllPosts();
+  let posts = await getNotionPostsMeta();
   if (tag) {
     posts = posts.filter((p) => p.tags.includes(tag));
   }
@@ -27,6 +27,7 @@ export async function GET(request: Request) {
         date: p.date,
         author: p.author,
         tags: p.tags,
+        coverImage: p.coverImage,
         url: `${request.headers.get("x-forwarded-proto") ?? "https"}://${request.headers.get("host")}/blog/${p.slug}`,
       })),
     },

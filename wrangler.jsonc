@@ -21,6 +21,9 @@
     }
   },
   "main": "./worker/index.ts",
+  "vars": {
+    "NOTION_MOVIES_DATA_SOURCE_ID": "371dc62d-0738-8015-a601-000bc3944fcb"
+  },
   "assets": {
     "directory": "dist/client",
     "not_found_handling": "none",

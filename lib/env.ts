@@ -22,6 +22,18 @@ export type AppEnv = {
   TURNSTILE_SITE_KEY?: string;
   /** Turnstile secret — set via `wrangler secret put TURNSTILE_SECRET_KEY` */
   TURNSTILE_SECRET_KEY?: string;
+  /** Notion integration token for the blog data source */
+  NOTION_TOKEN?: string;
+  /** Notion data source ID used by dataSources.query */
+  NOTION_DATA_SOURCE_ID?: string;
+  /** Notion data source ID for the public movie catalog */
+  NOTION_MOVIES_DATA_SOURCE_ID?: string;
+  /** Optional Notion API base URL for tests or proxies */
+  NOTION_API_BASE_URL?: string;
+  /** Optional Notion edit URL for admin handoff screens */
+  NOTION_EDIT_BASE_URL?: string;
+  /** Optional webhook verification token for Notion invalidation */
+  NOTION_WEBHOOK_VERIFICATION_TOKEN?: string;
 };
 
 // 强制类型：vinext 把 env 类型放在 env.d.ts（interface VinextEnv extends Env），

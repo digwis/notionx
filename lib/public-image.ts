@@ -27,7 +27,25 @@ export function isOptimizableCoverImage(src: string) {
   const url = parseImageUrl(src);
   if (!url) return false;
 
-  return url.pathname.startsWith("/api/cdn/");
+  return (
+    url.pathname.startsWith("/api/cdn/") ||
+    url.pathname.startsWith("/api/notion/media/")
+  );
+}
+
+export function isPublicImageUrlAllowed(src: string) {
+  const url = parseImageUrl(src);
+  if (!url) return false;
+
+  if (url.pathname.startsWith("/api/cdn/")) return true;
+  if (url.pathname.startsWith("/api/notion/media/")) return true;
+
+  return [
+    "www.notion.so",
+    "notion.so",
+    "secure.notion-static.com",
+    "prod-files-secure.s3.us-west-2.amazonaws.com",
+  ].includes(url.hostname);
 }
 
 function buildSizedImageUrl(src: string, width: number, quality: number) {
@@ -77,7 +95,7 @@ export function buildResponsiveImageAttrs(
 }
 
 export function getCoverImageLoading(index: number) {
-  if (index === 0) {
+  if (index < 3) {
     return {
       loading: "eager" as const,
       fetchPriority: "high" as const,

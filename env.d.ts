@@ -10,6 +10,12 @@ interface VinextEnv extends Env {
   ADMIN_PASSWORD?: string;
   TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET_KEY?: string;
+  NOTION_TOKEN?: string;
+  NOTION_DATA_SOURCE_ID?: string;
+  NOTION_MOVIES_DATA_SOURCE_ID?: string;
+  NOTION_API_BASE_URL?: string;
+  NOTION_EDIT_BASE_URL?: string;
+  NOTION_WEBHOOK_VERIFICATION_TOKEN?: string;
 }
 
 declare module "cloudflare:workers" {

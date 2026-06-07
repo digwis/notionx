@@ -469,79 +469,20 @@ async function requirePostOwnerOrAdmin(slug: string): Promise<{
 }
 
 export async function createPostAction(formData: FormData): Promise<void> {
-  const session = await requireAuth();
-  const email = session.email.toLowerCase();
-  const admin = await isAdminEmail(email);
-
-  const slugRaw = String(formData.get("slug") ?? "");
-  const slug = slugify(slugRaw);
-  const post: NewPost = {
-    slug,
-    title: String(formData.get("title") ?? "").trim(),
-    description: String(formData.get("description") ?? "").trim(),
-    date: String(formData.get("date") ?? "").trim(),
-    author: String(formData.get("author") ?? "zhao").trim(),
-    tags: parseTags(formData.get("tags")),
-    content: parseContent(formData.get("content")),
-    cover_image: String(formData.get("coverImage") ?? "").trim() || null,
-    owner_email: email,
-    status: admin ? "published" : "draft",
-  };
-
-  const err = validatePostInput(post);
-  if (err) redirect(`/admin/new?error=${encodeURIComponent(err)}`);
-  if (await slugExists(slug))
-    redirect(`/admin/new?error=${encodeURIComponent("slug 已存在")}`);
-
-  await createPost(post);
-  revalidatePath("/blog");
-  revalidatePath("/admin");
-  revalidatePath("/admin/review");
-  revalidatePath(`/blog/${slug}`, "page");
-  if (post.status === "published") {
-    logPublicInvalidation("publish", slug);
-  }
-  redirect(`/admin?created=${slug}`);
+  await requireAuth();
+  redirect(
+    `/admin/new?error=${encodeURIComponent("博客内容已迁移到 Notion，请在 Notion 中创建文章")}`
+  );
 }
 
 export async function updatePostAction(
   slug: string,
   formData: FormData
 ): Promise<void> {
-  const { isAdmin, email } = await requirePostOwnerOrAdmin(slug);
-
-  // 校验：只有 draft / rejected 状态可编辑（其他用户视图）
-  const existing = await getPostBySlugRaw(slug);
-  if (!existing) redirect("/admin?error=文章不存在");
-  if (!isAdmin && existing.owner_email.toLowerCase() !== email) {
-    redirect("/admin?error=无权操作该文章");
-  }
-  if (!isAdmin && !["draft", "rejected"].includes(existing.status)) {
-    redirect(`/admin/${slug}/edit?error=当前状态不可编辑（${existing.status}）`);
-  }
-
-  const input: PostInput = {
-    title: String(formData.get("title") ?? "").trim(),
-    description: String(formData.get("description") ?? "").trim(),
-    date: String(formData.get("date") ?? "").trim(),
-    author: String(formData.get("author") ?? "zhao").trim(),
-    tags: parseTags(formData.get("tags")),
-    content: parseContent(formData.get("content")),
-    cover_image: String(formData.get("coverImage") ?? "").trim() || null,
-  };
-
-  const err = validatePostInput({ slug, ...input });
-  if (err) redirect(`/admin/${slug}/edit?error=${encodeURIComponent(err)}`);
-
-  await updatePost(slug, input);
-  revalidatePath("/blog");
-  revalidatePath("/admin");
-  revalidatePath("/admin/review");
-  revalidatePath(`/blog/${slug}`, "page");
-  if (existing.status === "published") {
-    logPublicInvalidation("update", slug);
-  }
-  redirect(`/admin/${slug}/edit?saved=1`);
+  await requireAuth();
+  redirect(
+    `/admin/${slug}/edit?error=${encodeURIComponent("博客内容已迁移到 Notion，请在 Notion 中编辑文章")}`
+  );
 }
 
 export async function deletePostAction(formData: FormData): Promise<void> {

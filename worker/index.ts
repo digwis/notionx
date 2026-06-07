@@ -26,20 +26,23 @@ interface ExecutionContext {
 }
 
 // 仅缓存"不读 cookies / 不分用户态"的公开页面。
-// 路径白名单：仅博客公开列表和详情。
+// 路径白名单：博客和电影库的公开列表与详情。
 // 本 Worker 是公开页 HTML 的"单一主缓存层"：发布/审核/更新时由 lib/actions.ts
 // 触发 cache.delete(publicCacheKey(...))，不再依赖 ISR 被动过期。
-const PUBLIC_BLOG_RE = /^\/blog(?:\/[^/]+)?\/?$/;
+const PUBLIC_CONTENT_RE = /^\/(?:blog|movies)(?:\/[^/]+)?\/?$/;
 const PUBLIC_HTML_CACHE_CONTROL =
   "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
 
 // 页面分类（用于 traces/logs 上按 page_class 过滤）
-type PageClass = "home" | "blog_list" | "blog_detail" | "admin" | "auth" | "api" | "image" | "asset" | "other";
+type PageClass = "home" | "blog_list" | "blog_detail" | "movie_list" | "movie_detail" | "admin" | "auth" | "api" | "image" | "asset" | "other";
 function classifyPath(pathname: string): PageClass {
   if (pathname === "/" || pathname === "") return "home";
-  if (PUBLIC_BLOG_RE.test(pathname)) {
+  if (/^\/blog(?:\/[^/]+)?\/?$/.test(pathname)) {
     // /blog 自身是 list，/blog/<slug> 是 detail
     return pathname === "/blog" || pathname === "/blog/" ? "blog_list" : "blog_detail";
+  }
+  if (/^\/movies(?:\/[^/]+)?\/?$/.test(pathname)) {
+    return pathname === "/movies" || pathname === "/movies/" ? "movie_list" : "movie_detail";
   }
   if (pathname.startsWith("/admin")) return "admin";
   if (pathname.startsWith("/login") || pathname.startsWith("/register") || pathname.startsWith("/logout")) return "auth";
@@ -83,7 +86,7 @@ export default {
     let effectiveRequest = request;
     if (
       request.method === "GET" &&
-      PUBLIC_BLOG_RE.test(url.pathname)
+      PUBLIC_CONTENT_RE.test(url.pathname)
     ) {
       const canonicalPath = stripTrailingSlash(url.pathname);
       if (canonicalPath !== url.pathname) {
@@ -118,7 +121,7 @@ export default {
     const effectiveUrl = new URL(effectiveRequest.url);
     if (
       effectiveRequest.method === "GET" &&
-      PUBLIC_BLOG_RE.test(effectiveUrl.pathname) &&
+      PUBLIC_CONTENT_RE.test(effectiveUrl.pathname) &&
       !effectiveUrl.searchParams.has("_rsc") &&
       (effectiveRequest.headers.get("accept") ?? "").includes("text/html")
     ) {
