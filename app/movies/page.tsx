@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { PublicCoverImage } from "@/components/PublicCoverImage";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { getNotionMoviesMeta } from "@/lib/notion/movies";
+import { getPublicNotionMoviesMeta } from "@/lib/notion/movies";
 import { ArrowRight, BookOpen, CalendarDays, Film, Shield } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -26,7 +26,7 @@ function releaseYear(date: string) {
 }
 
 export default async function MoviesPage() {
-  const movies = await getNotionMoviesMeta();
+  const movies = await getPublicNotionMoviesMeta();
 
   return (
     <div className="min-h-screen bg-background">

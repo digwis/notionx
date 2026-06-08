@@ -6,6 +6,7 @@ import { isAdminEmail } from "./admin";
 import { getAppSettings } from "./settings";
 import type { SessionUser } from "./session";
 
+export type UserRole = "user" | "vip" | "admin";
 export type UserListItem = User & { post_count: number };
 
 export type User = {
@@ -21,7 +22,7 @@ export type User = {
   password_reset_token: string | null;
   password_reset_expires_at: string | null;
   session_rev: number;
-  role: "user" | "admin" | null;
+  role: UserRole | null;
   created_at: string;
   last_seen_at: string;
 };
@@ -32,6 +33,11 @@ function normalizeEmail(email: string): string {
 
 async function defaultRoleFor(email: string): Promise<"user" | "admin"> {
   return (await isAdminEmail(email)) ? "admin" : "user";
+}
+
+export function normalizeUserRole(role: string | null | undefined): UserRole {
+  if (role === "admin" || role === "vip") return role;
+  return "user";
 }
 
 function createRandomToken(): string {
@@ -381,6 +387,34 @@ export async function revokeUserSessions(userId: number): Promise<boolean> {
     .bind(userId)
     .run();
   return true;
+}
+
+export async function setUserRole(
+  userId: number,
+  role: Exclude<UserRole, "admin">
+): Promise<
+  | { ok: true; user: User }
+  | { ok: false; reason: "not_found" | "is_admin" }
+> {
+  const env = workerEnv;
+  const user = await getUserById(userId);
+  if (!user) return { ok: false, reason: "not_found" };
+  if (await isAdminEmail(user.email)) {
+    return { ok: false, reason: "is_admin" };
+  }
+
+  await env.DB.prepare(
+    `UPDATE users
+        SET role = ?,
+            last_seen_at = datetime('now')
+      WHERE id = ?`
+  )
+    .bind(role, userId)
+    .run();
+
+  const updated = await getUserById(userId);
+  if (!updated) return { ok: false, reason: "not_found" };
+  return { ok: true, user: updated };
 }
 
 export async function deleteUserAccount(userId: number): Promise<

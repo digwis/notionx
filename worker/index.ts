@@ -7,7 +7,7 @@
  */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES, isImageOptimizationPath } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
-import { publicCacheKey } from "../lib/cache-keys";
+import { publicApiCacheKeyForUrl, publicCacheKey } from "../lib/cache-keys";
 
 interface Env {
   ASSETS: Fetcher;
@@ -30,7 +30,10 @@ interface ExecutionContext {
 // 本 Worker 是公开页 HTML 的"单一主缓存层"：发布/审核/更新时由 lib/actions.ts
 // 触发 cache.delete(publicCacheKey(...))，不再依赖 ISR 被动过期。
 const PUBLIC_CONTENT_RE = /^\/(?:blog|movies)(?:\/[^/]+)?\/?$/;
+const PUBLIC_API_RE = /^\/api\/(?:posts(?:\/[^/]+)?|movies(?:\/[^/]+)?)\/?$/;
 const PUBLIC_HTML_CACHE_CONTROL =
+  "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
+const PUBLIC_API_CACHE_CONTROL =
   "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
 
 // 页面分类（用于 traces/logs 上按 page_class 过滤）
@@ -82,11 +85,11 @@ export default {
     let cacheMode: string | undefined;
     const willTrace = request.method === "GET" || request.method === "POST";
 
-    // 1) 公开博客路径：先做 trailing-slash 改写，再决定是否走缓存
+    // 1) 公开内容路径：先做 trailing-slash 改写，再决定是否走缓存
     let effectiveRequest = request;
     if (
       request.method === "GET" &&
-      PUBLIC_CONTENT_RE.test(url.pathname)
+      (PUBLIC_CONTENT_RE.test(url.pathname) || PUBLIC_API_RE.test(url.pathname))
     ) {
       const canonicalPath = stripTrailingSlash(url.pathname);
       if (canonicalPath !== url.pathname) {
@@ -113,7 +116,7 @@ export default {
       return r;
     }
 
-    // 公开博客页：走 Cloudflare 边缘 PoP 缓存（caches.default）
+    // 公开内容页：走 Cloudflare 边缘 PoP 缓存（caches.default）
     // - 仅缓存 HTML 响应（Accept: text/html）
     // - 排除 RSC 内部端点（_rsc=, RSC 头）
     // - 强制覆盖 Cache-Control 让 CF 接受
@@ -185,6 +188,59 @@ export default {
       branch = "public_cache_bypass";
       if (willTrace) perfLog({ kind: "page", page_class: classifyPath(effectiveUrl.pathname), method: request.method, path: effectiveUrl.pathname, status: response.status, branch, render_ms: renderMs, duration_ms: round(performance.now() - t0) });
       return new Response(response.body, { status: response.status, headers: bypassHeaders });
+    }
+
+    // 公开 JSON API：同样走 Cloudflare 边缘缓存。这里只匹配公开内容接口，
+    // 不包含 /api/movies/:id/download 这类需要登录态的私密接口。
+    if (
+      effectiveRequest.method === "GET" &&
+      PUBLIC_API_RE.test(effectiveUrl.pathname)
+    ) {
+      const cache = (caches as CacheStorage & { default: Cache }).default;
+      const cacheKey = new Request(publicApiCacheKeyForUrl(effectiveUrl), { method: "GET" });
+      const cached = await cache.match(cacheKey);
+      if (cached) {
+        const headers = new Headers(cached.headers);
+        headers.set("Cache-Control", PUBLIC_API_CACHE_CONTROL);
+        headers.set("Vary", "Accept-Encoding");
+        headers.set("X-Public-API-Cache", "HIT");
+        branch = "public_api_cache_hit";
+        cacheMode = "HIT";
+        const response = new Response(cached.body, { status: cached.status, headers });
+        if (willTrace) perfLog({ kind: "page", page_class: "api", method: request.method, path: effectiveUrl.pathname, status: cached.status, branch, cache: cacheMode, duration_ms: round(performance.now() - t0) });
+        return response;
+      }
+
+      const tRender = performance.now();
+      const response = await handler.fetch(effectiveRequest, env, ctx);
+      const renderMs = round(performance.now() - tRender);
+      const ctype = response.headers.get("content-type") ?? "";
+      if (response.status === 200 && ctype.includes("application/json")) {
+        const cloned = response.clone();
+        const headers = new Headers(cloned.headers);
+        headers.set("Cache-Control", PUBLIC_API_CACHE_CONTROL);
+        headers.set("Vary", "Accept-Encoding");
+        headers.set("X-Public-API-Cache", "MISS");
+        const toCache = new Response(cloned.body, {
+          status: cloned.status,
+          headers,
+        });
+        ctx.waitUntil(cache.put(cacheKey, toCache));
+        branch = "public_api_cache_miss";
+        cacheMode = "MISS";
+        const out = new Response(response.body, {
+          status: response.status,
+          headers,
+        });
+        if (willTrace) perfLog({ kind: "page", page_class: "api", method: request.method, path: effectiveUrl.pathname, status: response.status, branch, cache: cacheMode, render_ms: renderMs, duration_ms: round(performance.now() - t0) });
+        return out;
+      }
+
+      const headers = new Headers(response.headers);
+      headers.set("X-Public-API-Cache", "BYPASS");
+      branch = "public_api_cache_bypass";
+      if (willTrace) perfLog({ kind: "page", page_class: "api", method: request.method, path: effectiveUrl.pathname, status: response.status, branch, render_ms: renderMs, duration_ms: round(performance.now() - t0) });
+      return new Response(response.body, { status: response.status, headers });
     }
 
     // Delegate everything else to vinext, forwarding ctx so that

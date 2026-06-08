@@ -1,16 +1,19 @@
 "use client";
 
-// 主题切换按钮：放在右上角，点击循环 light / dark / system。
+// 主题切换按钮：按当前实际显示效果在 light / dark 之间直接切换。
 // 配合 components/theme-provider.tsx 使用。
 
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import { getThemeToggleDisabled } from "@/components/theme-toggle-state";
+import {
+  getThemeToggleDisabled,
+  nextExplicitTheme,
+} from "@/components/theme-toggle-state";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
 
@@ -28,15 +31,13 @@ export function ThemeToggle() {
     );
   }
 
-  const cycle = () => {
-    if (theme === "light") setTheme("dark");
-    else if (theme === "dark") setTheme("system");
-    else setTheme("light");
+  const toggle = () => {
+    setTheme(nextExplicitTheme(resolvedTheme));
   };
 
   return (
-    <Button variant="ghost" size="icon" onClick={cycle} aria-label="切换主题">
-      {theme === "dark" ? (
+    <Button variant="ghost" size="icon" onClick={toggle} aria-label="切换主题">
+      {resolvedTheme === "dark" ? (
         <Moon className="h-4 w-4" />
       ) : (
         <Sun className="h-4 w-4" />

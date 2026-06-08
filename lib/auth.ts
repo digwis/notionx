@@ -5,7 +5,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { env } from "cloudflare:workers";
-import { getUserById } from "./users";
+import { getUserById, normalizeUserRole, type UserRole } from "./users";
 import type { SessionUser } from "./session";
 
 export type { SessionUser } from "./session";
@@ -105,6 +105,20 @@ export async function requireAuth(): Promise<{ email: string }> {
   redirect("/login");
 }
 
+export type AuthViewer = {
+  email: string;
+  user: SessionUser | null;
+  role: UserRole;
+  isAdmin: boolean;
+  isVip: boolean;
+  canViewVipContent: boolean;
+};
+
+function getAdminEmail(): string {
+  const fromWorker = (env as { ADMIN_EMAIL?: string }).ADMIN_EMAIL;
+  return (fromWorker || "zhaofilms@gmail.com").toLowerCase();
+}
+
 // ====== OAuth (Google) session ======
 // 与 admin 密码的 session 平行存在。
 // 同样的 HMAC-SHA256 签名机制（用 ADMIN_PASSWORD 当 HMAC 密钥，方便 secret 复用）。
@@ -192,6 +206,39 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const jar = await cookies();
   const token = jar.get(USER_COOKIE)?.value;
   return verifyUserToken(token);
+}
+
+export async function getAuthViewer(): Promise<AuthViewer | null> {
+  const jar = await cookies();
+
+  if (await verifyToken(jar.get(COOKIE_NAME)?.value)) {
+    return {
+      email: getAdminEmail(),
+      user: null,
+      role: "admin",
+      isAdmin: true,
+      isVip: true,
+      canViewVipContent: true,
+    };
+  }
+
+  const user = await verifyUserToken(jar.get(USER_COOKIE)?.value);
+  if (!user) return null;
+
+  const dbUser = await getUserById(user.uid);
+  if (!dbUser) return null;
+  const role = normalizeUserRole(dbUser.role);
+  const isAdmin = role === "admin";
+  const isVip = role === "vip" || isAdmin;
+
+  return {
+    email: user.email,
+    user,
+    role,
+    isAdmin,
+    isVip,
+    canViewVipContent: isVip,
+  };
 }
 
 /** 清除 OAuth session */

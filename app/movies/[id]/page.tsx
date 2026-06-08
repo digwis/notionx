@@ -1,21 +1,20 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import NotionBlockRenderer from "@/components/NotionBlockRenderer";
+import { MovieBlocksPanel } from "@/components/MovieBlocksPanel";
+import { MovieDownloadPanel } from "@/components/MovieDownloadPanel";
 import { PublicCoverImage } from "@/components/PublicCoverImage";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
-  getNotionMovieByRouteId,
   getNotionMovieRouteIds,
+  getPublicNotionMovieMetaByRouteId,
 } from "@/lib/notion/movies";
 import {
   ArrowLeft,
   BookOpen,
   CalendarDays,
-  Download,
   ExternalLink,
   Film,
   Shield,
@@ -37,7 +36,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const movie = await getNotionMovieByRouteId(id);
+  const movie = await getPublicNotionMovieMetaByRouteId(id);
   if (!movie) return { title: "Not found" };
 
   return {
@@ -76,7 +75,7 @@ function Fact({
 
 export default async function MovieDetailPage({ params }: Props) {
   const { id } = await params;
-  const movie = await getNotionMovieByRouteId(id);
+  const movie = await getPublicNotionMovieMetaByRouteId(id);
   if (!movie) notFound();
 
   return (
@@ -153,14 +152,6 @@ export default async function MovieDetailPage({ params }: Props) {
               </p>
 
               <div className="mt-6 flex flex-wrap gap-2">
-                {movie.downloadUrl && (
-                  <Button asChild>
-                    <a href={movie.downloadUrl} target="_blank" rel="noreferrer">
-                      <Download className="h-4 w-4" />
-                      下载地址
-                    </a>
-                  </Button>
-                )}
                 {movie.sourceUrl && (
                   <Button asChild variant="outline">
                     <a href={movie.sourceUrl} target="_blank" rel="noreferrer">
@@ -191,12 +182,12 @@ export default async function MovieDetailPage({ params }: Props) {
             />
           </div>
 
-          {movie.blocks.length > 0 && (
-            <>
-              <Separator className="my-8" />
-              <NotionBlockRenderer blocks={movie.blocks} />
-            </>
-          )}
+          <MovieDownloadPanel
+            movieId={movie.routeId}
+            hasDownloadInfo={movie.hasDownloadInfo}
+          />
+
+          <MovieBlocksPanel movieId={movie.routeId} />
         </article>
       </main>
     </div>

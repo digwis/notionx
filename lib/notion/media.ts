@@ -21,6 +21,12 @@ function appendVersion(path: string, version?: string) {
   return `${path}?${new URLSearchParams({ v: value })}`;
 }
 
+function blockVersion(block: NotionBlock): string | undefined {
+  return typeof block.last_edited_time === "string"
+    ? block.last_edited_time
+    : undefined;
+}
+
 export function notionPageCoverMediaPath(pageId: string): string {
   return `/api/notion/media/page/${encodePathPart(pageId)}/cover`;
 }
@@ -123,7 +129,36 @@ export function fileObjectForMediaBlock(block: NotionBlock): unknown | null {
 export function mediaUrlForBlock(block: NotionBlock): string | null {
   const source = normalizeNotionFileSource(fileObjectForMediaBlock(block));
   if (!source) return null;
-  return source.type === "external" ? source.url : notionBlockMediaPath(block.id);
+  return source.type === "external"
+    ? source.url
+    : appendVersion(notionBlockMediaPath(block.id), blockVersion(block));
+}
+
+export function publicMediaBlockForApi(block: NotionBlock): NotionBlock {
+  const value = block[block.type];
+  const source = normalizeNotionFileSource(value);
+  const children = block.children?.map(publicMediaBlockForApi);
+
+  if (!source) {
+    return children ? { ...block, children } : { ...block };
+  }
+
+  const publicValue =
+    source.type === "external"
+      ? value
+      : {
+          ...(value as Record<string, unknown>),
+          file: {
+            url: appendVersion(notionBlockMediaPath(block.id), blockVersion(block)),
+            expiry_time: null,
+          },
+        };
+
+  return {
+    ...block,
+    [block.type]: publicValue,
+    ...(children ? { children } : {}),
+  };
 }
 
 export function isDirectVideoUrl(url: string): boolean {

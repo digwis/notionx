@@ -37,12 +37,32 @@ export type NotionMovieListItem = {
   genres: string[];
   downloadText: string;
   downloadUrl: string | null;
+  extractionCode: string;
+  hasDownloadInfo: boolean;
   coverImage: string | null;
   editUrl: string | null;
   sourceUrl: string | null;
 };
 
+export type PublicNotionMovieListItem = Omit<
+  NotionMovieListItem,
+  "downloadText" | "downloadUrl" | "extractionCode"
+> & {
+  downloadText: "";
+  downloadUrl: null;
+  extractionCode: "";
+};
+
+export type NotionMovieDownloadInfo = Pick<
+  NotionMovieListItem,
+  "routeId" | "title" | "downloadUrl" | "extractionCode" | "hasDownloadInfo"
+>;
+
 export type NotionMovieDetail = NotionMovieListItem & {
+  blocks: NotionBlock[];
+};
+
+export type PublicNotionMovieDetail = PublicNotionMovieListItem & {
   blocks: NotionBlock[];
 };
 

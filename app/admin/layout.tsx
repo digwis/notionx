@@ -14,11 +14,11 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   // viewer 聚合了当前用户和管理员身份，避免 layout 里重复走认证链路。
-  const { user, admin } = await perfSpan(
+  const { user, viewer, viewerEmail, admin } = await perfSpan(
     { span: "admin.viewer", pageClass: "admin" },
     () => getAdminViewer()
   );
-  if (!user) redirect("/login");
+  if (!viewer) redirect("/login");
 
   return (
     <div
@@ -63,9 +63,9 @@ export default async function AdminLayout({
             )}
           </div>
           <div className="flex items-center gap-2">
-            {user && (
+            {viewer && (
               <div className="flex items-center gap-2 rounded-md bg-muted px-2.5 py-1 text-xs">
-                {user.picture && (
+                {user?.picture && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={user.picture}
@@ -74,7 +74,7 @@ export default async function AdminLayout({
                   />
                 )}
                 <span className="hidden font-medium sm:inline">
-                  {user.name || user.email}
+                  {user?.name || viewerEmail}
                 </span>
                 {admin && (
                   <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">

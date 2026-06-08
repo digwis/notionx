@@ -6,8 +6,8 @@ test("buildInvalidationPlan for publish covers list and detail", () => {
   const plan = buildInvalidationPlan({ slug: "hello-world", kind: "publish" });
   assert.equal(plan.kind, "publish");
   assert.deepEqual(plan.keys, [
-    "https://cache.local/blog",
-    "https://cache.local/blog/hello-world",
+    "https://cache.local/__public-cache/v20260608c/blog",
+    "https://cache.local/__public-cache/v20260608c/blog/hello-world",
   ]);
 });
 
@@ -24,15 +24,19 @@ test("buildInvalidationPlan with previous slug covers old and new", () => {
     kind: "publish",
   });
   assert.equal(plan.keys.length, 3);
-  assert.ok(plan.keys.includes("https://cache.local/blog/old"));
-  assert.ok(plan.keys.includes("https://cache.local/blog/new"));
+  assert.ok(
+    plan.keys.includes("https://cache.local/__public-cache/v20260608c/blog/old")
+  );
+  assert.ok(
+    plan.keys.includes("https://cache.local/__public-cache/v20260608c/blog/new")
+  );
 });
 
 test("buildInvalidationPlan for delete covers list and detail", () => {
   const plan = buildInvalidationPlan({ slug: "gone", kind: "delete" });
   assert.equal(plan.kind, "delete");
   assert.deepEqual(plan.keys, [
-    "https://cache.local/blog",
-    "https://cache.local/blog/gone",
+    "https://cache.local/__public-cache/v20260608c/blog",
+    "https://cache.local/__public-cache/v20260608c/blog/gone",
   ]);
 });

@@ -12,14 +12,13 @@ import {
 } from "@/lib/settings";
 import { workerEnv } from "@/lib/env";
 import { ensureAdminBootstrap } from "@/lib/bootstrap";
-import { isAdminEmail } from "@/lib/admin";
-import { getCurrentUser } from "@/lib/auth";
+import { getAuthViewer } from "@/lib/auth";
 
 async function requireAdminOrRedirect(): Promise<void> {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  const viewer = await getAuthViewer();
+  if (!viewer) redirect("/login");
   await ensureAdminBootstrap();
-  if (!(await isAdminEmail(user.email))) {
+  if (!viewer.isAdmin) {
     redirect("/admin?error=需要管理员权限");
   }
 }

@@ -1,15 +1,14 @@
 import { cache } from "react";
-import { getCurrentUser } from "./auth";
-import { isAdminEmail } from "./admin";
+import { getAuthViewer } from "./auth";
 
 export const getAdminViewer = cache(async () => {
-  const user = await getCurrentUser();
-  const viewerEmail = user?.email.toLowerCase() ?? "";
-  const admin = viewerEmail ? await isAdminEmail(viewerEmail) : false;
+  const viewer = await getAuthViewer();
+  const viewerEmail = viewer?.email.toLowerCase() ?? "";
 
   return {
-    user,
+    user: viewer?.user ?? null,
     viewerEmail,
-    admin,
+    admin: Boolean(viewer?.isAdmin),
+    viewer,
   };
 });

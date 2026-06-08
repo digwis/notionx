@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
-import { isAdminEmail } from "@/lib/admin";
+import { getAdminViewer } from "@/lib/admin-viewer";
 import { listUsersWithPostCounts } from "@/lib/users";
 import {
   adminDeleteUserAction,
   adminRevokeSessionsAction,
+  adminSetUserRoleAction,
 } from "@/lib/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,24 +24,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LogOut, Trash2, Users } from "lucide-react";
+import { Crown, LogOut, Trash2, UserCheck, Users } from "lucide-react";
 
 type Props = {
   searchParams: Promise<{
     revoked?: string;
     deleted?: string;
+    roleUpdated?: string;
     error?: string;
   }>;
 };
 
 export default async function AdminUsersPage({ searchParams }: Props) {
-  const session = await getCurrentUser();
-  if (!session) redirect("/login");
-  if (!(await isAdminEmail(session.email))) {
+  const { viewer, viewerEmail, admin } = await getAdminViewer();
+  if (!viewer) redirect("/login");
+  if (!admin) {
     redirect("/admin?error=需要管理员权限");
   }
 
-  const { revoked, deleted, error } = await searchParams;
+  const { revoked, deleted, roleUpdated, error } = await searchParams;
   const users = await listUsersWithPostCounts();
 
   return (
@@ -70,6 +71,12 @@ export default async function AdminUsersPage({ searchParams }: Props) {
           </AlertDescription>
         </Alert>
       )}
+      {roleUpdated && (
+        <Alert>
+          <AlertTitle>角色已更新</AlertTitle>
+          <AlertDescription>{roleUpdated} 的权限已更新。</AlertDescription>
+        </Alert>
+      )}
       {error && (
         <Alert variant="destructive">
           <AlertTitle>操作失败</AlertTitle>
@@ -96,7 +103,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
             </TableHeader>
             <TableBody>
               {users.map((u) => {
-                const isSelf = u.email === session.email;
+                const isSelf = u.email === viewerEmail;
                 const loginMethod =
                   u.google_sub && u.password_hash
                     ? "Google + 密码"
@@ -117,6 +124,11 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                     <TableCell>
                       {u.role === "admin" ? (
                         <Badge>管理员</Badge>
+                      ) : u.role === "vip" ? (
+                        <Badge variant="secondary" className="gap-1">
+                          <Crown className="h-3 w-3" />
+                          VIP
+                        </Badge>
                       ) : (
                         <Badge variant="outline">用户</Badge>
                       )}
@@ -130,6 +142,29 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {!isSelf && u.role !== "admin" && (
+                          <form action={adminSetUserRoleAction}>
+                            <input type="hidden" name="userId" value={u.id} />
+                            <input
+                              type="hidden"
+                              name="role"
+                              value={u.role === "vip" ? "user" : "vip"}
+                            />
+                            <Button type="submit" variant="outline" size="sm">
+                              {u.role === "vip" ? (
+                                <>
+                                  <UserCheck className="mr-1 h-3 w-3" />
+                                  设为用户
+                                </>
+                              ) : (
+                                <>
+                                  <Crown className="mr-1 h-3 w-3" />
+                                  设为 VIP
+                                </>
+                              )}
+                            </Button>
+                          </form>
+                        )}
                         <form action={adminRevokeSessionsAction}>
                           <input type="hidden" name="userId" value={u.id} />
                           <Button type="submit" variant="outline" size="sm">

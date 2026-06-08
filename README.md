@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# vinext Notion Movie CMS
 
-## Getting Started
+This project is a low-cost content site built with vinext, Next.js App Router,
+Cloudflare Workers, D1, R2, Cloudflare Images, and Notion.
 
-First, run the development server:
+## Architecture
+
+- Notion is the editor-friendly CMS for posts and movies.
+- Cloudflare Workers serve the app and cache public HTML/JSON at the edge.
+- Cloudflare Images transforms Notion-hosted posters through `/api/notion/media`.
+- D1 stores users, sessions, app settings, and VIP roles.
+- R2 is available for uploaded app assets.
+- VIP download links stay behind `/api/movies/:id/download` and are never cached.
+
+## Notion Fields
+
+Movie data source:
+
+- `电影名称` - title
+- `上映时间` - date
+- `导演` - rich text
+- `演员` - rich text
+- `剧情简介` - rich text
+- `类型` - multi-select
+- `海报` - files
+- `播放链接` - files or page video blocks
+- `下载链接` - URL, VIP only
+- `提取码` - rich text, VIP only
+
+Blog data source:
+
+- `Title`, `Slug`, `Description`, `Date`, `Author`, `Tags`
+- `Status = Published` or `Published = true`
+- optional `Cover`
+
+See `docs/notion-movie-template.md` and `docs/notion-blog-template.md` for the
+full setup notes.
+
+## Environment
+
+Set Cloudflare bindings in `wrangler.jsonc`, then set secrets with Wrangler:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npx wrangler secret put ADMIN_PASSWORD
+npx wrangler secret put NOTION_TOKEN
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Optional secrets and variables:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npx wrangler secret put TURNSTILE_SECRET_KEY
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put GOOGLE_CLIENT_SECRET
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Common public vars:
 
-## Learn More
+- `NOTION_MOVIES_DATA_SOURCE_ID`
+- `NOTION_DATA_SOURCE_ID`
+- `NOTION_EDIT_BASE_URL`
+- `SITE_URL`
+- `RESEND_FROM`
+- `GOOGLE_CLIENT_ID`
+- `TURNSTILE_SITE_KEY`
 
-To learn more about Next.js, take a look at the following resources:
+## Development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev:vinext
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Test And Build
 
-## Deploy on Vercel
+```bash
+npm test
+npm run build:vinext
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run deploy:remote
+```
+
+This applies D1 migrations, deploys the Worker, and checks the remote schema.

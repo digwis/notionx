@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test lib/schema-guard.test.mjs lib/turnstile-client.test.mjs lib/notion/config.test.mjs lib/notion/mappers.test.mjs lib/notion/media.test.mjs lib/notion/posts.test.mjs lib/notion/movies.test.mjs lib/blog-detail-route.test.mjs lib/posts.admin.test.ts lib/public-image.test.ts",
+    "test": "node --test lib/cache-keys.test.ts lib/public-cache-invalidate.test.ts lib/schema-guard.test.mjs lib/turnstile-client.test.mjs lib/notion/config.test.mjs lib/notion/mappers.test.mjs lib/notion/media.test.mjs lib/notion/posts.test.mjs lib/notion/movies.test.mjs lib/blog-detail-route.test.mjs lib/movie-detail-route.test.mjs lib/posts.admin.test.ts lib/public-image.test.ts",
     "dev:vinext": "vinext dev --port 3001",
     "build:vinext": "vinext build",
     "start:vinext": "vinext start",

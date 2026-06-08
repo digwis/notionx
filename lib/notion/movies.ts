@@ -10,8 +10,11 @@ import {
 } from "./mappers.ts";
 import type {
   NotionMovieDetail,
+  NotionMovieDownloadInfo,
   NotionMovieListItem,
   NotionPageLike,
+  PublicNotionMovieDetail,
+  PublicNotionMovieListItem,
 } from "./types.ts";
 
 type DataSourceQueryResponse = {
@@ -87,7 +90,11 @@ export function mapNotionPageToMovieItem(
   options?: { editBaseUrl?: string }
 ): NotionMovieListItem {
   const properties = isRecord(page.properties) ? page.properties : {};
-  const downloadText = getRichTextProperty(properties, "下载地址");
+  const downloadLink = getRichTextProperty(properties, "下载链接");
+  const legacyDownloadText = getRichTextProperty(properties, "下载地址");
+  const downloadText = downloadLink || legacyDownloadText;
+  const downloadUrl = isSafeExternalUrl(downloadText) ? downloadText : null;
+  const extractionCode = getRichTextProperty(properties, "提取码");
   const sourceUrl =
     typeof page.public_url === "string" && page.public_url
       ? page.public_url
@@ -105,7 +112,9 @@ export function mapNotionPageToMovieItem(
     summary: getRichTextProperty(properties, "剧情简介"),
     genres: getTagsProperty(properties, "类型"),
     downloadText,
-    downloadUrl: isSafeExternalUrl(downloadText) ? downloadText : null,
+    downloadUrl,
+    extractionCode,
+    hasDownloadInfo: Boolean(downloadUrl || extractionCode),
     coverImage: movieCoverImageUrl(page),
     editUrl: notionPageEditUrl(page.id, options?.editBaseUrl),
     sourceUrl,
@@ -114,6 +123,40 @@ export function mapNotionPageToMovieItem(
 
 export function isRenderableMovie(movie: NotionMovieListItem): boolean {
   return Boolean(movie.title && movie.routeId);
+}
+
+export function toPublicMovieDetail(
+  movie: NotionMovieDetail
+): PublicNotionMovieDetail {
+  return {
+    ...movie,
+    downloadText: "",
+    downloadUrl: null,
+    extractionCode: "",
+  };
+}
+
+export function toPublicMovieListItem(
+  movie: NotionMovieListItem
+): PublicNotionMovieListItem {
+  return {
+    ...movie,
+    downloadText: "",
+    downloadUrl: null,
+    extractionCode: "",
+  };
+}
+
+function toMovieDownloadInfo(
+  movie: NotionMovieListItem
+): NotionMovieDownloadInfo {
+  return {
+    routeId: movie.routeId,
+    title: movie.title,
+    downloadUrl: movie.downloadUrl,
+    extractionCode: movie.extractionCode,
+    hasDownloadInfo: movie.hasDownloadInfo,
+  };
 }
 
 export function createNotionMovieSource(deps: NotionMovieSourceDeps) {
@@ -141,16 +184,29 @@ export function createNotionMovieSource(deps: NotionMovieSourceDeps) {
         .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate));
     },
 
-    async getMovieByRouteId(routeId: string): Promise<NotionMovieDetail | null> {
+    async getMovieMetaByRouteId(
+      routeId: string
+    ): Promise<NotionMovieListItem | null> {
       const normalizedRouteId = compactNotionId(routeId);
       const movies = await this.listMovies();
-      const movie = movies.find((item) => item.routeId === normalizedRouteId);
+      return movies.find((item) => item.routeId === normalizedRouteId) ?? null;
+    },
+
+    async getMovieByRouteId(routeId: string): Promise<NotionMovieDetail | null> {
+      const movie = await this.getMovieMetaByRouteId(routeId);
       if (!movie) return null;
 
       return {
         ...movie,
         blocks: await deps.getPageBlocks(movie.pageId),
       };
+    },
+
+    async getDownloadInfoByRouteId(
+      routeId: string
+    ): Promise<NotionMovieDownloadInfo | null> {
+      const movie = await this.getMovieMetaByRouteId(routeId);
+      return movie ? toMovieDownloadInfo(movie) : null;
     },
   };
 }
@@ -189,6 +245,11 @@ export const getNotionMoviesMeta = cache(async () => {
   }
 });
 
+export const getPublicNotionMoviesMeta = cache(async () => {
+  const movies = await getNotionMoviesMeta();
+  return movies.map(toPublicMovieListItem);
+});
+
 export const getNotionMovieRouteIds = cache(async () => {
   const movies = await getNotionMoviesMeta();
   return movies.map((movie) => movie.routeId);
@@ -204,3 +265,35 @@ export const getNotionMovieByRouteId = cache(async (routeId: string) => {
     return null;
   }
 });
+
+export const getPublicNotionMovieMetaByRouteId = cache(
+  async (routeId: string) => {
+    try {
+      const source = await getDefaultMovieSource();
+      if (!source) return null;
+      const movie = await source.getMovieMetaByRouteId(routeId);
+      return movie ? toPublicMovieListItem(movie) : null;
+    } catch (error) {
+      logNotionMovieError("meta", error);
+      return null;
+    }
+  }
+);
+
+export const getPublicNotionMovieByRouteId = cache(async (routeId: string) => {
+  const movie = await getNotionMovieByRouteId(routeId);
+  return movie ? toPublicMovieDetail(movie) : null;
+});
+
+export const getNotionMovieDownloadInfo = cache(
+  async (routeId: string): Promise<NotionMovieDownloadInfo | null> => {
+    try {
+      const source = await getDefaultMovieSource();
+      if (!source) return null;
+      return await source.getDownloadInfoByRouteId(routeId);
+    } catch (error) {
+      logNotionMovieError("download", error);
+      return null;
+    }
+  }
+);

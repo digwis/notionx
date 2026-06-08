@@ -1,0 +1,3 @@
+-- VIP membership uses users.role = 'vip'.
+-- The existing role column is TEXT, so no schema change is required.
+-- This migration documents the supported role value for deployed databases.

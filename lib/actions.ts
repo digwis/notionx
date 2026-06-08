@@ -15,6 +15,7 @@ import {
   issueVerificationToken,
   resetPasswordWithToken,
   revokeUserSessions,
+  setUserRole,
   userToSession,
 } from "./users";
 import {
@@ -32,6 +33,7 @@ import {
   checkPassword,
   clearSessionCookie,
   clearUserSessionCookie,
+  getAuthViewer,
   getCurrentUser,
   requireAuth,
   setSessionCookie,
@@ -400,12 +402,12 @@ export async function deleteAccountAction(formData: FormData): Promise<void> {
 }
 
 async function requireAdminSession(): Promise<{ email: string }> {
-  const session = await requireAuth();
-  const email = session.email.toLowerCase();
-  if (!(await isAdminEmail(email))) {
+  const viewer = await getAuthViewer();
+  if (!viewer) redirect("/login");
+  if (!viewer.isAdmin) {
     redirect("/admin?error=需要管理员权限");
   }
-  return { email };
+  return { email: viewer.email.toLowerCase() };
 }
 
 export async function adminRevokeSessionsAction(
@@ -448,6 +450,34 @@ export async function adminDeleteUserAction(
   }
 
   redirect(`/admin/users?deleted=${encodeURIComponent(result.email)}`);
+}
+
+export async function adminSetUserRoleAction(
+  formData: FormData
+): Promise<void> {
+  await requireAdminSession();
+
+  const userId = Number(formData.get("userId"));
+  const role = String(formData.get("role") ?? "");
+  if (!Number.isFinite(userId) || userId <= 0) {
+    redirect("/admin/users?error=无效的用户");
+  }
+  if (role !== "user" && role !== "vip") {
+    redirect("/admin/users?error=无效的角色");
+  }
+
+  const result = await setUserRole(userId, role);
+  if (!result.ok) {
+    if (result.reason === "is_admin") {
+      redirect("/admin/users?error=不能修改管理员角色");
+    }
+    redirect("/admin/users?error=用户不存在");
+  }
+
+  revalidatePath("/admin/users");
+  redirect(
+    `/admin/users?roleUpdated=${encodeURIComponent(result.user.email)}`
+  );
 }
 
 // —— Post actions ——
