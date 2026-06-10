@@ -1,9 +1,8 @@
 // packages/foundation/src/content/index.ts
 //
 // Public surface for `@vinext/foundation/content`. Re-exports the
-// content model registry helpers. The other framework modules
-// (revalidate, search, search-index, prewarm, admin-summary) join the
-// surface in a follow-up commit.
+// content model registry helpers and the moved framework modules.
+
 export {
   defineContentSource,
   getRegisteredSource,
@@ -15,3 +14,46 @@ export {
   type NotionSort,
   type NotionSortDirection,
 } from "./models";
+
+export {
+  authorizeContentRevalidate,
+  buildContentRevalidationPaths,
+  previewContentModelInvalidation,
+  readContentRevalidateRequest,
+  readContentRevalidateRequestFromUrl,
+  type ContentRevalidateRequest,
+  type InvalidationKind,
+  type RevalidatePathFn,
+} from "./revalidate";
+
+export {
+  filterItemsBySearchIndex,
+  getMissingSearchIndexRouteIds,
+  matchesIndexedItem,
+  querySearchIndexRouteIds,
+  deleteSearchIndexDocument,
+  deleteSearchIndexForModel,
+  upsertSearchIndexDocument,
+  type SearchIndexDocument,
+  type SearchIndexedItem,
+} from "./search-index";
+
+export {
+  filterMoviesBySearch,
+  filterPostsBySearch,
+  matchesSearchQuery,
+  normalizeSearchQuery,
+} from "./search";
+
+export {
+  prewarmPublicContentSearchIndex,
+  type ContentPrewarmModelResult,
+  type ContentPrewarmResult,
+  type PrewarmTarget,
+} from "./prewarm";
+
+export {
+  getContentModelAdminSummaries,
+  summarizeContentModelForAdmin,
+  type ContentModelAdminSummary,
+} from "./admin-summary";

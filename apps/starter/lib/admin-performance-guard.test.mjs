@@ -102,7 +102,7 @@ test("edge cache consumers use runtime public cache adapter", () => {
 
 test("content revalidation API is token-gated", () => {
   const route = read("app/api/content/revalidate/route.ts");
-  const helper = read("lib/content/revalidate.ts");
+  const helper = readPackage("src/content/revalidate.ts");
   const config = readPackage("src/notion/config.ts");
 
   assert.match(route, /authorizeContentRevalidate/);
@@ -187,7 +187,7 @@ test("admin exposes content model registry without write actions", () => {
   const layout = read("app/admin/layout.tsx");
   const page = read("app/admin/content-models/page.tsx");
   const pagePkg = readPackage("src/admin/pages/content-models.tsx");
-  const summary = read("lib/content/admin-summary.ts");
+  const summary = readPackage("src/content/admin-summary.ts");
 
   assert.match(layout, /\/admin\/content-models/);
   // The starter page is a thin delegate. The implementation lives in

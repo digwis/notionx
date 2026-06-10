@@ -1,51 +1,10 @@
-import type { ContentModelDefinition, NotionFieldMap } from "./model.ts";
-import { contentModels } from "./models.ts";
-
-export type ContentModelAdminSummary = {
-  id: string;
-  name: string;
-  kind: ContentModelDefinition["kind"];
-  visibility: "public" | "admin" | "public+admin" | "private";
-  listPath: string;
-  detailPath: string;
-  publicApiPath?: string;
-  dataSourceEnv: string;
-  hasDefaultDataSource: boolean;
-  fieldCount: number;
-  capabilities: {
-    richBlocks: boolean;
-    coverImages: boolean;
-    gatedAssets: boolean;
-  };
-};
-
-function visibilityFor(model: ContentModelDefinition<NotionFieldMap>) {
-  if (model.visibility.public && model.visibility.admin) return "public+admin";
-  if (model.visibility.public) return "public";
-  if (model.visibility.admin) return "admin";
-  return "private";
-}
-
-export function summarizeContentModelForAdmin(
-  model: ContentModelDefinition<NotionFieldMap>
-): ContentModelAdminSummary {
-  return {
-    id: model.id,
-    name: model.ui.name,
-    kind: model.kind,
-    visibility: visibilityFor(model),
-    listPath: model.routes.listPath,
-    detailPath: model.routes.detailPath,
-    publicApiPath: model.routes.publicApiPath,
-    dataSourceEnv: model.source.dataSourceEnv,
-    hasDefaultDataSource: Boolean(model.source.defaultDataSourceId),
-    fieldCount: Object.keys(model.source.fields).length,
-    capabilities: model.capabilities,
-  };
-}
-
-export function getContentModelAdminSummaries(
-  models: readonly ContentModelDefinition<NotionFieldMap>[] = contentModels
-) {
-  return models.map(summarizeContentModelForAdmin);
-}
+// Re-exports the foundation's content admin summary helpers. The
+// foundation owns the generic `summarizeContentModelForAdmin` and
+// `getContentModelAdminSummaries` implementations; the starter
+// resolves its content models from the foundation's registry by
+// default.
+export {
+  getContentModelAdminSummaries,
+  summarizeContentModelForAdmin,
+  type ContentModelAdminSummary,
+} from "@vinext/foundation/content";
