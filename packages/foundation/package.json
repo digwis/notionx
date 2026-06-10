@@ -1,0 +1,49 @@
+{
+  "name": "@vinext/foundation",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "exports": {
+    ".": "./dist/index.js",
+    "./types": "./dist/types.js",
+    "./util": "./dist/util/index.js",
+    "./i18n": "./dist/i18n/index.js",
+    "./hooks": "./dist/hooks/index.js",
+    "./platform": "./dist/platform/index.js",
+    "./cache": "./dist/cache/index.js",
+    "./notion": "./dist/notion/index.js",
+    "./content": "./dist/content/index.js",
+    "./auth": "./dist/auth/index.js",
+    "./auth-pages": "./dist/auth/auth-pages/index.js",
+    "./storage": "./dist/storage/index.js",
+    "./media": "./dist/media/index.js",
+    "./email": "./dist/email/index.js",
+    "./admin": "./dist/admin/index.js",
+    "./admin/pages": "./dist/admin/pages/index.js",
+    "./doctor": "./dist/doctor/index.js",
+    "./worker": "./dist/worker/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "foundation:doctor": "node ./dist/doctor/cli.js"
+  },
+  "dependencies": {
+    "@notionhq/client": "^5.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "eslint": "^9",
+    "tsup": "^8",
+    "typescript": "^5",
+    "vitest": "^2"
+  }
+}

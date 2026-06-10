@@ -1,0 +1,2 @@
+pnpm -r --filter '!@vinext/foundation' lint
+pnpm -r --filter '!@vinext/foundation' typecheck
