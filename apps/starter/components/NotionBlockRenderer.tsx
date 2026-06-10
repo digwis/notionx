@@ -5,7 +5,7 @@ import {
   mediaUrlForBlock,
   videoEmbedUrl,
 } from "@/lib/notion/media";
-import { buildResponsiveImageAttrs } from "@/lib/public-image";
+import { buildResponsiveImageAttrs } from "@vinext/foundation/media";
 import type { NotionBlock, NotionRichTextPart } from "@/lib/notion/types";
 
 type TypedBlockValue = {

@@ -5,7 +5,7 @@ import {
   publicMediaCacheKeyForUrl,
   publicMediaVariantForAccept,
   type PublicMediaVariant,
-} from "@/lib/cache-keys";
+} from "@vinext/foundation/cache";
 import { createNotionClient } from "@/lib/notion/client";
 import { getNotionClientConfig } from "@/lib/notion/config";
 import {

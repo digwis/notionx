@@ -171,6 +171,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      resend:
+        specifier: ^6.12.4
+        version: 6.12.4
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0

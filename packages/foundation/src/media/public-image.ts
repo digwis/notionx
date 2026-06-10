@@ -98,6 +98,11 @@ export function getCoverImageLoading(
   index: number,
   variant: PublicImageVariant = "detail"
 ) {
+  // `variant` is reserved for future per-variant loading strategy
+  // (e.g. eager above-the-fold for list thumbnails). Reference it
+  // explicitly to satisfy `@typescript-eslint/no-unused-vars` while
+  // keeping the public API stable.
+  void variant;
   if (index === 0) {
     return {
       loading: "eager" as const,

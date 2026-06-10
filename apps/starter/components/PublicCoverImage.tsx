@@ -2,7 +2,7 @@ import {
   buildResponsiveImageAttrs,
   getCoverImageLoading,
   type PublicImageVariant,
-} from "@/lib/public-image";
+} from "@vinext/foundation/media";
 
 type Props = {
   src: string;

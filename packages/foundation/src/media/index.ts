@@ -1,2 +1,1 @@
-// Stub. Populated in Phase 5.
-export {};
+export * from "./public-image";

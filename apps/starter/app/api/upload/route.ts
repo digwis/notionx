@@ -3,7 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
-import { uploadFile } from "@/lib/storage";
+import { uploadFile } from "@vinext/foundation/storage";
 
 export const dynamic = "force-dynamic";
 

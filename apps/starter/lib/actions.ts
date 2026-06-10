@@ -52,7 +52,7 @@ import {
   sendEmail,
   resetPasswordHtml,
   verifyEmailHtml,
-} from "./email";
+} from "@vinext/foundation/email";
 
 // —— 验证 helpers ——
 

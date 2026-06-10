@@ -1,9 +1,11 @@
-// lib/email.ts - 通过 Resend HTTP API 发送邮件
-// Cloudflare Workers 不能用 SMTP（无长连接），所以走 Resend HTTP API
-// 免费：resend.com → 3000 封/月
+// Email delivery via the Resend HTTP API.
+//
+// Cloudflare Workers cannot use SMTP (no long-lived connections), so
+// email is sent through the Resend HTTP API. The free Resend tier
+// covers 3 000 messages per month.
 
 import { Resend } from "resend";
-import { workerEnv } from "./env";
+import { workerEnv } from "../util/env";
 
 let resendClient: Resend | null = null;
 
@@ -24,14 +26,15 @@ type SendArgs = {
 };
 
 /**
- * 发送邮件。如果 RESEND_API_KEY 没配（dev 默认），自动 noop + log，不报错。
- * 返回 resend 提供的 message id，失败时 throw。
+ * Send an email. When RESEND_API_KEY is not set (the dev default), the
+ * call is silently skipped with a log line instead of failing. Returns
+ * the Resend message id, or null when no-op. Throws on a Resend error.
  */
 export async function sendEmail(args: SendArgs): Promise<string | null> {
   const env = workerEnv;
   const resend = getResend();
 
-  // dev 模式没配 key → 静默跳过
+  // Dev mode without a key: skip silently.
   if (!resend) {
     console.log("[email:noop] to=%s subject=%s", args.to, args.subject);
     return null;
@@ -54,7 +57,7 @@ export async function sendEmail(args: SendArgs): Promise<string | null> {
   return data?.id ?? null;
 }
 
-/** 简单 HTML 转义 */
+/** Minimal HTML escape (avoids depending on a runtime sanitizer). */
 function esc(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -64,7 +67,7 @@ function esc(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-/** 欢迎订阅邮件模板（纯 HTML 字符串，不依赖 React Email 组件，体积更小） */
+/** Welcome email for new newsletter subscribers. */
 export function welcomeEmailHtml(opts: {
   email: string;
   unsubscribeUrl: string;
@@ -139,7 +142,7 @@ export function verifyEmailHtml(opts: {
 </html>`;
 }
 
-/** 新文章通知邮件模板 */
+/** New post notification email. */
 export function newPostEmailHtml(opts: {
   title: string;
   description: string;
@@ -151,7 +154,7 @@ export function newPostEmailHtml(opts: {
 <body style="margin:0;padding:0;background:#fafafa;font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#171717;">
   <div style="max-width:560px;margin:0 auto;padding:40px 20px;">
     <p style="font-size:13px;color:#737373;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.05em;">New post</p>
-    <h1 style="font-size:24px;font-weight:600;margin:0 0 12px;">
+    <h1 style="font-size:24px;font-weight:600;margin:0 0 16px;">
       <a href="${esc(opts.url)}" style="color:#171717;text-decoration:none;">${esc(opts.title)}</a>
     </h1>
     <p style="font-size:16px;line-height:24px;color:#404040;margin:0 0 24px;">${esc(opts.description)}</p>

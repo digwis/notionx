@@ -3,7 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { addSubscriber, unsubscribeByToken } from "@/lib/subscribers";
-import { sendEmail, welcomeEmailHtml } from "@/lib/email";
+import { sendEmail, welcomeEmailHtml } from "@vinext/foundation/email";
 
 export const dynamic = "force-dynamic";
 

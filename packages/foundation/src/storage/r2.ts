@@ -1,11 +1,16 @@
-// lib/storage.ts - 对象存储文件上传 / 列出 / 删除 helpers
-// Cloudflare 运行时使用 R2。
+// Object storage helpers for file upload, list, and delete.
 //
-// 文件命名：<随机UUID>.<ext>（防止覆盖 + 防盗链）
-// 公网访问：暂时用 worker 自己的 /api/files/[key] 代理（避免公开 bucket 的复杂性）
-// 如果想用公开 R2 bucket（更快）：把 bucket 设成 public，加 custom domain
+// Cloudflare Workers uses R2 as the backing store; the abstraction in
+// platform/runtime.ts hides the concrete binding.
+//
+// File naming: <randomUUID>.<ext> — prevents collisions and makes keys
+// non-guessable.
+// Public access: today every read goes through the worker's
+// /api/files/[key] proxy (avoids the complexity of a public bucket).
+// To serve directly from R2: make the bucket public and attach a
+// custom domain.
 
-import { getRuntimePlatform } from "./platform/current";
+import { getRuntimePlatform } from "../platform/current";
 
 export type UploadResult = {
   key: string;
@@ -14,7 +19,7 @@ export type UploadResult = {
   contentType: string;
 };
 
-function buildAssetUrl(kind: "cdn" | "files", key: string): string {
+export function buildAssetUrl(kind: "cdn" | "files", key: string): string {
   // Encode each path segment separately so nested R2 keys remain routable.
   const safeKey = key
     .split("/")
@@ -24,8 +29,9 @@ function buildAssetUrl(kind: "cdn" | "files", key: string): string {
   return `/api/${kind}/${safeKey}`;
 }
 
-// 允许上传的文件类型（防止把 R2 当垃圾场）
-// 注意：浏览器在某些情况下可能给空 type，这里除了 MIME 还允许通过扩展名判断。
+// Whitelisted MIME types — keeps the bucket from becoming a dumping
+// ground. The browser can occasionally send an empty type, so the
+// extension is also checked.
 const ALLOWED = new Set([
   "image/jpeg",
   "image/jpg",
@@ -40,7 +46,7 @@ const ALLOWED = new Set([
 
 const ALLOWED_IMAGE_EXT = /\.(jpe?g|png|gif|webp|avif|svg)$/i;
 
-// 100 MB 上限（worker 请求 body 限制）
+// 100 MB cap (worker request body limit).
 const MAX_SIZE = 100 * 1024 * 1024;
 
 export async function uploadFile(
@@ -54,18 +60,18 @@ export async function uploadFile(
   if (file.size > MAX_SIZE) {
     throw new Error(`File too large: ${file.size} bytes (max ${MAX_SIZE})`);
   }
-  // 双保险：MIME 命中 OR 扩展名命中
+  // Belt and suspenders: pass the MIME whitelist OR a matching extension.
   if (!ALLOWED.has(file.type) && !ALLOWED_IMAGE_EXT.test(file.name)) {
     throw new Error(`Unsupported file type: ${file.type || "(empty)"}`);
   }
 
-  // 随机 key（防猜测）
+  // Random key (non-guessable).
   const ext = file.name.split(".").pop() || "bin";
   const rand = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
   const date = new Date().toISOString().slice(0, 10);
   const key = `${prefix}/${date}/${rand}.${ext}`;
 
-  // 写入对象存储（自带 content-type + immutable cache）。
+  // Write to object storage with content-type and immutable cache headers.
   await storage.put(key, file, {
     contentType: file.type,
     cacheControl: "public, max-age=31536000, immutable",
@@ -77,7 +83,8 @@ export async function uploadFile(
 
   return {
     key,
-    // 图片走 cdn（自动 WebP/AVIF 优化），其他文件走 files
+    // Images go through the CDN (auto WebP/AVIF optimization); other
+    // files go through the raw /api/files proxy.
     url: file.type.startsWith("image/")
       ? buildAssetUrl("cdn", key)
       : buildAssetUrl("files", key),
