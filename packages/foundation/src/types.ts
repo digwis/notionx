@@ -74,6 +74,21 @@ export type ContentSource = unknown;
 
 // ----- Admin / Worker -----
 export type AdminExtension = unknown;
-export type AdminNavItem = unknown;
+
+/**
+ * A single entry in the admin sidebar nav. `labelKey` is resolved at
+ * render time against the i18n message catalog; `icon` is the lucide
+ * icon name; `requireRole` is an optional guard so an item disappears
+ * for viewers who do not have the named role.
+ */
+export interface AdminNavItem {
+  href: string;
+  labelKey: string;
+  icon?: string;
+  order?: number;
+  requireRole?: string;
+  external?: boolean;
+}
+
 export type WorkerOptions = unknown;
 export type FoundationConfig = unknown;
