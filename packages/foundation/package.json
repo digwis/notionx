@@ -22,6 +22,7 @@
     "./notion": "./dist/notion/index.js",
     "./notion/*": "./dist/notion/*.js",
     "./content": "./dist/content/index.js",
+    "./content/models": "./dist/content/models.js",
     "./auth": "./dist/auth/index.js",
     "./auth/session": "./dist/auth/session.js",
     "./auth/users": "./dist/auth/users.js",

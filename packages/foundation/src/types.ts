@@ -70,7 +70,10 @@ export interface AuthConfig {
 }
 
 // ----- Content -----
-export type ContentSource = unknown;
+export type {
+  ContentModelDefinition,
+  ContentSource,
+} from "./content/models";
 
 // ----- Admin / Worker -----
 export type AdminExtension = unknown;

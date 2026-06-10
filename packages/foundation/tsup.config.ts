@@ -26,6 +26,7 @@ export default defineConfig({
     "notion/webhook": "src/notion/webhook.ts",
     "notion/mappers": "src/notion/mappers.ts",
     "content/index": "src/content/index.ts",
+    "content/models": "src/content/models.ts",
     "auth/index": "src/auth/index.ts",
     "auth/session": "src/auth/session.ts",
     "auth/passwords": "src/auth/passwords.ts",
