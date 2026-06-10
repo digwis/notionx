@@ -65,5 +65,5 @@ dist/
 **/.wrangler/
 .playwright-cli/
 
-# moviebluebook: only the Next.js app/ directory is excluded; components/lib/etc remain tracked
-apps/moviebluebook/app/
+# moviebluebook: kept locally as a working reference, never pushed; consumers scaffold via `pnpm create vinext-app`
+apps/moviebluebook/
