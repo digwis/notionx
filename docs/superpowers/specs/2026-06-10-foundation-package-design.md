@@ -396,6 +396,51 @@ Validation:
 Business code never reads `process.env` directly. It always goes through
 `getCurrentRuntime()`.
 
+### Dependency Direction Rules
+
+The package is organized in tiers. Imports must flow top-down only.
+
+```
+util, types                ← Tier 0: pure helpers, no internal deps
+  ↑
+i18n, hooks                ← Tier 1: depend on util/types only
+  ↑
+platform, cache            ← Tier 2: platform + cache primitives
+  ↑
+notion                     ← Tier 3: Notion client + generic helpers
+  ↑
+content                    ← Tier 4: ContentSource framework
+  ↑
+auth                       ← Tier 5: auth (depends on content for viewer)
+  ↑
+email, storage, media      ← Tier 5.5: cross-cutting services
+  ↑
+admin                      ← Tier 6: composes content + auth
+  ↑
+worker                     ← Tier 7: entry point
+```
+
+Forbidden imports (enforced by ESLint `import/no-restricted-paths`):
+
+- `notion` may not import from `content`, `auth`, `admin`, or `worker`
+- `content` may not import from `auth`, `admin`, or `worker`
+- `auth` may not import from `admin` or `worker`
+- `admin` may not import from `worker`
+- Any package module may not import from `apps/starter` or
+  `@vinext/foundation`'s `@internal/*` paths
+
+Enforcement:
+
+- `packages/foundation/eslint.config.mjs` configures
+  `import/no-restricted-paths` with a `zone` per tier. Running
+  `pnpm --filter @vinext/foundation lint` fails on any violation.
+- `packages/foundation/package.json` `exports` field exposes only the
+  documented subpaths. Internal modules are placed under `src/internal/`
+  and excluded from `exports`. The `apps/starter` cannot import them
+  even if it tries.
+- A pre-commit hook (added in Phase 0) runs `pnpm -r lint` and
+  `pnpm -r typecheck` on staged files.
+
 ### Distribution
 
 The package is published to **GitHub Packages** under the
@@ -468,6 +513,15 @@ starter must remain runnable at the end of every phase.
 - Add `pnpm-workspace.yaml` and `.npmrc` for pnpm.
 - Add a minimal `packages/foundation/src/index.ts` placeholder so the
   package compiles.
+- Configure `packages/foundation/eslint.config.mjs` with
+  `import/no-restricted-paths` zones matching the tier rules in
+  "Dependency Direction Rules". `pnpm --filter @vinext/foundation lint`
+  must pass on the empty package.
+- Configure `packages/foundation/package.json` `exports` field with the
+  documented public subpaths; reserve `src/internal/` for modules that
+  must not be importable from outside the package.
+- Wire a pre-commit hook (Husky or simple git hook) that runs
+  `pnpm -r lint` and `pnpm -r typecheck` on staged files.
 - **Verification**: `cd apps/starter && npm run dev:vinext` starts;
   `npm test` passes.
 
