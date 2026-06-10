@@ -6,6 +6,12 @@ the app layer familiar to Next/App Router developers where practical, but the
 product direction is one vinext-first Cloudflare foundation, not a multi-runtime
 starter.
 
+> This repository is part of a pnpm workspace. The reusable platform lives in
+> `packages/foundation/` and is published as `@vinext/foundation`. Changes to
+> that package are released via changesets; everything in `apps/starter/` is
+> project-local. See `docs/architecture/foundation-package.md` for the
+> boundary and tier rules.
+
 ## Architecture
 
 - Notion is the editor-friendly CMS and content modeling surface.
