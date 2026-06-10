@@ -1,5 +1,2 @@
-export type RuntimeId = "cloudflare-workers";
-
-export function currentRuntimeId(): RuntimeId {
-  return "cloudflare-workers";
-}
+// Re-exported from @vinext/foundation. Will be removed in Phase 2.
+export * from "@vinext/foundation/platform";

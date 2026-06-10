@@ -6,9 +6,14 @@ import { fileURLToPath } from "node:url";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(currentDir, "..");
+const packageRoot = path.resolve(projectRoot, "..", "..", "packages", "foundation");
 
 function read(relativePath) {
   return fs.readFileSync(path.join(projectRoot, relativePath), "utf8");
+}
+
+function readPackage(relativePath) {
+  return fs.readFileSync(path.join(packageRoot, relativePath), "utf8");
 }
 
 function sourceFilesUnder(...roots) {
@@ -65,7 +70,7 @@ test("edge cache consumers use runtime public cache adapter", () => {
   const worker = read("worker/index.ts");
   const notionMedia = read("app/api/notion/media/[...ref]/route.ts");
   const actions = read("lib/actions.ts");
-  const runtime = read("lib/platform/cloudflare-runtime.ts");
+  const runtime = readPackage("src/platform/cloudflare-runtime.ts");
   const viteConfig = read("vite.config.ts");
 
   assert.match(viteConfig, /cdnAdapter\(/);
@@ -112,8 +117,8 @@ test("business code imports the current platform facade", () => {
 
   assert.deepEqual(offenders, []);
 
-  const facade = read("lib/platform/current.ts");
-  const selection = read("lib/platform/selection.ts");
+  const facade = readPackage("src/platform/current.ts");
+  const selection = readPackage("src/platform/selection.ts");
   assert.match(facade, /currentRuntimeId/);
   const removedRuntimePattern = new RegExp(
     "VINEXT" + "_RUNTIME|ver" + "cel",
