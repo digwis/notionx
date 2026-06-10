@@ -31,8 +31,8 @@ const authViewerRoutePath = path.join(
   "app/api/auth/viewer/route.ts"
 );
 const notionMediaRoutePath = path.join(
-  projectRoot,
-  "app/api/notion/media/[...ref]/route.ts"
+  packageRoot,
+  "src/media/routes/notion-media.ts"
 );
 const gatedVideoPath = path.join(projectRoot, "components/GatedVideo.tsx");
 const movieDownloadPanelPath = path.join(

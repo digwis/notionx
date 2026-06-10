@@ -56,40 +56,48 @@ test("database-backed business modules use runtime database adapter", () => {
   // package. We re-export their public surface from the starter, so
   // the runtime-database assertion is now checked against the
   // package's source rather than the starter's re-export shim.
+  // The same is true for the health route: it now lives at
+  // `packages/foundation/src/worker/routes/health.ts` and re-exports
+  // through `app/api/health/route.ts`.
+  // `lib/posts.ts` still lives in the starter (Phase 6 will move it
+  // when the content abstraction lands), so we keep reading it from
+  // the starter.
   const settingsPkg = readPackage("src/internal/admin/settings.ts");
   const rateLimitPkg = readPackage("src/auth/rate-limit.ts");
   const usersPkg = readPackage("src/auth/users.ts");
   const posts = read("lib/posts.ts");
-  const health = read("app/api/health/route.ts");
+  const healthPkg = readPackage("src/worker/routes/health.ts");
 
   assert.match(settingsPkg, /getDatabase/);
   assert.match(rateLimitPkg, /getDatabase/);
   assert.match(usersPkg, /getDatabase/);
   assert.match(posts, /getDatabase/);
-  assert.match(health, /getDatabase/);
+  assert.match(healthPkg, /getDatabase/);
   assert.doesNotMatch(settingsPkg, /env\.DB|workerEnv\.DB/);
   assert.doesNotMatch(rateLimitPkg, /env\.DB|workerEnv\.DB/);
   assert.doesNotMatch(usersPkg, /env\.DB|workerEnv\.DB/);
   assert.doesNotMatch(posts, /env\.DB|workerEnv\.DB|cloudflare:workers/);
-  assert.doesNotMatch(health, /env\.DB|workerEnv\.DB/);
+  assert.doesNotMatch(healthPkg, /env\.DB|workerEnv\.DB/);
 });
 
 test("edge cache consumers use runtime public cache adapter", () => {
   const worker = read("worker/index.ts");
-  const notionMedia = read("app/api/notion/media/[...ref]/route.ts");
+  // The Notion media route moved into the package; the starter
+  // re-exports its handler. Assert against the package source.
+  const notionMediaPkg = readPackage("src/media/routes/notion-media.ts");
   const actions = read("lib/actions.ts");
   const runtime = readPackage("src/platform/cloudflare-runtime.ts");
   const viteConfig = read("vite.config.ts");
 
   assert.match(viteConfig, /cdnAdapter\(/);
   assert.match(viteConfig, /kvDataAdapter\(/);
-  assert.match(notionMedia, /getPublicCache/);
+  assert.match(notionMediaPkg, /getPublicCache/);
   assert.match(actions, /revalidatePath/);
   assert.doesNotMatch(worker, /getPublicCache|publicCacheKey|publicApiCacheKeyForUrl/);
   assert.match(runtime, /globalThis/);
   assert.match(runtime, /getDefaultCloudflareCache/);
   assert.match(runtime, /publicCache: getDefaultCloudflareCache/);
-  assert.doesNotMatch(notionMedia, /caches\.default/);
+  assert.doesNotMatch(notionMediaPkg, /caches\.default/);
 });
 
 test("content revalidation API is token-gated", () => {
@@ -104,12 +112,15 @@ test("content revalidation API is token-gated", () => {
 });
 
 test("notion webhook API verifies Notion signatures", () => {
-  const route = read("app/api/notion/webhook/route.ts");
+  // The Notion webhook route moved into the package; the starter
+  // re-exports its handler. Assert the implementation lives in the
+  // package and the starter delegates to it.
+  const routePkg = readPackage("src/notion/routes/webhook.ts");
   const helper = readPackage("src/notion/webhook.ts");
 
-  assert.match(route, /verifyNotionWebhookSignatureWithTokens/);
-  assert.match(route, /putStoredNotionWebhookVerificationToken/);
-  assert.match(route, /x-notion-signature/);
+  assert.match(routePkg, /verifyNotionWebhookSignatureWithTokens/);
+  assert.match(routePkg, /putStoredNotionWebhookVerificationToken/);
+  assert.match(routePkg, /x-notion-signature/);
   assert.match(helper, /HMAC/);
   assert.match(helper, /SHA-256/);
 });
