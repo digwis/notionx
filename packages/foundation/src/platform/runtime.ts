@@ -182,11 +182,14 @@ export function createCloudflareKeyValueCacheAdapter(
 ): KeyValueCacheAdapter {
   return {
     kind: "workers-kv",
-    async get(key, options) {
+    async get<T = unknown>(
+      key: string,
+      options?: KeyValueCacheGetOptions
+    ): Promise<T | null> {
       return (await namespace.get(key, {
         type: "json",
         cacheTtl: options?.cacheTtl,
-      })) as unknown | null;
+      })) as T | null;
     },
     async put(key, value, options) {
       await namespace.put(key, JSON.stringify(value), {
@@ -205,7 +208,7 @@ export function createCloudflareKeyValueCacheAdapter(
       });
       return {
         keys: result.keys.map((key) => ({ name: key.name })),
-        cursor: result.cursor,
+        cursor: result.list_complete ? undefined : result.cursor,
         listComplete: result.list_complete,
       };
     },
@@ -242,17 +245,17 @@ export function createCloudflareRuntimePlatform(
   options?: { publicCache?: CloudflareCacheLike | null }
 ): RuntimePlatform {
   const database: SqlDatabaseAdapter | null = env.DB
-    ? {
+    ? ({
         kind: "d1",
-        prepare(query) {
+        prepare(query: string) {
           return env.DB.prepare(query) as unknown as SqlPreparedStatement;
         },
-        async batch(statements) {
+        async batch(statements: SqlPreparedStatement[]) {
           return (await env.DB.batch(
             statements as unknown as D1PreparedStatement[]
-          )) as SqlResult[];
+          )) as unknown as SqlResult<Record<string, unknown>>[];
         },
-      }
+      } as unknown as SqlDatabaseAdapter)
     : null;
 
   const objectStorage: ObjectStorageAdapter | null = env.ASSETS_BUCKET
