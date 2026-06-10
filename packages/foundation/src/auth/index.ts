@@ -1,13 +1,70 @@
 // Public surface for the @vinext/foundation/auth subpath.
 //
-// Phase 3.1 lands the factory and the public types. The session, users,
-// rate-limit, and turnstile internals are added in Task 3.2; consumers
-// already get a fully-typed `Auth` object so the rest of the auth stack
-// can be wired up incrementally.
+// The `createAuth` factory and its `Auth` interface are the public API.
+// Internal helpers (session, users, rate-limit, turnstile, passwords)
+// are also re-exported so the starter's re-export shims and existing
+// server actions can keep using the same import paths.
+
 export { createAuth } from "./auth";
 export type {
   Auth,
   AuthUser,
-  AuthViewer,
   AuthRateLimitResult,
 } from "./auth";
+
+export type { SessionUser } from "./session";
+export {
+  ADMIN_COOKIE,
+  USER_COOKIE,
+  checkPassword,
+  clearSessionCookie,
+  clearUserSessionCookie,
+  getAuthViewer,
+  getCurrentUser,
+  isAuthenticated,
+  setSessionCookie,
+  setUserSessionCookie,
+  signUserToken,
+  verifyUserToken,
+} from "./user-session";
+export type { AuthViewer } from "./user-session";
+export {
+  hashPassword,
+  verifyPassword,
+  validatePasswordStrength,
+} from "./passwords";
+export type { User, UserRole, UserListItem } from "./users";
+export {
+  authenticateEmailUser,
+  changeUserPassword,
+  createEmailUser,
+  deleteUserAccount,
+  getUserByEmail,
+  getUserById,
+  issuePasswordResetToken,
+  issueVerificationToken,
+  listUsers,
+  listUsersWithPostCounts,
+  normalizeUserRole,
+  resetPasswordWithToken,
+  revokeUserSessions,
+  setUserRole,
+  upsertGoogleUser,
+  userToSession,
+  verifyEmailUser,
+} from "./users";
+export {
+  checkAuthRateLimit,
+  clearAuthRateLimit,
+  clearAuthRateLimits,
+  enforceAuthRateLimits,
+  recordAuthFailure,
+  recordAuthFailures,
+} from "./rate-limit";
+export type { AuthRateLimitKind } from "./rate-limit";
+export {
+  getTurnstileRuntimeConfig,
+  verifyTurnstileFromForm,
+  verifyTurnstileToken,
+} from "./turnstile";
+export type { TurnstileRuntimeConfig } from "./turnstile";

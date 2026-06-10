@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(currentDir, "..");
+const packageRoot = path.resolve(projectRoot, "..", "..", "packages", "foundation");
 const detailPagePath = path.join(
   projectRoot,
   "app/[locale]/movies/[slug]/page.tsx"
@@ -126,7 +127,17 @@ test("movie video stream API requires prior access, playback token, and does not
 });
 
 test("auth viewer API is private and uncached", () => {
-  const source = fs.readFileSync(authViewerRoutePath, "utf8");
+  // The viewer route delegates to the package; the route's runtime
+  // properties (force-dynamic, no-store cache header, getAuthViewer,
+  // canViewVipContent) are now asserted against the package source
+  // rather than the starter's one-line re-export.
+  const source = fs.readFileSync(
+    path.join(
+      packageRoot,
+      "src/auth/routes/viewer.ts"
+    ),
+    "utf8"
+  );
 
   assert.match(source, /dynamic\s*=\s*"force-dynamic"/);
   assert.match(source, /getAuthViewer/);

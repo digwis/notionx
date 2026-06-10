@@ -43,25 +43,33 @@ test("admin layout no longer runs bootstrap on every request", () => {
 });
 
 test("settings helpers use request-scoped cache wrappers", () => {
-  const source = read("lib/settings.ts");
+  // The settings internals now live in the package's
+  // `internal/admin/settings.ts`; the `cache(` wrapper is therefore
+  // asserted against the package's source, not the starter's
+  // re-export shim.
+  const source = readPackage("src/internal/admin/settings.ts");
   assert.match(source, /cache\(/);
 });
 
 test("database-backed business modules use runtime database adapter", () => {
-  const settings = read("lib/settings.ts");
-  const rateLimit = read("lib/auth-rate-limit.ts");
-  const users = read("lib/users.ts");
+  // The auth/rate-limit and auth/users internals now live in the
+  // package. We re-export their public surface from the starter, so
+  // the runtime-database assertion is now checked against the
+  // package's source rather than the starter's re-export shim.
+  const settingsPkg = readPackage("src/internal/admin/settings.ts");
+  const rateLimitPkg = readPackage("src/auth/rate-limit.ts");
+  const usersPkg = readPackage("src/auth/users.ts");
   const posts = read("lib/posts.ts");
   const health = read("app/api/health/route.ts");
 
-  assert.match(settings, /getDatabase/);
-  assert.match(rateLimit, /getDatabase/);
-  assert.match(users, /getDatabase/);
+  assert.match(settingsPkg, /getDatabase/);
+  assert.match(rateLimitPkg, /getDatabase/);
+  assert.match(usersPkg, /getDatabase/);
   assert.match(posts, /getDatabase/);
   assert.match(health, /getDatabase/);
-  assert.doesNotMatch(settings, /env\.DB|workerEnv\.DB/);
-  assert.doesNotMatch(rateLimit, /env\.DB|workerEnv\.DB/);
-  assert.doesNotMatch(users, /env\.DB|workerEnv\.DB/);
+  assert.doesNotMatch(settingsPkg, /env\.DB|workerEnv\.DB/);
+  assert.doesNotMatch(rateLimitPkg, /env\.DB|workerEnv\.DB/);
+  assert.doesNotMatch(usersPkg, /env\.DB|workerEnv\.DB/);
   assert.doesNotMatch(posts, /env\.DB|workerEnv\.DB|cloudflare:workers/);
   assert.doesNotMatch(health, /env\.DB|workerEnv\.DB/);
 });
