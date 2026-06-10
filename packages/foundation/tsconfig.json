@@ -10,10 +10,10 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "dist",
-    "rootDir": "src",
     "isolatedModules": true,
     "resolveJsonModule": true,
     "noUncheckedIndexedAccess": true,
+    "types": ["@cloudflare/workers-types", "node"],
     "paths": {
       "@vinext/foundation": ["./src/index.ts"],
       "@vinext/foundation/*": ["./src/*"]

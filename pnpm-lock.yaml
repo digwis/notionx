@@ -44,6 +44,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.2.4
         version: 1.2.5(@types/react@19.2.17)(react@19.2.7)
+      '@vinext/foundation':
+        specifier: workspace:*
+        version: link:../../packages/foundation
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -165,7 +168,16 @@ importers:
       '@notionhq/client':
         specifier: ^5.22.0
         version: 5.22.0
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      tailwind-merge:
+        specifier: ^3.6.0
+        version: 3.6.0
     devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4
+        version: 4.20260610.1
       '@types/node':
         specifier: ^20
         version: 20.19.42

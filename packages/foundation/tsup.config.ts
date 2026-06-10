@@ -29,4 +29,8 @@ export default defineConfig({
   clean: true,
   splitting: false,
   target: "es2022",
+  // Virtual modules and consumer runtime modules must not be bundled.
+  // Consumers (the starter) resolve these at runtime in Cloudflare Workers
+  // or in the vinext/Next.js runtime.
+  external: ["cloudflare:workers", "next/headers", "next/server"],
 });
