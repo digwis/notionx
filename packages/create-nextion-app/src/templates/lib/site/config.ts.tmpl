@@ -2,12 +2,12 @@
 // `navigation.main` array is rendered on the landing page. Add
 // additional entries to wire up more content sources.
 
-import { {{contentSourceVarName}} } from "../content/models.ts";
+import { contentSources } from "../content/models.ts";
 
 export const siteConfig = {
   name: "{{projectName}}",
   description:
-    "A vinext project backed by @nextion/core and Cloudflare Workers.",
+    "A Notion-powered site built on @nextion/core, running on Cloudflare Workers with D1, R2, and Cloudflare Images.",
   defaultLocale: "{{defaultLocale}}",
   locales: {{supportedLocalesJson}},
   navigation: {
@@ -21,7 +21,7 @@ export const siteConfig = {
     adminHref: "/login",
   },
   primarySourceId: "{{contentSourceId}}",
-  sources: [{{contentSourceVarName}}],
+  sources: contentSources,
 };
 
 export type SiteConfig = typeof siteConfig;

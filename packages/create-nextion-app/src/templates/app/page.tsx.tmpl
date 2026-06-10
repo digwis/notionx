@@ -1,57 +1,99 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { siteConfig } from "@/lib/site/config";
+import { contentSources } from "@/lib/content/models";
+import {
+  ArrowRight,
+  Code,
+  Database,
+  Shield,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Home() {
   return (
-    <main
-      style={{
-        fontFamily: "system-ui, sans-serif",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
-        background: "linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%)",
-        color: "#111",
-      }}
-    >
-      <h1 style={{ fontSize: "3rem", marginBottom: "0.5rem" }}>
-        {siteConfig.name}
-      </h1>
-      <p style={{ maxWidth: 540, textAlign: "center", color: "#555" }}>
-        {siteConfig.description}
-      </p>
-      <nav style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
-        {siteConfig.navigation.main.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            style={{
-              padding: "0.5rem 1rem",
-              border: "1px solid #ccc",
-              borderRadius: "6px",
-              textDecoration: "none",
-              color: "#111",
-            }}
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+      <header className="container mx-auto flex items-center justify-end p-4">
+        <ThemeToggle />
+      </header>
+
+      <main className="container mx-auto flex max-w-3xl flex-col items-center px-4 py-16 text-center">
+        <div className="mb-6 inline-flex items-center rounded-full border bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
+          <span className="mr-2 h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          RSC + Cloudflare Workers + D1 + Notion
+        </div>
+
+        <h1 className="text-5xl font-bold tracking-tight md:text-6xl">
+          {siteConfig.name}
+        </h1>
+        <p className="mt-6 max-w-xl text-lg text-muted-foreground">
+          {siteConfig.description}
+        </p>
+
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          {siteConfig.navigation.main.map((item, index) => (
+            <Button
+              key={item.href}
+              asChild
+              size="lg"
+              variant={index === 0 ? "default" : "secondary"}
+            >
+              <Link href={item.href}>
+                <Database className="mr-2 h-4 w-4" />
+                {item.label}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          ))}
+          <Button asChild variant="outline" size="lg">
+            <Link href={siteConfig.navigation.adminHref}>
+              <Shield className="mr-2 h-4 w-4" />
+              Admin
+            </Link>
+          </Button>
+        </div>
+
+        <Card className="mt-16 w-full text-left">
+          <CardContent className="grid gap-6 p-6 md:grid-cols-3">
+            <Feature
+              title="Edge RSC"
+              desc="React Server Components run on Cloudflare Workers, served from the edge."
+            />
+            <Feature
+              title="Notion Content"
+              desc="Content models register Notion fields, routes, and capabilities in one place."
+            />
+            <Feature
+              title="AI-Customized UI"
+              desc={`${contentSources.length} content source${contentSources.length === 1 ? "" : "s"} registered. New domains can be shaped directly with React, Tailwind, and shadcn/ui.`}
+            />
+            <Feature
+              title="Admin Panel"
+              desc="Password-gated admin with a read-only article index and Notion handoff."
+            />
+          </CardContent>
+        </Card>
+
+        <p className="mt-12 text-xs text-muted-foreground">
+          <a
+            href="https://github.com/your-username/{{projectNameLower}}"
+            className="inline-flex items-center hover:text-foreground"
           >
-            {item.label}
-          </Link>
-        ))}
-        <Link
-          href={siteConfig.navigation.adminHref}
-          style={{
-            padding: "0.5rem 1rem",
-            border: "1px solid #111",
-            borderRadius: "6px",
-            textDecoration: "none",
-            color: "#fff",
-            background: "#111",
-          }}
-        >
-          Admin
-        </Link>
-      </nav>
-    </main>
+            <Code className="mr-1 h-3 w-3" />
+            Source
+          </a>
+        </p>
+      </main>
+    </div>
+  );
+}
+
+function Feature({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div>
+      <h3 className="font-semibold">{title}</h3>
+      <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
+    </div>
   );
 }
