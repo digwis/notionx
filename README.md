@@ -1,45 +1,36 @@
 # vinext
 
-vinext 是一个面向 [Cloudflare Workers](https://workers.cloudflare.com/) 的
-Next.js / App Router 风格框架。本仓库是 vinext 官方维护的 pnpm monorepo：
-可复用的平台层打包成 `@vinext/foundation` 发布到 GitHub Packages，业务侧的
-参考实现放在 `apps/starter/`，脚手架工具放在 `tools/create-vinext-app/`。
+vinext is a Next.js / App Router–style framework for [Cloudflare Workers](https://workers.cloudflare.com/). This repository is the official pnpm monorepo maintained by the vinext team: the reusable platform layer is bundled and published as `@vinext/foundation` to GitHub Packages, a reference business implementation lives in `apps/moviebluebook/`, and the project scaffolding tool lives in `tools/create-vinext-app/`.
 
-## 架构
+## Architecture
 
-vinext 是一份 pnpm monorepo：可复用的平台、认证、Admin 外壳、Notion 工具链
-都被抽离到 `@vinext/foundation` 包里；新建项目只需 `pnpm create vinext-app
-my-new-site`，写几个 `defineContentSource(...)` 调用就能拿到完整的认证、Admin
-与 Cloudflare 部署能力。仓库结构、七个依赖分层、四个边界契约（`ContentSource`
-/ `AuthConfig` / `AdminExtension` / `WorkerOptions`）与分发模型都在
-[`docs/architecture/foundation-package.md`](docs/architecture/foundation-package.md)
-里有完整说明。
+vinext is a pnpm monorepo: the reusable platform, authentication, admin shell, and Notion toolkit are all extracted into the `@vinext/foundation` package. New projects only need `pnpm create vinext-app my-new-site` plus a few `defineContentSource(...)` calls to get full authentication, admin, and Cloudflare deployment out of the box. The repository layout, the seven dependency layers, the four boundary contracts (`ContentSource` / `AuthConfig` / `AdminExtension` / `WorkerOptions`), and the distribution model are all described in detail in [`docs/architecture/foundation-package.md`](docs/architecture/foundation-package.md).
 
-- 完整架构总览：[`docs/architecture/foundation-package.md`](docs/architecture/foundation-package.md)
-- 创建新项目：[`docs/architecture/creating-new-project.md`](docs/architecture/creating-new-project.md)
-- 添加 / 修改内容域：[`docs/architecture/customizing-content-source.md`](docs/architecture/customizing-content-source.md)
-- 升级 `@vinext/foundation`：[`docs/architecture/upgrading-foundation.md`](docs/architecture/upgrading-foundation.md)
-- 发布说明：[`docs/architecture/foundation-changelog.md`](docs/architecture/foundation-changelog.md)
-- 旧的内容基础文档（已不作为权威来源）：[`docs/architecture/content-foundation.md`](docs/architecture/content-foundation.md)
+- Full architecture overview: [`docs/architecture/foundation-package.md`](docs/architecture/foundation-package.md)
+- Creating a new project: [`docs/architecture/creating-new-project.md`](docs/architecture/creating-new-project.md)
+- Adding / modifying content domains: [`docs/architecture/customizing-content-source.md`](docs/architecture/customizing-content-source.md)
+- Upgrading `@vinext/foundation`: [`docs/architecture/upgrading-foundation.md`](docs/architecture/upgrading-foundation.md)
+- Release notes: [`docs/architecture/foundation-changelog.md`](docs/architecture/foundation-changelog.md)
+- Legacy content-foundation docs (no longer authoritative): [`docs/architecture/content-foundation.md`](docs/architecture/content-foundation.md)
 
-## 仓库布局
+## Repository layout
 
 ```text
-packages/foundation/   # 编译并发布为 @vinext/foundation
-apps/moviebluebook/  # 业务参考应用（消费 @vinext/foundation）
-tools/create-vinext-app/  # `pnpm create vinext-app` 脚手架
-docs/                  # 架构文档与设计规格
+packages/foundation/        # Compiled and published as @vinext/foundation
+apps/moviebluebook/         # Reference business app (consumes @vinext/foundation)
+tools/create-vinext-app/    # `pnpm create vinext-app` scaffolding
+docs/                       # Architecture docs and design specs
 ```
 
-## 本地开发
+## Local development
 
 ```bash
 pnpm install
 pnpm --filter @vinext/foundation build
-pnpm --filter @vinext/starter dev
+pnpm --filter @vinext/moviebluebook dev
 ```
 
-## 测试与诊断
+## Testing and diagnostics
 
 ```bash
 pnpm -r test
