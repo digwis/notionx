@@ -1,122 +1,115 @@
+// apps/starter/app/admin/layout.tsx
+//
+// Layout for every page under `/admin/*`. The package's `AdminShell`
+// owns the chrome (brand, sidebar, header). This file wires the
+// starter's nav, viewer, and design-system header extras (blog link,
+// theme toggle, logout) into the shell.
+
+import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminShell } from "@vinext/foundation/admin";
 import { getAdminViewer } from "@/lib/admin-viewer";
 import { perfSpan } from "@/lib/perf-trace";
 import { logoutAction } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
-import {
-  Database,
-  LogOut,
-  Shield,
-  Settings,
-  UserCircle,
-  Users,
-} from "lucide-react";
+import { Database, LogOut, Settings, Shield, UserCircle, Users } from "lucide-react";
+import { adminNav } from "@/lib/admin/nav";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // viewer 聚合了当前用户和管理员身份，避免 layout 里重复走认证链路。
-  const { user, viewer, viewerEmail, admin } = await perfSpan(
+  const { user, viewerEmail, admin } = await perfSpan(
     { span: "admin.viewer", pageClass: "admin" },
     () => getAdminViewer()
   );
-  if (!viewer) redirect("/login");
+  if (!viewerEmail) redirect("/login");
+
+  const viewer = {
+    email: viewerEmail,
+    name: user?.name ?? null,
+    picture: user?.picture ?? null,
+    isAdmin: admin,
+    role: admin ? "admin" : "user",
+  };
+
+  // Best-effort: get the current pathname from headers. Falls back to
+  // "/admin" so the dashboard is marked active by default.
+  const h = await headers();
+  const pathname = h.get("x-pathname") ?? h.get("x-invoke-path") ?? "/admin";
 
   return (
-    <div
-      className="min-h-screen bg-background"
+    <AdminShell
+      nav={adminNav}
+      viewer={viewer}
+      pathname={pathname}
+      brandLabel="vinext Admin"
+      brandHref="/admin"
+      viewerRoles={admin ? ["admin", "user"] : ["user"]}
+      headerLinks={
+        <>
+          <Separator orientation="vertical" className="h-4" />
+          <Link
+            href="/blog"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            查看博客 →
+          </Link>
+          {admin && (
+            <>
+              <Separator orientation="vertical" className="h-4" />
+              <Link
+                href="/admin/content-models"
+                className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
+              >
+                <Database className="h-3.5 w-3.5" />
+                内容模型
+              </Link>
+              <Separator orientation="vertical" className="h-4" />
+              <Link
+                href="/admin/settings"
+                className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
+              >
+                <Settings className="h-3.5 w-3.5" />
+                系统设置
+              </Link>
+              <Separator orientation="vertical" className="h-4" />
+              <Link
+                href="/admin/users"
+                className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
+              >
+                <Users className="h-3.5 w-3.5" />
+                用户管理
+              </Link>
+            </>
+          )}
+        </>
+      }
+      headerActions={
+        <>
+          {user && (
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/admin/account">
+                <UserCircle className="mr-1 h-3 w-3" />
+                账户
+              </Link>
+            </Button>
+          )}
+          <ThemeToggle />
+          <form action={logoutAction}>
+            <Button type="submit" variant="outline" size="sm">
+              <LogOut className="mr-1 h-3 w-3" />
+              登出
+            </Button>
+          </form>
+        </>
+      }
     >
-      <header className="border-b bg-muted/30">
-        <div className="container mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-2 text-sm font-semibold"
-            >
-              <Shield className="h-4 w-4" />
-              vinext Admin
-            </Link>
-            <Separator orientation="vertical" className="h-4" />
-            <Link
-              href="/blog"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              查看博客 →
-            </Link>
-            {admin && (
-              <>
-                <Separator orientation="vertical" className="h-4" />
-                <Link
-                  href="/admin/content-models"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
-                >
-                  <Database className="h-3.5 w-3.5" />
-                  内容模型
-                </Link>
-                <Separator orientation="vertical" className="h-4" />
-                <Link
-                  href="/admin/settings"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
-                >
-                  <Settings className="h-3.5 w-3.5" />
-                  系统设置
-                </Link>
-                <Separator orientation="vertical" className="h-4" />
-                <Link
-                  href="/admin/users"
-                  className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
-                >
-                  <Users className="h-3.5 w-3.5" />
-                  用户管理
-                </Link>
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {viewer && (
-              <div className="flex items-center gap-2 rounded-md bg-muted px-2.5 py-1 text-xs">
-                {user?.picture && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={user.picture}
-                    alt=""
-                    className="h-5 w-5 rounded-full"
-                  />
-                )}
-                <span className="hidden font-medium sm:inline">
-                  {user?.name || viewerEmail}
-                </span>
-                {admin && (
-                  <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                    管理员
-                  </span>
-                )}
-              </div>
-            )}
-            {user && (
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/admin/account">
-                  <UserCircle className="mr-1 h-3 w-3" />
-                  账户
-                </Link>
-              </Button>
-            )}
-            <ThemeToggle />
-            <form action={logoutAction}>
-              <Button type="submit" variant="outline" size="sm">
-                <LogOut className="mr-1 h-3 w-3" />
-                登出
-              </Button>
-            </form>
-          </div>
-        </div>
-      </header>
-      <div className="container mx-auto max-w-6xl px-4 py-8">{children}</div>
-    </div>
+      {children}
+    </AdminShell>
   );
 }

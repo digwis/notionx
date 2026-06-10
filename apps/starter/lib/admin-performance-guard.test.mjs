@@ -143,10 +143,16 @@ test("turnstile field no longer posts debug events to localhost", () => {
 });
 
 test("admin list uses Notion handoff instead of D1 delete actions", () => {
-  const source = read("app/admin/page.tsx");
-  assert.match(source, /getNotionPostsMeta/);
-  assert.match(source, /getNotionEditBaseUrl/);
-  assert.doesNotMatch(source, /DeleteButton/);
+  // The dashboard implementation now lives in the foundation package.
+  // The starter page is a thin delegate that wires the context and
+  // forwards `searchParams`. The actual handoff is in the package
+  // source, which is what the production admin route renders.
+  const page = read("app/admin/page.tsx");
+  const pagePkg = readPackage("src/admin/pages/dashboard.tsx");
+  assert.match(page, /DashboardPage/);
+  assert.match(pagePkg, /getNotionPostsMeta/);
+  assert.match(pagePkg, /getNotionEditBaseUrl/);
+  assert.doesNotMatch(pagePkg, /DeleteButton/);
 });
 
 test("new post page hands off content creation to Notion", () => {
@@ -157,19 +163,28 @@ test("new post page hands off content creation to Notion", () => {
 });
 
 test("admin route defines a dedicated content-only loading state", () => {
+  // The loading implementation now lives in the foundation package.
+  // The starter file is a thin delegate.
   const source = read("app/admin/loading.tsx");
-  assert.match(source, /Skeleton/);
-  assert.doesNotMatch(source, /vinext Admin/);
+  const sourcePkg = readPackage("src/admin/pages/loading.tsx");
+  assert.match(source, /LoadingPage/);
+  assert.match(sourcePkg, /Skeleton/);
+  assert.doesNotMatch(sourcePkg, /vinext Admin/);
 });
 
 test("admin exposes content model registry without write actions", () => {
   const layout = read("app/admin/layout.tsx");
   const page = read("app/admin/content-models/page.tsx");
+  const pagePkg = readPackage("src/admin/pages/content-models.tsx");
   const summary = read("lib/content/admin-summary.ts");
 
   assert.match(layout, /\/admin\/content-models/);
-  assert.match(page, /getContentModelAdminSummaries/);
+  // The starter page is a thin delegate. The implementation lives in
+  // the foundation package, so we assert against both the package
+  // source (real implementation) and the starter page (delegate).
+  assert.match(pagePkg, /getContentModelAdminSummaries/);
+  assert.match(page, /ContentModelsPage/);
   assert.match(summary, /capabilities/);
-  assert.match(page, /新领域由 AI 直接新增模型、路由和 UI 代码/);
-  assert.doesNotMatch(page, /<form|action=/);
+  assert.match(pagePkg, /新领域由 AI 直接新增模型、路由和 UI 代码/);
+  assert.doesNotMatch(pagePkg, /<form|action=/);
 });
