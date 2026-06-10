@@ -9,7 +9,16 @@ import {
 } from "./config.ts";
 
 const source = fs.readFileSync(
-  path.join(process.cwd(), "lib/notion/config.ts"),
+  path.join(
+    process.cwd(),
+    "..",
+    "..",
+    "packages",
+    "foundation",
+    "src",
+    "notion",
+    "config.ts"
+  ),
   "utf8"
 );
 

@@ -87,7 +87,7 @@ test("edge cache consumers use runtime public cache adapter", () => {
 test("content revalidation API is token-gated", () => {
   const route = read("app/api/content/revalidate/route.ts");
   const helper = read("lib/content/revalidate.ts");
-  const config = read("lib/notion/config.ts");
+  const config = readPackage("src/notion/config.ts");
 
   assert.match(route, /authorizeContentRevalidate/);
   assert.match(route, /getNotionWebhookVerificationToken/);
@@ -97,7 +97,7 @@ test("content revalidation API is token-gated", () => {
 
 test("notion webhook API verifies Notion signatures", () => {
   const route = read("app/api/notion/webhook/route.ts");
-  const helper = read("lib/notion/webhook.ts");
+  const helper = readPackage("src/notion/webhook.ts");
 
   assert.match(route, /verifyNotionWebhookSignatureWithTokens/);
   assert.match(route, /putStoredNotionWebhookVerificationToken/);

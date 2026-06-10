@@ -16,6 +16,7 @@
     "./platform": "./dist/platform/index.js",
     "./cache": "./dist/cache/index.js",
     "./notion": "./dist/notion/index.js",
+    "./notion/*": "./dist/notion/*.js",
     "./content": "./dist/content/index.js",
     "./auth": "./dist/auth/index.js",
     "./auth-pages": "./dist/auth/auth-pages/index.js",

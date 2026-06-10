@@ -1,10 +1,2 @@
-import { Client } from "@notionhq/client";
-import type { NotionClientConfig } from "./config.ts";
-
-export function createNotionClient(config: NotionClientConfig) {
-  return new Client({
-    auth: config.token,
-    baseUrl: config.apiBaseUrl,
-    notionVersion: "2026-03-11",
-  });
-}
+// Re-exported from @vinext/foundation/notion. Will be removed in Phase 2.
+export * from "@vinext/foundation/notion";

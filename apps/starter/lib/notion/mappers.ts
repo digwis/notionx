@@ -1,6 +1,12 @@
-import { coverImageUrlForPage } from "./media.ts";
+// Re-exported from @vinext/foundation/notion. Will be removed in Phase 2.
+export * from "@vinext/foundation/notion/mappers";
+
+import { coverImageUrlForPage } from "@vinext/foundation/notion/media";
 import { blogContentModel } from "../content/models.ts";
-import type { NotionPageLike, NotionPostListItem } from "./types.ts";
+import type {
+  NotionPageLike,
+  NotionPostListItem,
+} from "@vinext/foundation/notion/types";
 import {
   getAuthorProperty,
   getDateProperty,
@@ -15,25 +21,7 @@ import {
   notionPageEditUrl,
   pickDescriptionFallback,
   pickPublishedFlag,
-} from "./property-mappers.ts";
-
-export {
-  getAuthorProperty,
-  getCheckboxProperty,
-  getDateProperty,
-  getFirstDateProperty,
-  getFirstPeopleProperty,
-  getFirstTagsProperty,
-  getFirstTitleProperty,
-  getRelationPageIds,
-  getRichTextProperty,
-  getSelectProperty,
-  getTagsProperty,
-  isValidPublicSlug,
-  notionPageEditUrl,
-  pickDescriptionFallback,
-  pickPublishedFlag,
-} from "./property-mappers.ts";
+} from "@vinext/foundation/notion/property-mappers";
 
 function compactNotionId(id: string) {
   return id.replaceAll("-", "").toLowerCase();
@@ -63,7 +51,7 @@ export function mapNotionPageToListItem(
     ? configuredSlug
     : compactNotionId(page.id);
   const description = pickDescriptionFallback(
-    getRichTextProperty(properties, fields.description),
+    getRichTextProperty(properties, fields.description) || getFirstTitleProperty(properties),
     title
   );
   const published = hasPublishControl(properties)

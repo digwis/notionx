@@ -67,7 +67,16 @@ const booksModel = defineContentModel({
 
 test("generic Notion source stays independent from blog-specific mappers", () => {
   const source = fs.readFileSync(
-    path.join(process.cwd(), "lib/notion/generic-source.ts"),
+    path.join(
+      process.cwd(),
+      "..",
+      "..",
+      "packages",
+      "foundation",
+      "src",
+      "notion",
+      "generic-source.ts"
+    ),
     "utf8"
   );
 
