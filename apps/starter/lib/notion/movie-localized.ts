@@ -15,7 +15,6 @@ import {
   getPublishedMovieTranslationBySlug,
   getPublishedMovieTranslations,
   getPublishedMovieTranslationsForLocale,
-  hasMovieTranslationConfig,
 } from "./movie-translations.ts";
 import type {
   LocalizedPublicMovieDetail,
@@ -59,8 +58,9 @@ function fallbackLocalizedMovies(locale: AppLocale) {
 async function buildLocalizedMovieList(locale: AppLocale) {
   const translations = await getPublishedMovieTranslationsForLocale(locale);
   if (translations.length === 0) {
-    const configured = await hasMovieTranslationConfig();
-    if (!configured && locale === defaultLocale) {
+    // 默认语言始终回退到原 Notion 电影库：
+    // 翻译是叠加层，原电影库（中文）才是默认语言的内容源。
+    if (locale === defaultLocale) {
       return fallbackLocalizedMovies(locale);
     }
     return [];
@@ -96,8 +96,8 @@ async function resolveTranslationForSlug(locale: AppLocale, slug: string) {
   );
   if (translation) return translation;
 
-  const configured = await hasMovieTranslationConfig();
-  if (!configured && locale === defaultLocale) {
+  // 默认语言没有翻译时，回退到原 Notion 电影库里的电影。
+  if (locale === defaultLocale) {
     const movie = await getPublicNotionMovieMetaByRouteId(normalizedSlug);
     if (!movie) return null;
     return {
