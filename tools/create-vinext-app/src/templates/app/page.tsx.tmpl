@@ -1,0 +1,57 @@
+import Link from "next/link";
+import { siteConfig } from "@/lib/site/config";
+
+export default function Home() {
+  return (
+    <main
+      style={{
+        fontFamily: "system-ui, sans-serif",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "2rem",
+        background: "linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%)",
+        color: "#111",
+      }}
+    >
+      <h1 style={{ fontSize: "3rem", marginBottom: "0.5rem" }}>
+        {siteConfig.name}
+      </h1>
+      <p style={{ maxWidth: 540, textAlign: "center", color: "#555" }}>
+        {siteConfig.description}
+      </p>
+      <nav style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
+        {siteConfig.navigation.main.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            style={{
+              padding: "0.5rem 1rem",
+              border: "1px solid #ccc",
+              borderRadius: "6px",
+              textDecoration: "none",
+              color: "#111",
+            }}
+          >
+            {item.label}
+          </Link>
+        ))}
+        <Link
+          href={siteConfig.navigation.adminHref}
+          style={{
+            padding: "0.5rem 1rem",
+            border: "1px solid #111",
+            borderRadius: "6px",
+            textDecoration: "none",
+            color: "#fff",
+            background: "#111",
+          }}
+        >
+          Admin
+        </Link>
+      </nav>
+    </main>
+  );
+}

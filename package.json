@@ -9,6 +9,7 @@
     "typecheck": "pnpm -r typecheck",
     "dev:vinext": "pnpm --filter @vinext/starter dev:vinext",
     "foundation:doctor": "pnpm --filter @vinext/foundation foundation:doctor",
+    "tools:build": "pnpm --filter create-vinext-app build",
     "prepare": "husky"
   },
   "devDependencies": {

@@ -1,0 +1,21 @@
+{
+  "name": "create-vinext-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "create-vinext-app": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-templates.mjs",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx": "^4",
+    "typescript": "^5.5"
+  }
+}

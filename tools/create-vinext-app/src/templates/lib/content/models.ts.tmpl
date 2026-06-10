@@ -1,0 +1,51 @@
+// First content source registered with the foundation. Edit the
+// `fields` map to match the Notion property names in the data source
+// pointed to by `NOTION_DATA_SOURCE_ID`. Add more sources by calling
+// `defineContentSource` again and appending to the exported array.
+
+import {
+  defineContentSource,
+  type ContentSource,
+} from "@vinext/foundation/content";
+
+export const {{contentSourceVarName}}: ContentSource = defineContentSource({
+  id: "{{contentSourceId}}",
+  kind: {{contentSourceKind}},
+  visibility: {
+    public: true,
+    admin: true,
+  },
+  source: {
+    type: "notion",
+    tokenEnv: "NOTION_TOKEN",
+    dataSourceEnv: "NOTION_DATA_SOURCE_ID",
+    fields: {
+{{contentSourceFields}}
+    },
+    query: {
+      pageSize: 50,
+    },
+  },
+  routes: {
+    listPath: "{{contentSourceListPath}}",
+    detailPath: "{{contentSourceDetailPath}}",
+    detailParam: "slug",
+    publicApiPath: "{{contentSourceApiPath}}",
+  },
+  ui: {
+    name: "{{contentSourceTitle}}",
+    pluralName: "{{contentSourcePluralName}}",
+    navLabel: "{{contentSourceNavLabel}}",
+    listTitle: "{{contentSourceListTitle}}",
+    listDescription: "{{contentSourceListDescription}}",
+    emptyState: "{{contentSourceEmptyState}}",
+  },
+  capabilities: {
+    richBlocks: false,
+    coverImages: false,
+    gatedAssets: false,
+  },
+});
+
+export const contentSources = [{{contentSourceVarName}}] as const;
+export type ContentSourceId = (typeof contentSources)[number]["id"];
