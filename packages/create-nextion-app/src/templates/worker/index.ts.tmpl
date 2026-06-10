@@ -1,0 +1,35 @@
+// Cloudflare Worker entry point. Nextion-routed requests (health,
+// storage, notion media) are handled by `createNextionWorker`
+// before falling through to the vinext app router.
+
+import handler from "vinext/server/app-router-entry";
+import { createNextionWorker } from "@nextion/core/worker";
+import { authConfig } from "../lib/auth.config";
+import { adminNav } from "../lib/admin/nav";
+import { siteConfig } from "../lib/site/config";
+import { {{contentSourceVarName}} } from "../lib/content/models";
+
+const nextion = createNextionWorker({
+  sources: [{{contentSourceVarName}}],
+  adminNav,
+  authConfig,
+  siteConfig: {
+    name: siteConfig.name,
+    description: siteConfig.description,
+    defaultLocale: siteConfig.defaultLocale,
+    locales: [...siteConfig.locales],
+    navigation: siteConfig.navigation.main as unknown as unknown[],
+  },
+});
+
+export default {
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext
+  ): Promise<Response> {
+    const nextionResponse = await nextion.fetch(request, env, ctx);
+    if (nextionResponse) return nextionResponse;
+    return handler.fetch(request, env, ctx);
+  },
+};

@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Extract the reusable platform, authentication, admin framework, and Notion helpers from the current vinext starter into a `@vinext/foundation` npm package living in a pnpm monorepo. The starter becomes a thin app that consumes the package.
+**Goal:** Extract the reusable platform, authentication, admin framework, and Notion helpers from the current vinext starter into a `@nextion/core` npm package living in a pnpm monorepo. The starter becomes a thin app that consumes the package.
 
-**Architecture:** Single pnpm monorepo. `packages/foundation` is published to GitHub Packages via changesets. `apps/starter` is the current root, moved into `apps/starter/`. The package exposes 14 subpath exports organized into 7 dependency tiers. ESLint `import/no-restricted-paths` enforces the tier rules. The migration happens in 8 phases; each phase ends with a green test suite and a working dev server.
+**Architecture:** Single pnpm monorepo. `packages/nextion` is published to GitHub Packages via changesets. `apps/starter` is the current root, moved into `apps/starter/`. The package exposes 14 subpath exports organized into 7 dependency tiers. ESLint `import/no-restricted-paths` enforces the tier rules. The migration happens in 8 phases; each phase ends with a green test suite and a working dev server.
 
 **Tech Stack:** pnpm workspaces, TypeScript, tsup (ESM + d.ts), ESLint 9, Husky, changesets, Cloudflare Workers, D1, R2, Cloudflare Images, vinext, Notion SDK, Resend, Turnstile, vitest for new package tests, node:test (legacy) for the starter.
 
@@ -15,7 +15,7 @@
 ### New files (created during this plan)
 
 ```
-packages/foundation/
+packages/nextion/
 ├── package.json
 ├── tsconfig.json
 ├── tsup.config.ts
@@ -128,7 +128,7 @@ packages/foundation/
 │   │   ├── cli.ts
 │   │   └── index.ts
 │   ├── worker/
-│   │   ├── bootstrap.ts            # createFoundationWorker
+│   │   ├── bootstrap.ts            # createNextionWorker
 │   │   ├── middleware.ts
 │   │   ├── routes/
 │   │   │   ├── health.ts
@@ -148,7 +148,7 @@ packages/foundation/
     ├── auth/
     └── admin/
 
-tools/create-vinext-app/             # Phase 7: scaffolder
+packages/create-nextion-app/             # Phase 7: scaffolder
 ├── package.json
 ├── src/
 │   ├── index.ts                    # CLI entry
@@ -235,7 +235,7 @@ prefer-workspace-packages=true
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "dev:vinext": "pnpm --filter @vinext/starter dev:vinext",
-    "foundation:doctor": "pnpm --filter @vinext/foundation foundation:doctor"
+    "nextion:doctor": "pnpm --filter @nextion/core nextion:doctor"
   },
   "devDependencies": {
     "typescript": "^5"
@@ -313,20 +313,20 @@ git add -A
 git commit -m "chore: initialize pnpm monorepo skeleton"
 ```
 
-### Task 0.2: Create the foundation package skeleton
+### Task 0.2: Create the nextion package skeleton
 
 **Files:**
-- Create: `packages/foundation/package.json`
-- Create: `packages/foundation/tsconfig.json`
-- Create: `packages/foundation/tsup.config.ts`
-- Create: `packages/foundation/eslint.config.mjs`
-- Create: `packages/foundation/src/index.ts`
+- Create: `packages/nextion/package.json`
+- Create: `packages/nextion/tsconfig.json`
+- Create: `packages/nextion/tsup.config.ts`
+- Create: `packages/nextion/eslint.config.mjs`
+- Create: `packages/nextion/src/index.ts`
 
-- [ ] **Step 1: Create `packages/foundation/package.json`**
+- [ ] **Step 1: Create `packages/nextion/package.json`**
 
 ```json
 {
-  "name": "@vinext/foundation",
+  "name": "@nextion/core",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -361,7 +361,7 @@ git commit -m "chore: initialize pnpm monorepo skeleton"
     "test:watch": "vitest",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "foundation:doctor": "node ./dist/doctor/cli.js"
+    "nextion:doctor": "node ./dist/doctor/cli.js"
   },
   "dependencies": {
     "@notionhq/client": "^5.22.0"
@@ -376,7 +376,7 @@ git commit -m "chore: initialize pnpm monorepo skeleton"
 }
 ```
 
-- [ ] **Step 2: Create `packages/foundation/tsconfig.json`**
+- [ ] **Step 2: Create `packages/nextion/tsconfig.json`**
 
 ```json
 {
@@ -396,8 +396,8 @@ git commit -m "chore: initialize pnpm monorepo skeleton"
     "resolveJsonModule": true,
     "noUncheckedIndexedAccess": true,
     "paths": {
-      "@vinext/foundation": ["./src/index.ts"],
-      "@vinext/foundation/*": ["./src/*"]
+      "@nextion/core": ["./src/index.ts"],
+      "@nextion/core/*": ["./src/*"]
     }
   },
   "include": ["src", "tests"],
@@ -405,7 +405,7 @@ git commit -m "chore: initialize pnpm monorepo skeleton"
 }
 ```
 
-- [ ] **Step 3: Create `packages/foundation/tsup.config.ts`**
+- [ ] **Step 3: Create `packages/nextion/tsup.config.ts`**
 
 ```typescript
 import { defineConfig } from "tsup";
@@ -442,7 +442,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 4: Create `packages/foundation/eslint.config.mjs`**
+- [ ] **Step 4: Create `packages/nextion/eslint.config.mjs`**
 
 ```javascript
 import js from "@eslint/js";
@@ -498,7 +498,7 @@ export default [
 ];
 ```
 
-- [ ] **Step 5: Create `packages/foundation/src/index.ts`**
+- [ ] **Step 5: Create `packages/nextion/src/index.ts`**
 
 ```typescript
 // Public top-level entry. Subpath exports carry the bulk of the API.
@@ -512,14 +512,14 @@ export type {
 } from "./types";
 
 export { defineContentSource } from "./content/models";
-export { createFoundationWorker } from "./worker/bootstrap";
-export { runFoundationDoctor } from "./doctor";
+export { createNextionWorker } from "./worker/bootstrap";
+export { runNextionDoctor } from "./doctor";
 ```
 
 - [ ] **Step 6: Install and verify the package compiles**
 
 ```bash
-cd packages/foundation
+cd packages/nextion
 pnpm install
 pnpm build
 pnpm lint
@@ -535,8 +535,8 @@ Create `.husky/pre-commit`:
 
 ```bash
 #!/usr/bin/env sh
-pnpm -r --filter '!@vinext/foundation' lint
-pnpm -r --filter '!@vinext/foundation' typecheck
+pnpm -r --filter '!@nextion/core' lint
+pnpm -r --filter '!@nextion/core' typecheck
 ```
 
 Make it executable:
@@ -595,7 +595,7 @@ least one blog or movie route. Kill the dev server.
 Add a one-paragraph note near the top:
 
 > This repository is a pnpm workspace. The reusable platform lives in
-> `packages/foundation/` and is published as `@vinext/foundation`.
+> `packages/nextion/` and is published as `@nextion/core`.
 > Changes to that package are released via changesets; everything in
 > `apps/starter/` is project-local.
 
@@ -611,7 +611,7 @@ git commit -m "docs(starter): note pnpm workspace structure"
 ## Phase 1: Leaf modules
 
 Pattern for every file move in this phase: copy the file from
-`apps/starter/lib/<path>` to `packages/foundation/src/<path>`, then in
+`apps/starter/lib/<path>` to `packages/nextion/src/<path>`, then in
 `apps/starter` re-export it from its original location so existing
 imports keep working. The re-exports come out in Task 2.x once imports
 have been migrated.
@@ -619,12 +619,12 @@ have been migrated.
 ### Task 1.1: Move util modules
 
 **Files:**
-- Create: `packages/foundation/src/util/env.ts`
-- Create: `packages/foundation/src/util/site-url.ts`
-- Create: `packages/foundation/src/util/request-ip.ts`
-- Create: `packages/foundation/src/util/utils.ts`
-- Create: `packages/foundation/src/util/get-env.ts`
-- Create: `packages/foundation/src/util/index.ts`
+- Create: `packages/nextion/src/util/env.ts`
+- Create: `packages/nextion/src/util/site-url.ts`
+- Create: `packages/nextion/src/util/request-ip.ts`
+- Create: `packages/nextion/src/util/utils.ts`
+- Create: `packages/nextion/src/util/get-env.ts`
+- Create: `packages/nextion/src/util/index.ts`
 - Modify: `apps/starter/lib/env.ts` (re-export)
 - Modify: `apps/starter/lib/site-url.ts` (re-export)
 - Modify: `apps/starter/lib/request-ip.ts` (re-export)
@@ -632,7 +632,7 @@ have been migrated.
 
 - [ ] **Step 1: Write failing tests for `getEnv`**
 
-Create `packages/foundation/tests/util/get-env.test.ts`:
+Create `packages/nextion/tests/util/get-env.test.ts`:
 
 ```typescript
 import { describe, it, expect } from "vitest";
@@ -661,7 +661,7 @@ describe("getEnv", () => {
 - [ ] **Step 2: Run the test to confirm it fails**
 
 ```bash
-cd packages/foundation && pnpm test tests/util/get-env.test.ts
+cd packages/nextion && pnpm test tests/util/get-env.test.ts
 ```
 
 Expected: FAIL because `src/util/get-env.ts` does not exist.
@@ -669,8 +669,8 @@ Expected: FAIL because `src/util/get-env.ts` does not exist.
 - [ ] **Step 3: Move and adapt the source files**
 
 Copy each file from `apps/starter/lib/<name>.ts` to
-`packages/foundation/src/util/<name>.ts`. Then create
-`packages/foundation/src/util/get-env.ts`:
+`packages/nextion/src/util/<name>.ts`. Then create
+`packages/nextion/src/util/get-env.ts`:
 
 ```typescript
 export function getEnv(primary: string, ...fallbacks: string[]): string | undefined {
@@ -682,7 +682,7 @@ export function getEnv(primary: string, ...fallbacks: string[]): string | undefi
 }
 ```
 
-Create `packages/foundation/src/util/index.ts`:
+Create `packages/nextion/src/util/index.ts`:
 
 ```typescript
 export { getEnv } from "./get-env";
@@ -706,8 +706,8 @@ For each of the four original files, replace the body of
 `apps/starter/lib/<name>.ts` with:
 
 ```typescript
-// Re-exported from @vinext/foundation. Will be removed in Phase 2.
-export * from "@vinext/foundation/util";
+// Re-exported from @nextion/core. Will be removed in Phase 2.
+export * from "@nextion/core/util";
 ```
 
 - [ ] **Step 6: Verify the starter still runs**
@@ -729,15 +729,15 @@ git commit -m "feat(foundation): move util modules into package"
 ### Task 1.2: Move i18n modules
 
 **Files:**
-- Create: `packages/foundation/src/i18n/config.ts`
-- Create: `packages/foundation/src/i18n/messages.ts`
-- Create: `packages/foundation/src/i18n/index.ts`
+- Create: `packages/nextion/src/i18n/config.ts`
+- Create: `packages/nextion/src/i18n/messages.ts`
+- Create: `packages/nextion/src/i18n/index.ts`
 - Modify: `apps/starter/lib/i18n/config.ts` (re-export)
 - Modify: `apps/starter/lib/i18n/messages.ts` (re-export)
 
 - [ ] **Step 1: Write failing tests**
 
-Create `packages/foundation/tests/i18n/config.test.ts`:
+Create `packages/nextion/tests/i18n/config.test.ts`:
 
 ```typescript
 import { describe, it, expect } from "vitest";
@@ -758,13 +758,13 @@ describe("i18n config", () => {
 - [ ] **Step 2: Run, expect FAIL**
 
 ```bash
-cd packages/foundation && pnpm test tests/i18n/config.test.ts
+cd packages/nextion && pnpm test tests/i18n/config.test.ts
 ```
 
 - [ ] **Step 3: Move source files and create barrel**
 
 Copy `apps/starter/lib/i18n/config.ts` and `messages.ts` to
-`packages/foundation/src/i18n/`. Create `index.ts`:
+`packages/nextion/src/i18n/`. Create `index.ts`:
 
 ```typescript
 export * from "./config";
@@ -783,18 +783,18 @@ git commit -m "feat(foundation): move i18n modules into package"
 ### Task 1.3: Move platform modules
 
 **Files:**
-- Create: `packages/foundation/src/platform/runtime.ts`
-- Create: `packages/foundation/src/platform/cloudflare-runtime.ts`
-- Create: `packages/foundation/src/platform/capabilities.ts`
-- Create: `packages/foundation/src/platform/current.ts`
-- Create: `packages/foundation/src/platform/selection.ts`
-- Create: `packages/foundation/src/platform/index.ts`
+- Create: `packages/nextion/src/platform/runtime.ts`
+- Create: `packages/nextion/src/platform/cloudflare-runtime.ts`
+- Create: `packages/nextion/src/platform/capabilities.ts`
+- Create: `packages/nextion/src/platform/current.ts`
+- Create: `packages/nextion/src/platform/selection.ts`
+- Create: `packages/nextion/src/platform/index.ts`
 - Modify: `apps/starter/lib/platform/*` (re-export each)
-- Create: `packages/foundation/tests/platform/selection.test.ts`
+- Create: `packages/nextion/tests/platform/selection.test.ts`
 
 - [ ] **Step 1: Write failing test for runtime selection**
 
-Create `packages/foundation/tests/platform/selection.test.ts`:
+Create `packages/nextion/tests/platform/selection.test.ts`:
 
 ```typescript
 import { describe, it, expect } from "vitest";
@@ -817,13 +817,13 @@ describe("selectRuntime", () => {
 - [ ] **Step 3: Move source files**
 
 Copy each `apps/starter/lib/platform/<name>.ts` into
-`packages/foundation/src/platform/`. The original files become:
+`packages/nextion/src/platform/`. The original files become:
 
 ```typescript
-export * from "@vinext/foundation/platform";
+export * from "@nextion/core/platform";
 ```
 
-Create `packages/foundation/src/platform/index.ts`:
+Create `packages/nextion/src/platform/index.ts`:
 
 ```typescript
 export * from "./runtime";
@@ -846,22 +846,22 @@ git commit -m "feat(foundation): move platform modules into package"
 ### Task 1.4: Move doctor module
 
 **Files:**
-- Create: `packages/foundation/src/doctor/doctor.ts`
-- Create: `packages/foundation/src/doctor/cli.ts`
-- Create: `packages/foundation/src/doctor/index.ts`
+- Create: `packages/nextion/src/doctor/doctor.ts`
+- Create: `packages/nextion/src/doctor/cli.ts`
+- Create: `packages/nextion/src/doctor/index.ts`
 - Modify: `apps/starter/lib/foundation/doctor.ts` (re-export)
 - Modify: `apps/starter/scripts/foundation-doctor.mjs` (delegate)
-- Create: `packages/foundation/tests/doctor/doctor.test.ts`
+- Create: `packages/nextion/tests/doctor/doctor.test.ts`
 
 - [ ] **Step 1: Write failing test**
 
 ```typescript
 import { describe, it, expect } from "vitest";
-import { runFoundationDoctor } from "../../src/doctor";
+import { runNextionDoctor } from "../../src/doctor";
 
-describe("runFoundationDoctor", () => {
+describe("runNextionDoctor", () => {
   it("reports a missing database binding as an error", async () => {
-    const report = await runFoundationDoctor({
+    const report = await runNextionDoctor({
       env: {} as any,
       runtime: { getBinding: () => undefined } as any,
       sources: [],
@@ -884,16 +884,16 @@ via `tsx` during development.
 
 - [ ] **Step 5: Update starter's `package.json` script**
 
-Change `"foundation:doctor": "node scripts/foundation-doctor.mjs"` to:
+Change `"nextion:doctor": "node scripts/foundation-doctor.mjs"` to:
 
 ```json
-"foundation:doctor": "pnpm --filter @vinext/foundation foundation:doctor"
+"nextion:doctor": "pnpm --filter @nextion/core nextion:doctor"
 ```
 
 - [ ] **Step 6: Verify, commit**
 
 ```bash
-cd apps/starter && pnpm run foundation:doctor
+cd apps/starter && pnpm run nextion:doctor
 git add -A
 git commit -m "feat(foundation): move doctor module into package"
 ```
@@ -905,14 +905,14 @@ git commit -m "feat(foundation): move doctor module into package"
 ### Task 2.1: Move generic Notion helpers
 
 **Files:**
-- Create: `packages/foundation/src/notion/{client,config,blocks,block-text,content-cache,media,generic-source,property-mappers,types,webhook,mappers}.ts`
-- Create: `packages/foundation/src/notion/index.ts`
+- Create: `packages/nextion/src/notion/{client,config,blocks,block-text,content-cache,media,generic-source,property-mappers,types,webhook,mappers}.ts`
+- Create: `packages/nextion/src/notion/index.ts`
 - Modify: `apps/starter/lib/notion/<name>.ts` for each moved file (re-export)
 - Stay in starter: `apps/starter/lib/notion/{posts,movies,movie-*.ts}`
 
 - [ ] **Step 1: Write failing tests for the generic mapper**
 
-Create `packages/foundation/tests/notion/mappers.test.ts`:
+Create `packages/nextion/tests/notion/mappers.test.ts`:
 
 ```typescript
 import { describe, it, expect } from "vitest";
@@ -937,11 +937,11 @@ describe("mapPageToRecord", () => {
 - [ ] **Step 3: Move source files**
 
 Copy each of the 11 generic files from `apps/starter/lib/notion/` to
-`packages/foundation/src/notion/`. The starter's
+`packages/nextion/src/notion/`. The starter's
 `apps/starter/lib/notion/posts.ts`, `movies.ts`, and
 `movie-*.ts` files stay where they are.
 
-Create `packages/foundation/src/notion/index.ts`:
+Create `packages/nextion/src/notion/index.ts`:
 
 ```typescript
 export * from "./client";
@@ -968,7 +968,7 @@ grep -rl "from \"@/lib/notion/<name>\"" --include="*.ts" --include="*.tsx" .
 ```
 
 For each match, change `from "@/lib/notion/<name>"` to
-`from "@vinext/foundation/notion"`. Then delete the re-export at
+`from "@nextion/core/notion"`. Then delete the re-export at
 `apps/starter/lib/notion/<name>.ts`.
 
 - [ ] **Step 5: Run, expect PASS**
@@ -997,9 +997,9 @@ git commit -m "feat(foundation): move generic Notion helpers into package"
 ### Task 3.1: Define the auth factory and types
 
 **Files:**
-- Create: `packages/foundation/src/auth/auth.ts`
-- Create: `packages/foundation/src/auth/index.ts`
-- Create: `packages/foundation/tests/auth/auth.test.ts`
+- Create: `packages/nextion/src/auth/auth.ts`
+- Create: `packages/nextion/src/auth/index.ts`
+- Create: `packages/nextion/tests/auth/auth.test.ts`
 
 - [ ] **Step 1: Write failing test for the auth factory**
 
@@ -1032,7 +1032,7 @@ describe("createAuth", () => {
 - [ ] **Step 3: Implement `createAuth`**
 
 ```typescript
-// packages/foundation/src/auth/auth.ts
+// packages/nextion/src/auth/auth.ts
 import type { AuthConfig } from "../types";
 import { getCurrentRuntime } from "../platform/current";
 import { getViewer } from "./session";
@@ -1080,9 +1080,9 @@ git commit -m "feat(foundation): add createAuth factory"
 ### Task 3.2: Move auth internals and routes
 
 **Files:**
-- Create: `packages/foundation/src/auth/{session,passwords,users,rate-limit,turnstile}.ts`
-- Create: `packages/foundation/src/auth/routes/{login,register,logout,forgot-password,reset-password,verify-email,google,google-callback,viewer,index}.ts`
-- Create: `packages/foundation/src/auth/auth-pages/{login,register,forgot-password,reset-password,index}.{tsx,ts}`
+- Create: `packages/nextion/src/auth/{session,passwords,users,rate-limit,turnstile}.ts`
+- Create: `packages/nextion/src/auth/routes/{login,register,logout,forgot-password,reset-password,verify-email,google,google-callback,viewer,index}.ts`
+- Create: `packages/nextion/src/auth/auth-pages/{login,register,forgot-password,reset-password,index}.{tsx,ts}`
 - Modify: `apps/starter/lib/auth.ts` (re-export)
 - Modify: `apps/starter/lib/{session,passwords,users,auth-rate-limit,turnstile}.ts` (re-export)
 - Modify: `apps/starter/app/api/auth/*` (delegate to package or remove)
@@ -1093,14 +1093,14 @@ git commit -m "feat(foundation): add createAuth factory"
 - [ ] **Step 1: Move each internal module to the package**
 
 For each of `session.ts`, `passwords.ts`, `users.ts`, `rate-limit.ts`,
-`turnstile.ts`: copy to `packages/foundation/src/auth/<name>.ts`. Each
+`turnstile.ts`: copy to `packages/nextion/src/auth/<name>.ts`. Each
 file's imports change from relative `../platform/current` to
 `../../platform/current`.
 
 - [ ] **Step 2: Move each auth API route to the package**
 
 For each `apps/starter/app/api/auth/<name>/route.ts`, create
-`packages/foundation/src/auth/routes/<name>.ts` exporting
+`packages/nextion/src/auth/routes/<name>.ts` exporting
 `GET`/`POST` handlers. The handler bodies are unchanged; imports are
 updated to use the package's own modules.
 
@@ -1108,19 +1108,19 @@ updated to use the package's own modules.
 
 For each of `login/page.tsx`, `register/page.tsx`,
 `forgot-password/page.tsx`, `reset-password/page.tsx`, move to
-`packages/foundation/src/auth/auth-pages/<name>.tsx`. The page module
+`packages/nextion/src/auth/auth-pages/<name>.tsx`. The page module
 uses `definePage` style export. The page entry is now provided by
 `apps/starter` as a thin re-export:
 
 ```typescript
 // apps/starter/app/login/page.tsx
-export { default } from "@vinext/foundation/auth-pages/login";
+export { default } from "@nextion/core/auth-pages/login";
 ```
 
 - [ ] **Step 4: Create `apps/starter/lib/auth.config.ts`**
 
 ```typescript
-import type { AuthConfig } from "@vinext/foundation/types";
+import type { AuthConfig } from "@nextion/core/types";
 
 export const authConfig: AuthConfig = {
   databaseBinding: "DB",
@@ -1188,13 +1188,13 @@ git commit -m "feat(foundation): move auth internals, routes, and pages into pac
 ### Task 4.1: Define the admin shell and nav factory
 
 **Files:**
-- Create: `packages/foundation/src/admin/shell.tsx`
-- Create: `packages/foundation/src/admin/layout.tsx`
-- Create: `packages/foundation/src/admin/sidebar.tsx`
-- Create: `packages/foundation/src/admin/header.tsx`
-- Create: `packages/foundation/src/admin/nav.ts`
-- Create: `packages/foundation/src/admin/index.ts`
-- Create: `packages/foundation/tests/admin/nav.test.ts`
+- Create: `packages/nextion/src/admin/shell.tsx`
+- Create: `packages/nextion/src/admin/layout.tsx`
+- Create: `packages/nextion/src/admin/sidebar.tsx`
+- Create: `packages/nextion/src/admin/header.tsx`
+- Create: `packages/nextion/src/admin/nav.ts`
+- Create: `packages/nextion/src/admin/index.ts`
+- Create: `packages/nextion/tests/admin/nav.test.ts`
 
 - [ ] **Step 1: Write failing test for `createAdminNav`**
 
@@ -1230,7 +1230,7 @@ describe("createAdminNav", () => {
 - [ ] **Step 3: Implement `createAdminNav`**
 
 ```typescript
-// packages/foundation/src/admin/nav.ts
+// packages/nextion/src/admin/nav.ts
 import type { AdminNavItem } from "../types";
 
 export interface AdminNavOptions {
@@ -1270,7 +1270,7 @@ git commit -m "feat(foundation): add admin shell and createAdminNav factory"
 ### Task 4.2: Move generic admin pages
 
 **Files:**
-- Create: `packages/foundation/src/admin/pages/{dashboard,users,settings,account,content-models,delete-button,delete-button-lazy,loading}.{tsx,ts}`
+- Create: `packages/nextion/src/admin/pages/{dashboard,users,settings,account,content-models,delete-button,delete-button-lazy,loading}.{tsx,ts}`
 - Modify: `apps/starter/app/admin/layout.tsx` (use package shell)
 - Modify: `apps/starter/app/admin/page.tsx` (delegate)
 - Modify: `apps/starter/app/admin/users/page.tsx` (delegate)
@@ -1290,7 +1290,7 @@ For each page, the source code moves verbatim except that:
 - [ ] **Step 2: Create `apps/starter/lib/admin/nav.ts`**
 
 ```typescript
-import { createAdminNav } from "@vinext/foundation/admin";
+import { createAdminNav } from "@nextion/core/admin";
 
 export const adminNav = createAdminNav([
   { href: "/admin", labelKey: "admin.nav.dashboard", icon: "Home", order: 10 },
@@ -1307,7 +1307,7 @@ export default adminNav;
 - [ ] **Step 3: Update `apps/starter/app/admin/layout.tsx`**
 
 ```typescript
-import { AdminShell } from "@vinext/foundation/admin";
+import { AdminShell } from "@nextion/core/admin";
 import { adminNav } from "@/lib/admin/nav";
 import { getAdminViewer } from "@/lib/admin-viewer";
 
@@ -1325,7 +1325,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
 ```typescript
 // apps/starter/app/admin/page.tsx
-export { default } from "@vinext/foundation/admin/pages/dashboard";
+export { default } from "@nextion/core/admin/pages/dashboard";
 ```
 
 Repeat for `users`, `settings`, `account`, `content-models`, and
@@ -1362,13 +1362,13 @@ git commit -m "feat(foundation): move admin framework pages into package"
 ### Task 5.1: Move cache, media, storage, email modules
 
 **Files:**
-- Create: `packages/foundation/src/cache/cache-keys.ts` (+ `index.ts`)
-- Create: `packages/foundation/src/media/public-image.ts` (+ `index.ts`)
-- Create: `packages/foundation/src/storage/r2.ts` (+ `index.ts`)
-- Create: `packages/foundation/src/email/resend.ts` (+ `index.ts`)
+- Create: `packages/nextion/src/cache/cache-keys.ts` (+ `index.ts`)
+- Create: `packages/nextion/src/media/public-image.ts` (+ `index.ts`)
+- Create: `packages/nextion/src/storage/r2.ts` (+ `index.ts`)
+- Create: `packages/nextion/src/email/resend.ts` (+ `index.ts`)
 - Modify: `apps/starter/lib/<name>.ts` (re-export)
-- Create: `packages/foundation/tests/cache/cache-keys.test.ts`
-- Create: `packages/foundation/tests/storage/r2.test.ts`
+- Create: `packages/nextion/tests/cache/cache-keys.test.ts`
+- Create: `packages/nextion/tests/storage/r2.test.ts`
 
 - [ ] **Step 1: Write failing test for `buildCacheKey`**
 
@@ -1410,10 +1410,10 @@ git commit -m "feat(foundation): move cache, media, storage, email modules into 
 ### Task 5.2: Move generic API routes
 
 **Files:**
-- Create: `packages/foundation/src/storage/routes/{files,cdn,index}.ts`
-- Create: `packages/foundation/src/media/routes/{notion-media,index}.ts`
-- Create: `packages/foundation/src/worker/routes/{health,content-revalidate,content-prewarm,index}.ts`
-- Create: `packages/foundation/src/notion/routes/{webhook,index}.ts` (webhook moves from `notion/webhook.ts` and is exposed as an API route)
+- Create: `packages/nextion/src/storage/routes/{files,cdn,index}.ts`
+- Create: `packages/nextion/src/media/routes/{notion-media,index}.ts`
+- Create: `packages/nextion/src/worker/routes/{health,content-revalidate,content-prewarm,index}.ts`
+- Create: `packages/nextion/src/notion/routes/{webhook,index}.ts` (webhook moves from `notion/webhook.ts` and is exposed as an API route)
 - Modify: `apps/starter/app/api/files/[...key]/route.ts` (delegate)
 - Modify: `apps/starter/app/api/cdn/[...key]/route.ts` (delegate)
 - Modify: `apps/starter/app/api/notion/media/[...ref]/route.ts` (delegate)
@@ -1430,7 +1430,7 @@ The bodies are copied verbatim; the only changes are imports.
 
 ```typescript
 // apps/starter/app/api/files/[...key]/route.ts
-import { filesRoute } from "@vinext/foundation/storage/routes";
+import { filesRoute } from "@nextion/core/storage/routes";
 export const GET = filesRoute.GET;
 export const POST = filesRoute.POST;
 ```
@@ -1463,22 +1463,22 @@ git commit -m "feat(foundation): move generic API routes into package"
 ### Task 5.3: Move middleware and create worker bootstrap
 
 **Files:**
-- Create: `packages/foundation/src/middleware.ts`
-- Create: `packages/foundation/src/worker/bootstrap.ts`
-- Create: `packages/foundation/src/worker/index.ts`
-- Create: `packages/foundation/tests/worker/bootstrap.test.ts`
+- Create: `packages/nextion/src/middleware.ts`
+- Create: `packages/nextion/src/worker/bootstrap.ts`
+- Create: `packages/nextion/src/worker/index.ts`
+- Create: `packages/nextion/tests/worker/bootstrap.test.ts`
 - Modify: `apps/starter/middleware.ts` (delegate)
 - Modify: `apps/starter/worker/index.ts` (thin call)
 
-- [ ] **Step 1: Write failing test for `createFoundationWorker`**
+- [ ] **Step 1: Write failing test for `createNextionWorker`**
 
 ```typescript
 import { describe, it, expect, vi } from "vitest";
-import { createFoundationWorker } from "../../src/worker/bootstrap";
+import { createNextionWorker } from "../../src/worker/bootstrap";
 
-describe("createFoundationWorker", () => {
+describe("createNextionWorker", () => {
   it("returns a fetch handler", () => {
-    const handler = createFoundationWorker({
+    const handler = createNextionWorker({
       sources: [],
       adminNav: [],
       authConfig: {
@@ -1496,15 +1496,15 @@ describe("createFoundationWorker", () => {
 
 - [ ] **Step 2: Run, expect FAIL**
 
-- [ ] **Step 3: Implement `createFoundationWorker`**
+- [ ] **Step 3: Implement `createNextionWorker`**
 
 ```typescript
-// packages/foundation/src/worker/bootstrap.ts
+// packages/nextion/src/worker/bootstrap.ts
 import type { WorkerOptions, ContentSource, AdminNavItem, AuthConfig } from "../types";
 import { getCurrentRuntime } from "../platform/current";
 import { registerContentSource } from "../content/models";
 import { createAuth } from "../auth/auth";
-import { foundationMiddleware } from "../middleware";
+import { nextionMiddleware } from "../middleware";
 import { revalidateContentModel } from "../content/revalidate";
 import { healthRoute } from "./routes/health";
 import { contentRevalidateRoute } from "./routes/content-revalidate";
@@ -1518,7 +1518,7 @@ export interface Worker {
   fetch: (request: Request, env: any, ctx: any) => Promise<Response>;
 }
 
-export function createFoundationWorker(options: WorkerOptions): Worker {
+export function createNextionWorker(options: WorkerOptions): Worker {
   // Pre-register content sources so their handlers are wired up.
   const sources: ContentSource[] = options.sources;
   const auth = createAuth(options.authConfig);
@@ -1547,7 +1547,7 @@ export function createFoundationWorker(options: WorkerOptions): Worker {
 
   return {
     async fetch(request, env, ctx) {
-      const middlewareResponse = await foundationMiddleware(request, env, options);
+      const middlewareResponse = await nextionMiddleware(request, env, options);
       if (middlewareResponse) return middlewareResponse;
 
       for (const route of routes) {
@@ -1560,7 +1560,7 @@ export function createFoundationWorker(options: WorkerOptions): Worker {
 }
 ```
 
-`foundationMiddleware` reads the cookie, attaches the viewer to a
+`nextionMiddleware` reads the cookie, attaches the viewer to a
 request-scoped context, and either allows the request through or
 returns 401 for protected admin paths.
 
@@ -1569,13 +1569,13 @@ returns 401 for protected admin paths.
 - [ ] **Step 5: Replace `apps/starter/worker/index.ts`**
 
 ```typescript
-import { createFoundationWorker } from "@vinext/foundation/worker";
+import { createNextionWorker } from "@nextion/core/worker";
 import { blogSource, moviesSource } from "../lib/content/models";
 import { adminNav } from "../lib/admin/nav";
 import { authConfig } from "../lib/auth.config";
 import { siteConfig } from "../lib/site/config";
 
-export default createFoundationWorker({
+export default createNextionWorker({
   sources: [blogSource, moviesSource],
   adminNav,
   authConfig,
@@ -1600,7 +1600,7 @@ refactor.
 
 ```bash
 git add -A
-git commit -m "feat(foundation): add createFoundationWorker and middleware"
+git commit -m "feat(foundation): add createNextionWorker and middleware"
 ```
 
 ---
@@ -1610,9 +1610,9 @@ git commit -m "feat(foundation): add createFoundationWorker and middleware"
 ### Task 6.1: Define `defineContentSource`
 
 **Files:**
-- Create: `packages/foundation/src/content/models.ts`
-- Create: `packages/foundation/src/content/index.ts`
-- Create: `packages/foundation/tests/content/models.test.ts`
+- Create: `packages/nextion/src/content/models.ts`
+- Create: `packages/nextion/src/content/index.ts`
+- Create: `packages/nextion/tests/content/models.test.ts`
 
 - [ ] **Step 1: Write failing test**
 
@@ -1639,7 +1639,7 @@ describe("defineContentSource", () => {
 - [ ] **Step 3: Implement `defineContentSource`**
 
 ```typescript
-// packages/foundation/src/content/models.ts
+// packages/nextion/src/content/models.ts
 import type { ContentSource } from "../types";
 
 const registry: ContentSource[] = [];
@@ -1672,9 +1672,9 @@ git commit -m "feat(content): add defineContentSource factory"
 ### Task 6.2: Move content framework modules
 
 **Files:**
-- Create: `packages/foundation/src/content/{revalidate,prewarm,search,search-index,admin-summary}.ts`
+- Create: `packages/nextion/src/content/{revalidate,prewarm,search,search-index,admin-summary}.ts`
 - Modify: `apps/starter/lib/content/<name>.ts` (re-export)
-- Create: `packages/foundation/tests/content/revalidate.test.ts`
+- Create: `packages/nextion/tests/content/revalidate.test.ts`
 
 - [ ] **Step 1: Write failing test for revalidation**
 
@@ -1717,8 +1717,8 @@ Same pattern as prior phases. The revalidate module uses
 
 ```typescript
 // apps/starter/lib/content/models.ts
-import { defineContentSource } from "@vinext/foundation/content";
-import type { ContentSource } from "@vinext/foundation/types";
+import { defineContentSource } from "@nextion/core/content";
+import type { ContentSource } from "@nextion/core/types";
 
 export const blogSource: ContentSource = defineContentSource({
   id: "blog",
@@ -1790,8 +1790,8 @@ import { getNotionClient } from "@/lib/notion/client";
 const post = await queryBlogBySlug(slug);
 
 // after
-import { getNotionClient } from "@vinext/foundation/notion";
-import { getRegisteredSources } from "@vinext/foundation/content";
+import { getNotionClient } from "@nextion/core/notion";
+import { getRegisteredSources } from "@nextion/core/content";
 import { blogSource } from "@/lib/content/models";
 const post = await queryBlogBySlug(slug, blogSource);
 ```
@@ -1818,22 +1818,22 @@ git commit -m "feat(content): convert blog and movies to defineContentSource"
 ### Task 7.1: Build the scaffolder
 
 **Files:**
-- Create: `tools/create-vinext-app/package.json`
-- Create: `tools/create-vinext-app/tsconfig.json`
-- Create: `tools/create-vinext-app/src/index.ts`
-- Create: `tools/create-vinext-app/src/prompt.ts`
-- Create: `tools/create-vinext-app/src/render.ts`
-- Create: `tools/create-vinext-app/src/templates/` (template files)
+- Create: `packages/create-nextion-app/package.json`
+- Create: `packages/create-nextion-app/tsconfig.json`
+- Create: `packages/create-nextion-app/src/index.ts`
+- Create: `packages/create-nextion-app/src/prompt.ts`
+- Create: `packages/create-nextion-app/src/render.ts`
+- Create: `packages/create-nextion-app/src/templates/` (template files)
 
-- [ ] **Step 1: Create `tools/create-vinext-app/package.json`**
+- [ ] **Step 1: Create `packages/create-nextion-app/package.json`**
 
 ```json
 {
-  "name": "create-vinext-app",
+  "name": "create-nextion-app",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "bin": { "create-vinext-app": "./dist/index.js" },
+  "bin": { "create-nextion-app": "./dist/index.js" },
   "scripts": {
     "build": "tsc -p tsconfig.json"
   },
@@ -1845,13 +1845,13 @@ git commit -m "feat(content): convert blog and movies to defineContentSource"
 
 - [ ] **Step 2: Implement the prompt**
 
-`tools/create-vinext-app/src/prompt.ts` uses `@clack/prompts` to ask
+`packages/create-nextion-app/src/prompt.ts` uses `@clack/prompts` to ask
 for project name, default locale, and first content source fields.
 
 - [ ] **Step 3: Implement the render**
 
-`tools/create-vinext-app/src/render.ts` writes:
-- `package.json` with `"@vinext/foundation": "^1.0.0"` dependency
+`packages/create-nextion-app/src/render.ts` writes:
+- `package.json` with `"@nextion/core": "^1.0.0"` dependency
 - `wrangler.jsonc` with binding placeholders
 - `migrations/0001_init.sql` with the auth schema
 - `app/page.tsx` with a placeholder landing page
@@ -1859,15 +1859,15 @@ for project name, default locale, and first content source fields.
 - `lib/content/models.ts` with one `defineContentSource` for the user
 - `lib/site/config.ts` from a template
 - `lib/admin/nav.ts` with the default nav
-- `worker/index.ts` calling `createFoundationWorker`
+- `worker/index.ts` calling `createNextionWorker`
 - `tsconfig.json`, `next.config.ts`, `vite.config.ts`
 - `README.md` with quick-start instructions
 
 - [ ] **Step 4: Verify the scaffolder produces a working project**
 
 ```bash
-pnpm --filter create-vinext-app build
-node tools/create-vinext-app/dist/index.js /tmp/test-vinext
+pnpm --filter create-nextion-app build
+node packages/create-nextion-app/dist/index.js /tmp/test-vinext
 cd /tmp/test-vinext
 pnpm install
 pnpm test
@@ -1881,7 +1881,7 @@ the content list/detail routes defined in the prompt.
 
 ```bash
 git add -A
-git commit -m "feat(tools): add create-vinext-app scaffolder"
+git commit -m "feat(tools): add create-nextion-app scaffolder"
 ```
 
 ### Task 7.2: Configure changesets and the release workflow
@@ -1897,7 +1897,7 @@ git commit -m "feat(tools): add create-vinext-app scaffolder"
 ```json
 {
   "$schema": "https://unpkg.com/@changesets/config@2/schema.json",
-  "changelog": ["@vinext/foundation"],
+  "changelog": ["@nextion/core"],
   "commit": false,
   "fixed": [],
   "linked": [],
@@ -1939,7 +1939,7 @@ name: release
 on:
   push:
     branches: [main]
-    paths: ["packages/foundation/**", ".changeset/**"]
+    paths: ["packages/nextion/**", ".changeset/**"]
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -1954,7 +1954,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm, registry-url: https://npm.pkg.github.com }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vinext/foundation build
+      - run: pnpm --filter @nextion/core build
       - run: pnpm changeset version
       - run: pnpm changeset publish
         env:
@@ -1971,10 +1971,10 @@ jobs:
 mkdir -p .changeset
 cat > .changeset/initial-foundation.md <<'EOF'
 ---
-"@vinext/foundation": major
+"@nextion/core": major
 ---
 
-Initial release of @vinext/foundation as a separate package.
+Initial release of @nextion/core as a separate package.
 EOF
 ```
 
@@ -1987,7 +1987,7 @@ git push
 ```
 
 Confirm that the CI job passes and (on merge to main) the release job
-publishes `@vinext/foundation@1.0.0` to GitHub Packages.
+publishes `@nextion/core@1.0.0` to GitHub Packages.
 
 - [ ] **Step 6: Verify a consumer can install the published package**
 
@@ -1996,7 +1996,7 @@ Create a throwaway directory and run:
 ```bash
 mkdir /tmp/consumer && cd /tmp/consumer
 npm init -y
-npm install @vinext/foundation@1.0.0 --registry=https://npm.pkg.github.com
+npm install @nextion/core@1.0.0 --registry=https://npm.pkg.github.com
 ```
 
 Expect the install to succeed and the package to be importable from
@@ -2009,23 +2009,23 @@ Node.
 ### Task 8.1: Architecture documentation
 
 **Files:**
-- Create: `docs/architecture/foundation-package.md`
+- Create: `docs/architecture/nextion-package.md`
 - Create: `docs/architecture/creating-new-project.md`
 - Create: `docs/architecture/customizing-content-source.md`
-- Create: `docs/architecture/upgrading-foundation.md`
-- Create: `docs/architecture/foundation-changelog.md`
+- Create: `docs/architecture/upgrading-nextion.md`
+- Create: `docs/architecture/nextion-changelog.md`
 
-- [ ] **Step 1: Write `foundation-package.md`**
+- [ ] **Step 1: Write `nextion-package.md`**
 
 This is a near-copy of the spec, trimmed to omit the migration-phase
-details. Link from the existing `content-foundation.md`.
+details. Link from the existing `content-nextion.md`.
 
 - [ ] **Step 2: Write `creating-new-project.md`**
 
 ```markdown
 # Creating A New Project
 
-1. Run `pnpm create vinext-app my-new-site`.
+1. Run `pnpm create nextion-app my-new-site`.
 2. Answer the prompts: project name, default locale, first content
    source fields.
 3. `cd my-new-site && pnpm install`.
@@ -2041,12 +2041,12 @@ Show the process of adding a second content source to an existing
 project: edit `lib/content/models.ts`, add a route under `app/`, and
 optionally add an admin page.
 
-- [ ] **Step 4: Write `upgrading-foundation.md`**
+- [ ] **Step 4: Write `upgrading-nextion.md`**
 
 Show Dependabot config, the auto-merge strategy, and how to test a
 major version upgrade before merging.
 
-- [ ] **Step 5: Write `foundation-changelog.md`**
+- [ ] **Step 5: Write `nextion-changelog.md`**
 
 Link to GitHub Packages release notes. Add a section per release with
 the migration callouts (none for 1.0.0; future releases add notes
@@ -2064,13 +2064,13 @@ git add -A
 git commit -m "docs: add foundation package architecture documents"
 ```
 
-### Task 8.2: Update the existing `content-foundation.md`
+### Task 8.2: Update the existing `content-nextion.md`
 
 - [ ] **Step 1: Add a deprecation note at the top**
 
 > This document describes the original content foundation as it existed
 > before the package split. The new architecture is documented in
-> [`foundation-package.md`](./foundation-package.md). The starter
+> [`nextion-package.md`](./nextion-package.md). The starter
 > application under `apps/starter/` continues to follow both sets of
 > guidance: this document for its content domains, and the new document
 > for the boundary between starter and package.
@@ -2078,8 +2078,8 @@ git commit -m "docs: add foundation package architecture documents"
 - [ ] **Step 2: Commit**
 
 ```bash
-git add docs/architecture/content-foundation.md
-git commit -m "docs(content-foundation): link to package architecture"
+git add docs/architecture/content-nextion.md
+git commit -m "docs(content-nextion): link to package architecture"
 ```
 
 ---
@@ -2108,7 +2108,7 @@ text mandates it.
 
 3. **Type consistency** — `defineContentSource` is used everywhere as
    the factory name; `createAuth` is the auth factory; `createAdminNav`
-   is the nav factory; `createFoundationWorker` is the worker
+   is the nav factory; `createNextionWorker` is the worker
    factory. The `AuthConfig.tables` object uses snake_case keys
    consistent with the D1 schema. `ContentSource.source.fields` is
    a Record, allowing projects to add domain-specific fields.

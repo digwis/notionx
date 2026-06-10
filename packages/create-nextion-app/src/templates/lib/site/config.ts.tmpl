@@ -1,0 +1,28 @@
+// Site-level configuration consumed by the nextion worker. The
+// `navigation.main` array is rendered on the landing page. Add
+// additional entries to wire up more content sources.
+
+import { {{contentSourceVarName}} } from "../content/models.ts";
+
+export const siteConfig = {
+  name: "{{projectName}}",
+  description:
+    "A vinext project backed by @nextion/core and Cloudflare Workers.",
+  defaultLocale: "{{defaultLocale}}",
+  locales: {{supportedLocalesJson}},
+  navigation: {
+    main: [
+      {
+        label: "{{contentSourceNavLabel}}",
+        href: "{{contentSourceListPath}}",
+        modelId: "{{contentSourceId}}",
+      },
+    ],
+    adminHref: "/login",
+  },
+  primarySourceId: "{{contentSourceId}}",
+  sources: [{{contentSourceVarName}}],
+};
+
+export type SiteConfig = typeof siteConfig;
+export default siteConfig;

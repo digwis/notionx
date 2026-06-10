@@ -1,5 +1,5 @@
 ---
-"@vinext/foundation": major
+"@nextion/core": major
 ---
 
-Initial release of `@vinext/foundation` as a separate package.
+Initial release of `@nextion/core` as a separate package.

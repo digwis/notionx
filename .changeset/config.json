@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@2/schema.json",
-  "changelog": ["@vinext/foundation"],
+  "changelog": ["@nextion/core"],
   "commit": false,
   "fixed": [],
   "linked": [],

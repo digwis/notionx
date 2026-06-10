@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "packages/foundation/**"
+      - "packages/nextion/**"
       - ".changeset/**"
       - ".github/workflows/release.yml"
 
@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   release:
-    name: Publish @vinext/foundation
+    name: Publish @nextion/core
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -33,11 +33,11 @@ jobs:
           cache: pnpm
           registry-url: https://npm.pkg.github.com
       - run: pnpm install --frozen-lockfile
-      - name: Build foundation
-        run: pnpm --filter @vinext/foundation build
+      - name: Build nextion
+        run: pnpm --filter @nextion/core build
       - name: Create .npmrc for GitHub Packages
         run: |
-          echo "@vinext:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "@nextion:registry=https://npm.pkg.github.com" >> .npmrc
           echo "always-auth=true" >> .npmrc
       - name: Apply changesets (version + publish + push)
         uses: changesets/action@v1

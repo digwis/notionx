@@ -1,0 +1,45 @@
+// Auth configuration consumed by `createAuth` and the auth helpers
+// from `@nextion/core`. The package uses the `databaseBinding`
+// name to look up the D1 binding on the platform runtime, the
+// `tables` map to know which tables back users, sessions, password
+// resets, email verifications, and rate-limit buckets, and the
+// `sessionCookie` / `roles` / `turnstile` / `email` / `oauth` blocks
+// to bind the corresponding cookie names, role names, captcha
+// settings, email provider, and OAuth client to the auth helpers.
+
+import type { AuthConfig } from "@nextion/core/types";
+
+export const authConfig: AuthConfig = {
+  databaseBinding: "DB",
+  tables: {
+    users: "users",
+    sessions: "sessions",
+    passwordResets: "password_resets",
+    emailVerifications: "email_verifications",
+    authRateLimits: "auth_rate_limits",
+  },
+  sessionCookie: {
+    name: "vinext_session",
+    maxAge: 60 * 60 * 24 * 7,
+    secure: true,
+  },
+  turnstile: {
+    siteKeyEnv: "TURNSTILE_SITE_KEY",
+    secretKeyEnv: "TURNSTILE_SECRET_KEY",
+  },
+  email: {
+    provider: "resend",
+    fromEnv: "RESEND_FROM",
+    apiKeyEnv: "RESEND_API_KEY",
+  },
+  oauth: {
+    google: {
+      clientIdEnv: "GOOGLE_CLIENT_ID",
+      clientSecretEnv: "GOOGLE_CLIENT_SECRET",
+    },
+  },
+  roles: { default: "user", vip: "vip", admin: "admin" },
+  password: { minLength: 8 },
+};
+
+export default authConfig;

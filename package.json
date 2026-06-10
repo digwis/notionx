@@ -7,9 +7,9 @@
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "dev:vinext": "pnpm --filter @vinext/moviebluebook dev:vinext",
-    "foundation:doctor": "pnpm --filter @vinext/foundation foundation:doctor",
-    "tools:build": "pnpm --filter create-vinext-app build",
+    "dev:moviebluebook": "pnpm --filter @nextion/moviebluebook dev",
+    "nextion:doctor": "pnpm --filter @nextion/core doctor",
+    "tools:build": "pnpm --filter create-nextion-app build",
     "prepare": "husky"
   },
   "devDependencies": {
