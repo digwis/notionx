@@ -64,3 +64,6 @@ dist/
 **/out/
 **/.wrangler/
 .playwright-cli/
+
+# moviebluebook: only the Next.js app/ directory is excluded; components/lib/etc remain tracked
+apps/moviebluebook/app/
