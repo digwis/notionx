@@ -1,59 +1,30 @@
-export type NotionSortDirection = "ascending" | "descending";
+// apps/starter/lib/content/model.ts
+//
+// Re-exports the foundation's content-source shape and adds a
+// `defineContentModel` alias for the legacy factory name. New code
+// should prefer `defineContentSource` from `@vinext/foundation/content`,
+// which has the additional side effect of registering the source in
+// the package's module-level registry.
+import {
+  defineContentSource,
+  type ContentModelDefinition,
+  type NotionFieldMap,
+  type NotionSort,
+  type NotionSortDirection,
+} from "@vinext/foundation/content";
 
-export type NotionSort = {
-  property: string;
-  direction: NotionSortDirection;
-};
+export type { ContentModelDefinition, NotionFieldMap, NotionSort, NotionSortDirection };
 
-export type NotionFieldMap = Record<
-  string,
-  string | readonly string[]
->;
-
-export type ContentModelDefinition<
-  TFields extends NotionFieldMap = NotionFieldMap,
-> = {
-  id: string;
-  kind: "article" | "catalog" | "directory";
-  visibility: {
-    public: boolean;
-    admin: boolean;
-  };
-  source: {
-    type: "notion";
-    tokenEnv: "NOTION_TOKEN";
-    dataSourceEnv: string;
-    defaultDataSourceId?: string;
-    fields: TFields;
-    query: {
-      pageSize: number;
-      sorts?: readonly NotionSort[];
-      filterProperties?: readonly string[];
-    };
-  };
-  routes: {
-    listPath: string;
-    detailPath: string;
-    detailParam: string;
-    publicApiPath?: string;
-  };
-  ui: {
-    name: string;
-    pluralName: string;
-    navLabel: string;
-    listTitle: string;
-    listDescription: string;
-    emptyState: string;
-  };
-  capabilities: {
-    richBlocks: boolean;
-    coverImages: boolean;
-    gatedAssets: boolean;
-  };
-};
-
+/**
+ * Legacy alias for `defineContentSource`. Returns the value unchanged
+ * without registering it in the package's content-source registry.
+ * Kept for existing call sites (e.g. the generic Notion tests that
+ * build throwaway models); new code should use
+ * `defineContentSource` from `@vinext/foundation/content` so the
+ * source becomes discoverable.
+ */
 export function defineContentModel<const TFields extends NotionFieldMap>(
   model: ContentModelDefinition<TFields>
-) {
-  return model;
+): ContentModelDefinition<TFields> {
+  return defineContentSource(model);
 }

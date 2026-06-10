@@ -1,6 +1,17 @@
-import { defineContentModel } from "./model.ts";
+// apps/starter/lib/content/models.ts
+//
+// Concrete content models exposed by the starter. Each model is
+// registered globally via the foundation's `defineContentSource`
+// factory; the local `contentModels` array, `getContentModel` and
+// the public/admin helpers remain available as a thin compatibility
+// layer for the many callers that read them.
+import {
+  defineContentSource,
+  getRegisteredSource,
+  type ContentSource,
+} from "@vinext/foundation/content";
 
-export const blogContentModel = defineContentModel({
+export const blogContentModel: ContentSource = defineContentSource({
   id: "blog",
   kind: "article",
   visibility: {
@@ -52,7 +63,7 @@ export const blogContentModel = defineContentModel({
 export const DEFAULT_NOTION_MOVIE_TRANSLATIONS_DATA_SOURCE_ID =
   "0a98baad-7d0b-451a-ac83-34f7b7c4b53b";
 
-export const movieTranslationsContentModel = defineContentModel({
+export const movieTranslationsContentModel: ContentSource = defineContentSource({
   id: "movie-translations",
   kind: "directory",
   visibility: {
@@ -101,7 +112,7 @@ export const movieTranslationsContentModel = defineContentModel({
   },
 });
 
-export const movieContentModel = defineContentModel({
+export const movieContentModel: ContentSource = defineContentSource({
   id: "movies",
   kind: "catalog",
   visibility: {
@@ -152,6 +163,13 @@ export const movieContentModel = defineContentModel({
   },
 });
 
+/**
+ * Local view of all content sources. The order is fixed
+ * (`[blog, movies, movie-translations]`) so existing test snapshots
+ * and downstream consumers see a stable enumeration. The global
+ * foundation registry (`getRegisteredSources()`) is the source of
+ * truth for source discovery.
+ */
 export const contentModels = [
   blogContentModel,
   movieContentModel,
@@ -161,7 +179,7 @@ export const contentModels = [
 export type ContentModelId = (typeof contentModels)[number]["id"];
 
 export function getContentModel(id: ContentModelId) {
-  return contentModels.find((model) => model.id === id);
+  return getRegisteredSource(id);
 }
 
 export function getPublicContentModels() {
