@@ -2,7 +2,7 @@
 
 > **此文档已不再作为权威来源。** 它描述的是 Foundation 包拆分**之前**的
 > 内容基础结构。新的架构文档已经迁移到
-> [`foundation-package.md`](./foundation-package.md)。位于 `apps/starter/`
+> [`foundation-package.md`](./foundation-package.md)。位于 `apps/moviebluebook/`
 > 的 starter 应用同时遵循两份文档：本文件（针对其内容域），以及新文档
 > （针对 starter 与 package 之间的边界）。
 

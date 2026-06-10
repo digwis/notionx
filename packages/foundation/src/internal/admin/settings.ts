@@ -4,7 +4,7 @@
 // Internal to the package — not exposed via package.json exports. The
 // auth helpers (turnstile.ts, users.ts) call into the read functions;
 // admin pages in the starter import the update functions through a
-// re-export shim at `apps/starter/lib/settings.ts`.
+// re-export shim at `apps/moviebluebook/lib/settings.ts`.
 
 import { cache } from "react";
 import { workerEnv } from "../../util/env";

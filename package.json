@@ -7,7 +7,7 @@
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "dev:vinext": "pnpm --filter @vinext/starter dev:vinext",
+    "dev:vinext": "pnpm --filter @vinext/moviebluebook dev:vinext",
     "foundation:doctor": "pnpm --filter @vinext/foundation foundation:doctor",
     "tools:build": "pnpm --filter create-vinext-app build",
     "prepare": "husky"
@@ -20,5 +20,10 @@
     "husky": "^9",
     "typescript": "^5",
     "typescript-eslint": "^8"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "vinext@0.1.1": "patches/vinext@0.1.1.patch"
+    }
   }
 }

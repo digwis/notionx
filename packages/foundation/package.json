@@ -80,7 +80,8 @@
     "@notionhq/client": "^5.22.0",
     "clsx": "^2.1.1",
     "resend": "^6.12.4",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "vinext": "^0.1.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4",

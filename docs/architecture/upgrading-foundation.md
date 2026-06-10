@@ -72,13 +72,13 @@ updates:
 
 ## 3. 升级前的金丝雀测试
 
-Foundation 仓库内的 `apps/starter` 是所有消费项目的**金丝雀**：它跑的是仓库
+Foundation 仓库内的 `apps/moviebluebook` 是所有消费项目的**金丝雀**：它跑的是仓库
 当前 head 的代码，而不是已发布的版本。在合入一个会影响 starter 的 PR 之前：
 
 ```bash
 # 在 monorepo 根
 pnpm --filter @vinext/foundation test
-pnpm --filter @vinext/starter test
+pnpm --filter @vinext/moviebluebook test
 pnpm --filter @vinext/foundation lint
 pnpm --filter @vinext/foundation typecheck
 ```
@@ -86,13 +86,13 @@ pnpm --filter @vinext/foundation typecheck
 要点：
 
 - `pnpm --filter @vinext/foundation test` 验证包内的单元测试（vitest）；
-- `pnpm --filter @vinext/starter test` 验证 starter 的 node:test 回归（路由、
+- `pnpm --filter @vinext/moviebluebook test` 验证 moviebluebook 的 node:test 回归（路由、
   Webhook、内容模型、admin 行为）；
 - `pnpm --filter @vinext/foundation foundation:doctor` 在 dev 环境跑一次，确
   认 bindings / env 配置没有漂移。
 
 外部消费项目在收到 major Dependabot PR 后，可以临时把
-`@vinext/foundation` 指向 monorepo 的 `apps/starter` 旁边的工作区构建产物（例
+`@vinext/foundation` 指向 monorepo 的 `apps/moviebluebook` 旁边的工作区构建产物（例
 如通过 `pnpm pack`），或者直接 cherry-pick 该 PR 到自己的 fork，跑自己的回
 归套件。
 

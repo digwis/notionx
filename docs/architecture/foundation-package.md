@@ -80,7 +80,7 @@ vinext-monorepo/
     └── ci.yml             # 全量 build + test
 ```
 
-`apps/starter` 是脚手架的"参考实现"——它示范如何用本包搭一个真实的 vinext 项目。
+`apps/moviebluebook` 是脚手架的"参考实现"——它示范如何用本包搭一个真实的 vinext 项目。
 新建项目时它会被 `tools/create-vinext-app` 重新生成。
 
 ## 七层依赖分层
@@ -106,7 +106,7 @@ vinext-monorepo/
 - `content` 不能引用 `auth` / `admin` / `worker`；
 - `auth` 不能引用 `admin` / `worker`；
 - `admin` 不能引用 `worker`；
-- 包内任何模块都不能引用 `apps/starter` 或 `@vinext/foundation` 的内部路径。
+- 包内任何模块都不能引用 `apps/moviebluebook` 或 `@vinext/foundation` 的内部路径。
 
 包通过 `package.json` 的 `exports` 字段只暴露文档化的子路径；内部模块被放到
 `src/internal/` 下，外部即使想引用也取不到。
@@ -155,7 +155,7 @@ vinext-monorepo/
   `buildCacheKey`、`getRevalidationPaths`、`runFoundationDoctor`、
   `createFoundationWorker` 等关键边界。
 - **Starter 回归**：Starter 自身的 `node:test` 套件覆盖路由、Webhook、内容模型
-  与 admin 行为；在 monorepo 内的 `pnpm --filter @vinext/starter test` 必须保持
+  与 admin 行为；在 monorepo 内的 `pnpm --filter @vinext/moviebluebook test` 必须保持
   绿色。
 - **CI 工作流** (`.github/workflows/ci.yml`)：在 push 与 PR 上运行
   `pnpm -r build`、`pnpm -r lint`、`pnpm -r typecheck`、`pnpm -r test`。

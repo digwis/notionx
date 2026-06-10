@@ -9,7 +9,7 @@
 
 ## 1.0.0 — 初始发布
 
-首次将 Foundation 从 `apps/starter` 拆出，独立发布为 `@vinext/foundation`。
+首次将 Foundation 从 `apps/moviebluebook` 拆出，独立发布为 `@vinext/foundation`。
 本节为占位说明：1.0.0 没有迁移 callout，**没有**消费方需要做额外动作。
 
 ### 包含

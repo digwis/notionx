@@ -6,7 +6,7 @@
 
 ## 真实场景
 
-`apps/starter` 已经注册了 `blog` 和 `movies` 两个内容源。下面以"再加一个
+`apps/moviebluebook` 已经注册了 `blog` 和 `movies` 两个内容源。下面以"再加一个
 `podcasts` 播客目录"为例演示完整的改包路径：模型、路由、可选 Admin 入口、
 search index 目标。每一节都给出真实可用的 diff 片段。
 
@@ -18,11 +18,11 @@ search index 目标。每一节都给出真实可用的 diff 片段。
 
 ## 2. 写模型（`lib/content/models.ts`）
 
-打开 `apps/starter/lib/content/models.ts`，在已有 `blogContentModel` 旁边追加
+打开 `apps/moviebluebook/lib/content/models.ts`，在已有 `blogContentModel` 旁边追加
 一个 `podcastContentModel`：
 
 ```ts
-// apps/starter/lib/content/models.ts
+// apps/moviebluebook/lib/content/models.ts
 import {
   defineContentSource,
   getRegisteredSource,
@@ -97,13 +97,13 @@ app/api/podcasts/
 └── [slug]/route.ts    # GET：返回单个播客详情
 ```
 
-`route.ts` 的形状与 `apps/starter/app/api/posts/route.ts` 完全一致，只是把
+`route.ts` 的形状与 `apps/moviebluebook/app/api/posts/route.ts` 完全一致，只是把
 `getRegisteredSource("blog")` 换成 `getRegisteredSource("podcasts")`。
 
 ## 5. （可选）Admin 入口
 
 如果想让 sidebar 出现一个"播客审核"项，编辑
-`apps/starter/lib/admin/nav.ts`：
+`apps/moviebluebook/lib/admin/nav.ts`：
 
 ```ts
 import { createAdminNav } from "@vinext/foundation/admin";
@@ -149,7 +149,7 @@ export const adminNav = createAdminNav([
 最小检查清单：
 
 ```bash
-pnpm --filter @vinext/starter test     # 路由 / 模型 / webhook 回归
+pnpm --filter @vinext/moviebluebook test     # 路由 / 模型 / webhook 回归
 pnpm dev                                # 打开 /podcasts 看渲染
 ```
 

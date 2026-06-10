@@ -3,7 +3,7 @@
 // GET /api/notion/media/[...ref] - Notion-hosted media proxy with
 // edge cache, R2 fanout, and image transformation.
 //
-// Originally lives at `apps/starter/app/api/notion/media/[...ref]/route.ts`.
+// Originally lives at `apps/moviebluebook/app/api/notion/media/[...ref]/route.ts`.
 // The package exports a route object that exposes both a Next.js
 // handler (the `GET` field) and a worker-friendly `handle` function.
 //

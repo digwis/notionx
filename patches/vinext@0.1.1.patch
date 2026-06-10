@@ -1,0 +1,82 @@
+diff --git a/dist/entries/app-rsc-manifest.js b/dist/entries/app-rsc-manifest.js
+index 51e2e8b..0571015 100644
+--- a/dist/entries/app-rsc-manifest.js
++++ b/dist/entries/app-rsc-manifest.js
+@@ -49,7 +49,6 @@ function createImportAllocator() {
+ function registerRouteModules(routes, imports) {
+ 	for (const route of routes) {
+ 		if (route.pagePath) imports.getLazyLoaderVar(route.pagePath);
+-		if (route.routePath) imports.getLazyLoaderVar(route.routePath);
+ 		for (const layout of route.layouts) imports.getImportVar(layout);
+ 		for (const tmpl of route.templates) imports.getImportVar(tmpl);
+ 		if (route.loadingPath) imports.getImportVar(route.loadingPath);
+@@ -135,7 +134,7 @@ ${interceptEntries.join(",\n")}
+ 		const layoutErrorVars = (route.layoutErrorPaths || []).map((ep) => ep ? imports.getImportVar(ep) : "null");
+ 		const errorVars = (route.errorPaths ?? []).map((ep) => imports.getImportVar(ep));
+ 		const loadPageField = route.pagePath ? imports.getLazyLoaderVar(route.pagePath) : "null";
+-		const loadRouteHandlerField = route.routePath ? imports.getLazyLoaderVar(route.routePath) : "null";
++		const loadRouteHandlerField = route.routePath ? `(async () => (await import.meta.viteRsc.loadModule("ssr", "index")).loadAppRouteHandler(${JSON.stringify(route.pattern)}))` : "null";
+ 		return `  {
+     __buildTimeClassifications: __VINEXT_CLASS(${routeIdx}), // evaluated once at module load
+     __buildTimeReasons: __classDebug ? __VINEXT_CLASS_REASONS(${routeIdx}) : null,
+diff --git a/dist/entries/app-ssr-entry.js b/dist/entries/app-ssr-entry.js
+index c0a7605..270e5e5 100644
+--- a/dist/entries/app-ssr-entry.js
++++ b/dist/entries/app-ssr-entry.js
+@@ -1,4 +1,5 @@
+ import { resolveRuntimeEntryModule } from "./runtime-entry-module.js";
++import { normalizePathSeparators } from "../utils/path.js";
+ //#region src/entries/app-ssr-entry.ts
+ /**
+ * Generate the virtual SSR entry module.
+@@ -10,15 +11,36 @@ import { resolveRuntimeEntryModule } from "./runtime-entry-module.js";
+ * entry also re-exports selected Pages server entry hooks from
+ * `virtual:vinext-server-entry` so the RSC bundle can access Pages Router
+ * route metadata and fallback dispatchers via `import("./ssr/index.js")`.
++*
++* Route handlers (for example `app/api/<segment>/route.ts`) are loaded on demand from the
++* RSC environment via `import.meta.viteRsc.loadModule("ssr", "index")` to
++* avoid the `react-server` condition being applied to modules that need
++* `react-dom/server` to construct NextResponse / Response bodies.
+ */
+-function generateSsrEntry(hasPagesDir = false) {
++function generateSsrEntry(routes = [], hasPagesDir = false) {
+ 	const entryPath = resolveRuntimeEntryModule("app-ssr-entry");
++	const routeHandlerImports = [];
++	const routeHandlerEntries = [];
++	let routeHandlerIndex = 0;
++	for (const route of routes) {
++		if (!route.routePath) continue;
++		const routeHandlerVar = `__appRouteHandler_${routeHandlerIndex++}`;
++		routeHandlerImports.push(`import * as ${routeHandlerVar} from ${JSON.stringify(normalizePathSeparators(route.routePath))};`);
++		routeHandlerEntries.push(`  ${JSON.stringify(route.pattern)}: ${routeHandlerVar},`);
++	}
+ 	return `
++${routeHandlerImports.join("\n")}
+ export * from ${JSON.stringify(entryPath)};
+ export { default } from ${JSON.stringify(entryPath)};
++const __appRouteHandlers = {
++${routeHandlerEntries.join("\n")}
++};
++export function loadAppRouteHandler(pattern) {
++	return __appRouteHandlers[pattern] ?? null;
++}
+ ${hasPagesDir ? `
+ export { handleApiRoute, pageRoutes, renderPage } from "virtual:vinext-server-entry";
+ ` : ""}`;
+ }
+ //#endregion
+ export { generateSsrEntry };
+diff --git a/dist/index.js b/dist/index.js
+index 0b44f35..77474ae 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1031,7 +1031,7 @@ function vinext(options = {}) {
+ 				}
+ 				if (id === RESOLVED_ROOT_PARAMS) return generateRootParamsModule((hasAppDir ? await appRouter(appDir, nextConfig?.pageExtensions, fileMatcher) : []).flatMap((route) => route.rootParamNames ?? []));
+ 				if (id === RESOLVED_CACHE_ADAPTERS) return generateCacheAdaptersModule(options.cache);
+-				if (id === RESOLVED_APP_SSR_ENTRY && hasAppDir) return generateSsrEntry(hasPagesDir);
++				if (id === RESOLVED_APP_SSR_ENTRY && hasAppDir) return generateSsrEntry(await appRouter(appDir, nextConfig?.pageExtensions, fileMatcher), hasPagesDir);
+ 				if (id === RESOLVED_APP_BROWSER_ENTRY && hasAppDir) {
+ 					const graph = await appRouteGraph(appDir, nextConfig?.pageExtensions, fileMatcher);
+ 					return generateBrowserEntry(graph.routes, graph.routeManifest);

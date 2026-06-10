@@ -5,7 +5,7 @@
 // Internal to the package — not exposed via package.json exports.
 // The auth helpers (users.ts) call `isAdminEmail` to decide whether a
 // newly registered user gets the `admin` role. The starter still
-// re-exports this through `apps/starter/lib/admin.ts` for backward
+// re-exports this through `apps/moviebluebook/lib/admin.ts` for backward
 // compatibility with its own admin pages and tests.
 
 import { getAppSettings } from "./settings";
