@@ -71,6 +71,35 @@ packages:
 
 Then re-run `pnpm install` so pnpm picks up the local link.
 
+## Customize the look
+
+Every component reads its colors, radius, and shadow from CSS
+variables in `app/globals.css`. The default palette is neutral
+black/white. **Change those variables to re-skin the entire UI — no
+component code needs to change.**
+
+```css
+/* app/globals.css — :root { ... } */
+--primary: 222 47% 11%;       /* ← change this to re-color buttons, badges, links */
+--radius: 0.5rem;             /* ← bump to 1rem for chunky/pillowy UI */
+--background: 0 0% 100%;      /* ← page background */
+--foreground: 0 0% 3.9%;      /* ← main text */
+--font-sans: "Inter", sans-serif; /* swap in your own typeface */
+```
+
+Common recipes:
+
+| Look | `--primary` | `--radius` | Notes |
+|---|---|---|---|
+| Linear-style (sharp, blue-gray) | `220 13% 18%` | `0.375rem` | tight spacing, no shadows |
+| Stripe-style (purple) | `240 75% 60%` | `0.5rem` | generous padding |
+| Vercel-style (monochrome) | `0 0% 9%` | `0.5rem` | what you have now |
+| Claude-style (warm orange) | `16 53% 58%` | `0.375rem` | pair with Lora font |
+| Playful / kid-friendly | `340 80% 55%` | `1.5rem` | add a display font |
+
+For dark mode, the same tokens have a `.dark { ... }` override
+block right below `:root` — keep them in sync.
+
 ## UI components (shadcn/ui)
 
 The starter ships with these primitives in `components/ui/`, ready to
