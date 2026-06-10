@@ -11,3 +11,9 @@ export type {
 export { defineContentSource } from "./content/models";
 export { createFoundationWorker } from "./worker/bootstrap";
 export { runFoundationDoctor } from "./doctor";
+export type {
+  DoctorFinding,
+  RuntimeLike,
+  RunFoundationDoctorOptions,
+  FoundationDoctorFindingsReport,
+} from "./doctor";

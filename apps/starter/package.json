@@ -18,7 +18,7 @@
     "deploy:worker": "npx vinext deploy",
     "deploy:check": "node scripts/check-remote-schema.mjs",
     "deploy:remote": "npm run migrate:remote && npm run deploy:worker && npm run deploy:check",
-    "foundation:doctor": "node scripts/foundation-doctor.mjs"
+    "foundation:doctor": "pnpm --filter @vinext/foundation foundation:doctor"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

@@ -4,6 +4,7 @@ import {
   buildFoundationDoctorReport,
   formatFoundationDoctorReport,
 } from "./doctor.ts";
+import { contentModels } from "../content/models.ts";
 
 const wranglerConfig = {
   vars: {
@@ -24,6 +25,7 @@ test("foundation doctor reports a configured Cloudflare foundation", () => {
       NOTION_WEBHOOK_VERIFICATION_TOKEN: "webhook-secret",
     },
     wranglerConfig,
+    models: contentModels,
   });
 
   assert.equal(report.overall.status, "ok");
@@ -108,6 +110,7 @@ test("foundation doctor formatter omits secret values", () => {
       NOTION_DATA_SOURCE_ID: "blog-source",
     },
     wranglerConfig,
+    models: contentModels,
   });
 
   const output = formatFoundationDoctorReport(report);
