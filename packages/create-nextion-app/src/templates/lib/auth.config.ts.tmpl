@@ -1,5 +1,5 @@
 // Auth configuration consumed by `createAuth` and the auth helpers
-// from `@nextion/core`. The package uses the `databaseBinding`
+// from `@notionx/core`. The package uses the `databaseBinding`
 // name to look up the D1 binding on the platform runtime, the
 // `tables` map to know which tables back users, sessions, password
 // resets, email verifications, and rate-limit buckets, and the
@@ -7,7 +7,7 @@
 // to bind the corresponding cookie names, role names, captcha
 // settings, email provider, and OAuth client to the auth helpers.
 
-import type { AuthConfig } from "@nextion/core/types";
+import type { AuthConfig } from "@notionx/core/types";
 
 export const authConfig: AuthConfig = {
   databaseBinding: "DB",

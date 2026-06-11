@@ -1,4 +1,4 @@
-// Public surface for the @nextion/core/auth subpath.
+// Public surface for the @notionx/core/auth subpath.
 //
 // The `createAuth` factory and its `Auth` interface are the public API.
 // Internal helpers (session, users, rate-limit, turnstile, passwords)

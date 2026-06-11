@@ -120,26 +120,22 @@ function parseArgs(argv: string[]): CliOverrides {
 }
 
 function printHelp(): void {
-  console.log(`create-nextion-app — scaffold a new vinext project
+  console.log(`@notionx/create-nextion-app — scaffold a new vinext project
 
 Usage:
-  create-nextion-app [target-dir] [flags]
+  @notionx/create-nextion-app [target-dir] [flags]
 
 Flags:
-  --project-name <name>        Project name (kebab/lower case)
-  --target-dir <dir>           Output directory
-  --default-locale <locale>    Default locale (default: en)
-  --supported-locales <list>   Comma- or space-separated locales (default: en)
-  --content-id <id>            First content source id (default: blog)
-  --content-title <title>      First content source title (default: Blog)
-  --fields <names>             Field names, comma-separated
-                               (default: "Title, Slug, Description")
+  --project-name <name>        Project name (kebab/lower case).
+                               Other settings use sensible defaults
+                               (locale=en, content source=blog, etc.).
+  --target-dir <dir>           Output directory (default: ./<project-name>)
+  --nextion-source <spec>      Override the @notionx/core dep value
+                               (default: "workspace:*"). Examples:
+                                 "link:../vinext-monorepo/packages/nextion"
+                                 "file:../vinext-monorepo/packages/nextion"
+                                 "^0.1.0" (for published consumption)
   -y, --yes                    Skip the confirmation prompt
-      --nextion-source <spec>    Override the @nextion/core dep value
-                                   (default: "workspace:*"). Examples:
-                                     "link:../vinext-monorepo/packages/nextion"
-                                     "file:../vinext-monorepo/packages/nextion"
-                                     "^1.0.0" (for published consumption)
   -h, --help                   Print this help
 `);
 }
@@ -174,22 +170,18 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
 
 /**
  * Entry point. Resolves answers from CLI flags first; falls back to
- * the interactive prompt when the user did not pass `--yes`.
+ * the interactive prompt when the user did not pass `--yes` and
+ * didn't supply the project name on the command line.
  */
 export async function gatherAnswers(
   argv: string[] = process.argv
 ): Promise<Answers> {
   const cli = parseArgs(argv);
 
-  // If `--yes` was passed or the caller provided every required
-  // override, build answers without ever invoking the prompt.
-  const allOverrides = Boolean(
-    cli.projectName &&
-      cli.targetDir &&
-      cli.defaultLocale &&
-      cli.contentId
-  );
-  if (cli.yes || allOverrides) {
+  // If `--yes` was passed, or the caller supplied at least a project
+  // name (everything else has sensible defaults), build answers
+  // without ever invoking the prompt.
+  if (cli.yes || cli.projectName) {
     return applyDefaults(cli, argv);
   }
 
@@ -197,7 +189,7 @@ export async function gatherAnswers(
   // TTY-less pipe, abort with a friendly hint instead of hanging.
   if (!process.stdin.isTTY) {
     p.log.warn(
-      "No TTY detected. Pass --yes (or the relevant flags) to run non-interactively. See --help."
+      "No TTY detected. Pass --project-name <name> (or --yes) to run non-interactively. See --help."
     );
     p.outro("Aborting.");
     throw new Error("non-interactive without flags");

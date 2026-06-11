@@ -1,4 +1,4 @@
-// Public surface for the @nextion/core/notion/routes subpath.
+// Public surface for the @notionx/core/notion/routes subpath.
 //
 // The webhook route is a factory function that takes the
 // revalidation logic as a parameter. The starter wires its

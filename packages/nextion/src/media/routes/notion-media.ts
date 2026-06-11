@@ -370,7 +370,7 @@ export const GET = notionMediaRoute.GET;
 
 /**
  * Worker-friendly single-arg handler. Used by the Cloudflare Workers
- * bootstrap in `@nextion/core/worker`. Equivalent to
+ * bootstrap in `@notionx/core/worker`. Equivalent to
  * `notionMediaRoute.handle`.
  */
 export async function notionMediaRouteHandle(

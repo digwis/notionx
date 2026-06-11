@@ -1,53 +1,120 @@
-# create-nextion-app
+# @notionx/create-nextion-app
 
-Scaffolds a new [vinext](https://github.com/your-username/vinext) project that
-consumes `@nextion/core`. The generated project is bootable on Cloudflare
-Workers + D1 + R2 + Cloudflare Images, ships a single Notion-backed content
-source, and is wired to the nextion's auth, admin, and health routes.
+Scaffold a new [vinext](https://github.com/digwis/nextion) project that consumes
+[`@notionx/core`](https://www.npmjs.com/package/@notionx/core). The generated
+project runs on **Cloudflare Workers + D1 + R2**, ships a single
+**Notion-backed** content source, and comes pre-wired with auth, admin, and
+health routes — all from one command.
 
-## Usage (monorepo)
+> **TL;DR**
+> ```bash
+> npx @notionx/create-nextion-app my-app
+> cd my-app
+> pnpm install
+> pnpm dev
+> ```
 
-From the vinext monorepo root:
+---
 
-```bash
-pnpm --filter create-nextion-app build
-node packages/create-nextion-app/dist/index.js /tmp/my-app
-```
+## Quick start
 
-The interactive prompt asks for:
-
-- Project name + target directory
-- Default + supported locales
-- A first content source id, title, and field names
-
-The renderer writes the project to disk, then prints the next-step commands
-(`pnpm install`, `cp .dev.vars.example .dev.vars`, `pnpm dev`).
-
-## Development
-
-Run from source (no build step required):
+### One command, one question
 
 ```bash
-pnpm --filter create-nextion-app dev -- /tmp/my-app
+npx @notionx/create-nextion-app my-app
 ```
 
-## Layout
+The CLI asks exactly two things — your **project name** and a final
+**confirmation**. Everything else (locale, content-source shape, etc.) uses
+sensible defaults that you can edit in the generated project.
+
+### Skip prompts entirely
+
+```bash
+npx @notionx/create-nextion-app my-app --yes
+```
+
+### Custom install location
+
+```bash
+npx @notionx/create-nextion-app ./projects/my-app
+```
+
+### Pin a specific `@notionx/core` version
+
+```bash
+# In a published project (no monorepo workspace):
+npx @notionx/create-nextion-app my-app --nextion-source "^0.1.0"
+
+# In a monorepo that also hosts the @notionx/core source:
+npx @notionx/create-nextion-app my-app \
+  --nextion-source "link:../vinext-monorepo/packages/nextion"
+```
+
+## What gets generated
 
 ```
-src/
-  index.ts          CLI entry point
-  prompt.ts         @clack/prompts flow → typed Answers
-  render.ts         Filesystem writer; copies templates, interpolates {{tokens}}
-  templates/        The generated project's source files
+my-app/
+├── app/                        # App-Router pages
+│   ├── page.tsx                # landing page
+│   ├── login/page.tsx          # email/password login
+│   └── api/                    # health + auth endpoints
+├── worker/index.ts             # createNextionWorker + vinext fallthrough
+├── lib/                        # site/auth/admin/content config
+├── components/ui/              # shadcn/ui primitives
+├── migrations/0001_init.sql    # auth schema
+├── wrangler.jsonc              # D1 + KV + R2 + Assets bindings
+├── .dev.vars.example           # secret keys placeholder
+└── package.json
 ```
 
-Templates use `{{token}}` placeholders. The render step substitutes them from
-the `TokenMap` built in `render.ts`. Files with a `.tmpl` extension are
-rendered then written without the suffix; everything else is copied verbatim.
+## Interactive provisioning
 
-## Adding a new template
+When the CLI finishes writing files, it offers to provision your
+**Cloudflare**, **Notion**, **Turnstile**, **Resend**, and **Google OAuth**
+accounts in one shot. If you accept, it will:
 
-1. Drop the file under `src/templates/` (use `.tmpl` for interpolated files).
-2. If you need new tokens, extend the `TokenMap` and the `buildTokenMap` helper
-   in `render.ts`.
-3. Rebuild with `pnpm --filter create-nextion-app build`.
+1. Verify your `wrangler` login (and offer to install it / upgrade to v4 if not)
+2. Create the **D1** database, **KV** namespace, and **R2** bucket
+3. Patch `wrangler.jsonc` and `.dev.vars` with the resulting IDs
+4. Apply D1 migrations to your local Miniflare store
+5. Create a **Notion** data source with seeded sample pages
+6. Optionally configure **Turnstile**, **Resend**, and **Google OAuth**
+
+If you decline, the project is fully scaffolded but you'll need to wire
+resources manually — see the README generated inside the project.
+
+## Requirements
+
+- **Node.js 22+** (`node --version`)
+- **pnpm 9+** for the generated project (`npm install -g pnpm`)
+- A **Cloudflare** account (free tier is fine) — only needed if you accept provisioning
+- A **Notion** integration token — same
+
+## Flags
+
+| Flag | Description |
+|---|---|
+| `[target-dir]` | Output directory (positional, default: `./<project-name>`) |
+| `--project-name <name>` | Project name (kebab/lower case). Other settings use defaults. |
+| `--target-dir <dir>` | Output directory (default: `./<project-name>`) |
+| `--nextion-source <spec>` | `@notionx/core` dependency value (default: `workspace:*`) |
+| `-y`, `--yes` | Skip the confirmation prompt |
+| `-h`, `--help` | Print help |
+
+## What is `@notionx/core`?
+
+The runtime framework. New projects get it as a dependency; the generated
+code uses:
+
+- `createNextionWorker(...)` — the Cloudflare Worker entry
+- `defineContentSource(...)` — a Notion-backed content source
+- `createAuth(authConfig)` — email/password + OAuth login
+- `AdminExtension` — server-rendered admin shell
+- `WorkerOptions` — wrangler bindings, secrets, image transforms
+
+Repository: <https://github.com/digwis/nextion/tree/main/packages/nextion>
+
+## License
+
+MIT © [zhaofilms](https://github.com/digwis/nextion)

@@ -1,4 +1,4 @@
-// Public surface for the @nextion/core/auth/routes subpath.
+// Public surface for the @notionx/core/auth/routes subpath.
 //
 // The package ships standalone Next.js route handlers. Consuming
 // apps re-export them from their own `app/api/auth/<name>/route.ts`

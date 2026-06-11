@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import * as p from "@clack/prompts";
 import { gatherAnswers } from "./answers.js";
 import { render } from "./render.js";
+import { provision } from "./provision/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +29,30 @@ async function main(): Promise<void> {
 
     p.log.info(`Rendering into ${answers.targetDir}…`);
     await render(answers, templatesDir, answers.targetDir);
+
+    // Post-render provisioning. We treat this as a separate
+    // interactive stage: it talks to wrangler / ntn / Cloudflare /
+    // Notion, all of which can be slow or hang on auth. Skipped in
+    // non-interactive mode (--yes, CI) by passing interactive=false.
+    const projectDir = path.resolve(process.cwd(), answers.targetDir);
+    const interactive =
+      Boolean(process.stdin.isTTY) && !process.env.NEXTION_PROVISION_DISABLED;
+    if (interactive) {
+      const start = await p.confirm({
+        message: "Provision Cloudflare + Notion + secrets now? (you can skip and do it later)",
+        initialValue: true,
+      });
+      if (!p.isCancel(start) && start) {
+        await provision(answers, projectDir, { interactive: true });
+      } else {
+        p.log.info("Skipped provisioning. Run `pnpm dev` to start; see README for manual setup.");
+      }
+    } else {
+      // Non-interactive: print a hint, don't try to provision.
+      p.log.info(
+        "Non-interactive mode: skipping Cloudflare/Notion provisioning. See README for manual setup."
+      );
+    }
 
     p.outro("✨ Project generated!");
     console.log("");

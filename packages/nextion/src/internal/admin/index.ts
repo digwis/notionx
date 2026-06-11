@@ -1,5 +1,5 @@
 // Internal admin module — exposed only through the
-// `@nextion/core/internal-admin` subpath for the starter's
+// `@notionx/core/internal-admin` subpath for the starter's
 // backward-compat shims. Not part of the public API surface; can
 // change at any time.
 

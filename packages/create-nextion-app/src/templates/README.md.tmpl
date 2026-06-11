@@ -1,24 +1,81 @@
 # {{projectName}}
 
-A [vinext](https://github.com/your-username/vinext) project scaffolded with
-`create-nextion-app`, powered by [`@nextion/core`](https://github.com/your-username/vinext/tree/main/packages/nextion)
-on Cloudflare Workers + D1 + R2 + Cloudflare Images.
+A [vinext](https://github.com/digwis/nextion) project scaffolded with
+[`@notionx/create-nextion-app`](https://www.npmjs.com/package/@notionx/create-nextion-app),
+powered by [`@notionx/core`](https://www.npmjs.com/package/@notionx/core) on
+Cloudflare Workers + D1 + R2 + Cloudflare Images.
 
 ## Quick start
 
+When you ran `@notionx/create-nextion-app` interactively and answered "yes" to
+the provisioning prompt, this project is already wired with:
+
+- A real Cloudflare D1 database (id written into `wrangler.jsonc` + `.dev.vars`)
+- A `CONTENT_CACHE` KV namespace
+- A `{{projectNameLower}}-assets` R2 bucket
+- D1 migrations applied to the local Miniflare store
+- Optionally: a Turnstile widget (sitekey + secret), a Notion data source
+  with seeded sample pages, Resend email verification, Google OAuth
+- Optional secrets pushed to the worker via `wrangler secret put`
+  (TURNSTILE_SECRET_KEY at minimum)
+
+If provisioning was skipped or any step is ⚠️ in the scaffold summary, jump
+to [Manual setup](#manual-setup) below.
+
 ```bash
 pnpm install
-cp .dev.vars.example .dev.vars       # fill in real values
 pnpm dev                              # boots vinext on http://localhost:3001
 ```
 
-The first run will not have a database. To set one up locally:
+## Manual setup
+
+If you skipped provisioning or need to fill in something later:
 
 ```bash
-# Create a local D1 database
+# 1. Cloudflare auth
+pnpm dlx wrangler@latest login
+
+# 2. D1 database
 pnpm exec wrangler d1 create {{projectNameLower}}-db
-# Paste the printed `database_id` into both `wrangler.jsonc` and `.dev.vars`.
+# paste the printed database_id into wrangler.jsonc → d1_databases[0].database_id
+# and into .dev.vars → D1_DATABASE_ID
 pnpm exec wrangler d1 migrations apply {{projectNameLower}}-db --local
+
+# 3. KV namespace
+pnpm exec wrangler kv namespace create CONTENT_CACHE
+# paste the printed id into wrangler.jsonc → kv_namespaces[0].id
+# and into .dev.vars → KV_NAMESPACE_ID
+
+# 4. R2 bucket
+pnpm exec wrangler r2 bucket create {{projectNameLower}}-assets
+
+# 5. Turnstile (optional)
+#   wrangler has no turnstile subcommand and `wrangler login`'s scope
+#   doesn't include Account.Turnstile:Edit, so you need a custom API
+#   token: https://dash.cloudflare.com/profile/api-tokens
+#   Required permission: Account.Turnstile:Edit
+#   Then create a widget at: https://dash.cloudflare.com/?to=/:account/turnstile
+#   Domains: localhost, 127.0.0.1, and your production hostname
+#   Put sitekey into .dev.vars → TURNSTILE_SITE_KEY
+#   Put secret into .dev.vars → TURNSTILE_SECRET_KEY
+#   And: echo $SECRET | pnpm exec wrangler secret put TURNSTILE_SECRET_KEY
+
+# 6. Notion (optional)
+#   Create an integration at https://www.notion.so/my-integrations
+#   Share a target page with the integration
+#   Put the integration token into .dev.vars → NOTION_TOKEN
+#   Create a database under that page with properties matching the
+#   fields in lib/content/models.ts; put its data source id into
+#   .dev.vars → NOTION_DATA_SOURCE_ID
+
+# 7. Resend (optional)
+#   Get an API key at https://resend.com/api-keys
+#   Put into .dev.vars → RESEND_API_KEY and RESEND_FROM
+
+# 8. Google OAuth (optional)
+#   Create an OAuth client at https://console.cloud.google.com/apis/credentials
+#   Authorized redirect URI: $SITE_URL/api/auth/google/callback
+#   Put client id + secret into .dev.vars → GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
 ```
 
 ## What's included
@@ -55,14 +112,15 @@ pnpm exec wrangler r2 bucket create {{projectNameLower}}-assets
 pnpm exec vinext deploy
 ```
 
-## Wiring up the nextion package
+## Wiring up the @notionx/core package
 
-The dependency is currently `"@nextion/core": "workspace:*"` so this
-project can be developed inside the vinext monorepo. **TODO: change to
-`"^1.0.0"` before publishing** — the package is published to GitHub Packages
-on every merge to `main` (see `.changeset/` and `.github/workflows/release.yml`).
+The dependency is `"@notionx/core": "{{nextionSource}}"` — by default
+`workspace:*` so this project can be developed inside the vinext monorepo.
+For a published project, the scaffolder passes `--nextion-source "^0.1.0"`
+which pins you to a released version on npm.
 
-To consume a local build of the package, add to your own `pnpm-workspace.yaml`:
+To consume a local build of the package, add to your own
+`pnpm-workspace.yaml`:
 
 ```yaml
 packages:

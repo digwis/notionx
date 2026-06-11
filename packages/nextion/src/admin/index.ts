@@ -1,7 +1,7 @@
 // Public admin surface. Re-exports the nav factory, the React shell
 // components, and the shared `AdminNavItem` type. The page modules
 // (dashboard, users, settings, account, content-models, etc.) live
-// in `./pages` and are exposed via the `@nextion/core/admin/pages`
+// in `./pages` and are exposed via the `@notionx/core/admin/pages`
 // subpath.
 
 export type { AdminNavItem } from "../types";

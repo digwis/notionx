@@ -1,0 +1,27 @@
+# Source files
+src/
+tsconfig.json
+tsup.config.ts
+
+# Tests
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+vitest.config.ts
+__tests__/
+__mocks__/
+
+# Development files
+.DS_Store
+*.log
+.env*
+.vscode/
+.idea/
+
+# Build artifacts
+node_modules/
+*.tsbuildinfo
+
+# Documentation (keep README.md)
+docs/

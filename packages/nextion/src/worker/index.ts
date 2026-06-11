@@ -1,4 +1,4 @@
-// Public surface for the @nextion/core/worker subpath.
+// Public surface for the @notionx/core/worker subpath.
 //
 // Re-exports the Cloudflare Worker bootstrap plus the supporting
 // types the starter's `worker/index.ts` needs to construct one.

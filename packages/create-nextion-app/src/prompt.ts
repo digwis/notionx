@@ -1,9 +1,9 @@
 // packages/create-nextion-app/src/prompt.ts
 //
-// Interactive prompt for `create-nextion-app`. Uses `@clack/prompts` to
-// gather project metadata that the render step interpolates into the
-// generated templates. The shape returned here is the only contract
-// between the prompt and the renderer.
+// Interactive prompt for `create-nextion-app`. The flow is intentionally
+// minimal: we only ask for the project name. Everything else (locale,
+// content-source shape, etc.) uses sensible defaults that can be edited
+// in the generated project after scaffolding.
 
 import * as p from "@clack/prompts";
 
@@ -27,7 +27,7 @@ export interface Answers {
   supportedLocales: string[];
   contentSource: AnswersContentSource;
   /**
-   * Dependency specifier used for `@nextion/core` in the
+   * Dependency specifier used for `@notionx/core` in the
    * generated `package.json`. Default: `"workspace:*"`. The CLI
    * `--nextion-source` flag overrides this for non-monorepo
    * smoke tests.
@@ -42,13 +42,6 @@ function asString(value: unknown, fallback: string): string {
   return fallback;
 }
 
-function parseLocales(value: string): string[] {
-  return value
-    .split(/[,\s]+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-}
-
 function toCamelCase(name: string): string {
   const cleaned = name.replace(/[^a-zA-Z0-9 ]/g, " ").trim();
   if (!cleaned) return "field";
@@ -60,14 +53,33 @@ function toCamelCase(name: string): string {
   );
 }
 
+/** Defaults applied when the user accepts the canned scaffolding. */
+export const DEFAULT_ANSWERS: Omit<Answers, "projectName" | "targetDir"> = {
+  defaultLocale: "en",
+  supportedLocales: ["en"],
+  nextionSource: "workspace:*",
+  contentSource: {
+    id: "blog",
+    title: "Blog",
+    fields: [
+      { key: "title", notionName: "Title" },
+      { key: "slug", notionName: "Slug" },
+      { key: "description", notionName: "Description" },
+    ],
+  },
+};
+
 /**
  * Run the interactive prompt sequence. Cancels (Ctrl-C) throw so the
  * CLI wrapper can exit with a friendly message. The `argv` parameter
  * lets the caller pre-fill answers from positional args; positional
  * arg `argv[2]` (if any) is used as the target directory.
+ *
+ * The flow is intentionally minimal: project name → confirm-and-go.
+ * All other settings use the canned defaults in `DEFAULT_ANSWERS`.
  */
 export async function prompt(argv: string[] = process.argv): Promise<Answers> {
-  p.intro("create-nextion-app — scaffold a new vinext project");
+  p.intro("@notionx/create-nextion-app — scaffold a new vinext project");
 
   const targetFromArg = argv[2];
 
@@ -85,104 +97,25 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
     ""
   );
 
-  const targetDir = asString(
-    await p.text({
-      message: "Target directory?",
-      placeholder: `./${projectName || "my-vinext-app"}`,
-      initialValue: targetFromArg || `./${projectName || "my-vinext-app"}`,
-      validate: (v) => {
-        if (!v || v.trim().length === 0) return "Target directory is required";
-        return undefined;
-      },
-    }),
-    `./${projectName}`
+  const targetDir =
+    targetFromArg && targetFromArg.trim().length > 0
+      ? targetFromArg.trim()
+      : `./${projectName}`;
+
+  // Summarise the canned defaults so the user knows what they're agreeing to.
+  const fieldsList = DEFAULT_ANSWERS.contentSource.fields
+    .map((f) => f.notionName)
+    .join(", ");
+  p.log.info(
+    [
+      `Defaults:`,
+      `  target dir      : ${targetDir}`,
+      `  default locale  : ${DEFAULT_ANSWERS.defaultLocale}`,
+      `  supported locale: ${DEFAULT_ANSWERS.supportedLocales.join(", ")}`,
+      `  content source  : ${DEFAULT_ANSWERS.contentSource.id} (${DEFAULT_ANSWERS.contentSource.title})`,
+      `  fields          : ${fieldsList}`,
+    ].join("\n")
   );
-
-  const defaultLocale = asString(
-    await p.text({
-      message: "Default locale?",
-      placeholder: "en",
-      initialValue: "en",
-      validate: (v) => {
-        if (!v || v.trim().length === 0) return "Default locale is required";
-        return undefined;
-      },
-    }),
-    "en"
-  );
-
-  const supportedRaw = asString(
-    await p.text({
-      message: "Supported locales (comma or space separated)?",
-      placeholder: "en",
-      initialValue: "en",
-    }),
-    "en"
-  );
-  const supportedLocales = parseLocales(supportedRaw).length
-    ? Array.from(new Set([defaultLocale, ...parseLocales(supportedRaw)]))
-    : [defaultLocale];
-
-  const contentId = asString(
-    await p.text({
-      message: "First content source id?",
-      placeholder: "blog",
-      initialValue: "blog",
-      validate: (v) => {
-        if (!v || v.trim().length === 0) return "Source id is required";
-        if (!/^[a-z][a-z0-9-]*$/.test(v.trim()))
-          return "Use lowercase letters, digits, or dashes";
-        return undefined;
-      },
-    }),
-    "blog"
-  );
-
-  const contentTitle = asString(
-    await p.text({
-      message: "First content source title?",
-      placeholder: "Blog",
-      initialValue: contentId.charAt(0).toUpperCase() + contentId.slice(1),
-    }),
-    contentId
-  );
-
-  const fieldsRaw = asString(
-    await p.text({
-      message: "Field names (comma separated, in order)?",
-      placeholder: "Title, Slug, Description",
-      initialValue: "Title, Slug, Description",
-    }),
-    "Title, Slug, Description"
-  );
-
-  const fieldNames = parseLocales(fieldsRaw);
-  const fields: AnswersContentField[] = (fieldNames.length ? fieldNames : ["Title"]).map(
-    (name) => ({
-      key: toCamelCase(name),
-      notionName: name,
-    })
-  );
-
-  // Deduplicate by key (in case user typed the same name twice with
-  // different casing) and validate the key shape.
-  const seen = new Set<string>();
-  const dedupedFields: AnswersContentField[] = [];
-  for (const f of fields) {
-    if (!FIELD_KEY_RE.test(f.key)) {
-      p.log.warn(
-        `Skipping field "${f.notionName}" — key "${f.key}" is not a valid identifier`
-      );
-      continue;
-    }
-    if (seen.has(f.key)) continue;
-    seen.add(f.key);
-    dedupedFields.push(f);
-  }
-
-  if (dedupedFields.length === 0) {
-    dedupedFields.push({ key: "title", notionName: "Title" });
-  }
 
   const confirmed = await p.confirm({
     message: "Generate the project with these settings?",
@@ -195,16 +128,28 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
 
   p.outro("Prompt complete — generating files…");
 
+  // Validate field keys (defensive — DEFAULT_ANSWERS is hand-written so
+  // it should always pass, but we re-run the same guard used by the
+  // legacy multi-step prompt).
+  const seen = new Set<string>();
+  const fields: AnswersContentField[] = [];
+  for (const f of DEFAULT_ANSWERS.contentSource.fields) {
+    if (!FIELD_KEY_RE.test(f.key)) continue;
+    if (seen.has(f.key)) continue;
+    seen.add(f.key);
+    fields.push(f);
+  }
+
   return {
     projectName: projectName.trim(),
-    targetDir: targetDir.trim(),
-    defaultLocale: defaultLocale.trim(),
-    supportedLocales,
-    nextionSource: "workspace:*",
+    targetDir,
+    defaultLocale: DEFAULT_ANSWERS.defaultLocale,
+    supportedLocales: DEFAULT_ANSWERS.supportedLocales,
+    nextionSource: DEFAULT_ANSWERS.nextionSource,
     contentSource: {
-      id: contentId.trim(),
-      title: contentTitle.trim() || contentId.trim(),
-      fields: dedupedFields,
+      id: DEFAULT_ANSWERS.contentSource.id,
+      title: DEFAULT_ANSWERS.contentSource.title,
+      fields: fields.length ? fields : DEFAULT_ANSWERS.contentSource.fields,
     },
   };
 }

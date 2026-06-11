@@ -54,7 +54,7 @@ my-new-site/
 `worker/index.ts` 是一个 5 行的薄壳：
 
 ```ts
-import { createNextionWorker } from "@nextion/core/worker";
+import { createNextionWorker } from "@notionx/core/worker";
 import { authConfig } from "../lib/auth.config";
 import { adminNav } from "../lib/admin/nav";
 import { siteConfig } from "../lib/site/config";

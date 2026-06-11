@@ -1,10 +1,10 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@2/schema.json",
-  "changelog": ["@nextion/core"],
+  "changelog": ["@notionx/core", "create-nextion-app"],
   "commit": false,
   "fixed": [],
   "linked": [],
-  "access": "restricted",
+  "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "privatePackages": {

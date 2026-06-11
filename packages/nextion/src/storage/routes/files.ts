@@ -6,7 +6,7 @@
 // The package exports a route object with two surfaces:
 //   - `GET` is the Next.js handler signature (request, { params }).
 //   - `handle` is a single `(request) => Response` form used by the
-//     Cloudflare Workers bootstrap in `@nextion/core/worker`.
+//     Cloudflare Workers bootstrap in `@notionx/core/worker`.
 //
 // The bodies are identical; only the way the object key is read differs.
 
@@ -69,7 +69,7 @@ export const filesRoute = {
 
 /**
  * Worker-friendly single-arg handler. Used by the Cloudflare Workers
- * bootstrap in `@nextion/core/worker`. Equivalent to
+ * bootstrap in `@notionx/core/worker`. Equivalent to
  * `filesRoute.handle`.
  */
 export async function filesRouteHandle(request: Request): Promise<Response> {

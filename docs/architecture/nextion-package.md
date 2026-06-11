@@ -1,13 +1,13 @@
 # Nextion Package
 
-> 本文档是 `@nextion/core` 的架构概览。详细的设计动机与权衡分析见
+> 本文档是 `@notionx/core` 的架构概览。详细的设计动机与权衡分析见
 > [`docs/superpowers/specs/2026-06-10-nextion-package-design.md`](../../superpowers/specs/2026-06-10-nextion-package-design.md)；
 > 分阶段迁移历史见同名实现计划。如果只是想用，最短路径是
 > [创建新项目](./creating-new-project.md)。
 
 ## 简介
 
-`@nextion/core` 是 vinext 项目的可复用平台层。它把"所有 vinext 项目都需要
+`@notionx/core` 是 vinext 项目的可复用平台层。它把"所有 vinext 项目都需要
 的那部分"——Cloudflare 运行时适配、D1 认证、邮件、对象存储、Notion 工具链、
 Admin 外壳、缓存与失效、诊断——集中到一份 npm 包里，让"新建一个项目"变成"定义
 Notion 字段 + 写路由 + 写 UI"，而不是从零复制一整套基础设施。
@@ -35,7 +35,7 @@ Notion 字段 + 写路由 + 写 UI"，而不是从零复制一整套基础设施
 ```text
 vinext-monorepo/
 ├── packages/
-│   └── foundation/        # 编译并发布为 @nextion/core
+│   └── foundation/        # 编译并发布为 @notionx/core
 │       ├── src/
 │       │   ├── platform/  # Cloudflare 运行时 + capabilities
 │       │   ├── notion/    # Notion 客户端 + 通用辅助
@@ -69,7 +69,7 @@ vinext-monorepo/
 │       ├── wrangler.jsonc
 │       ├── vite.config.ts
 │       ├── next.config.ts
-│       └── package.json   # "@nextion/core": "workspace:*"
+│       └── package.json   # "@notionx/core": "workspace:*"
 ├── tools/
 │   └── create-nextion-app/ # `pnpm create nextion-app` 脚手架（私有 workspace）
 ├── pnpm-workspace.yaml
@@ -106,14 +106,14 @@ vinext-monorepo/
 - `content` 不能引用 `auth` / `admin` / `worker`；
 - `auth` 不能引用 `admin` / `worker`；
 - `admin` 不能引用 `worker`；
-- 包内任何模块都不能引用 `apps/moviebluebook` 或 `@nextion/core` 的内部路径。
+- 包内任何模块都不能引用 `apps/moviebluebook` 或 `@notionx/core` 的内部路径。
 
 包通过 `package.json` 的 `exports` 字段只暴露文档化的子路径；内部模块被放到
 `src/internal/` 下，外部即使想引用也取不到。
 
 ## 四个边界契约
 
-项目通过四个 TypeScript 接口消费本包。每个接口都在 `@nextion/core/types`
+项目通过四个 TypeScript 接口消费本包。每个接口都在 `@notionx/core/types`
 中导出，并且被 ESLint 与显式工厂函数双向保护。
 
 | 契约 | 位置 | 用途 |
@@ -136,10 +136,10 @@ vinext-monorepo/
   一个 changeset 文件，描述变更内容与 semver bump 类型。
 - **发布流程** (`.github/workflows/release.yml`)：推 main 时，如果
   `packages/nextion/**` 有变化，执行 `pnpm changeset version` →
-  `pnpm --filter @nextion/core build` → `pnpm changeset publish`。
+  `pnpm --filter @notionx/core build` → `pnpm changeset publish`。
   凭据使用具备 `packages: write` 权限的 `GITHUB_TOKEN`。
 - **消费方升级**：每个消费项目（脚手架新建的独立项目）的
-  `.github/dependabot.yml` 会在 `@nextion/core` 出现 minor/patch 升级时打开
+  `.github/dependabot.yml` 会在 `@notionx/core` 出现 minor/patch 升级时打开
   PR。详见 [升级 Foundation](./upgrading-nextion.md)。
 - **私有预览**：canary 通过 `pnpm changeset publish --tag=next` 走 GitHub
   Packages；不需要自建 Verdaccio。
@@ -161,7 +161,7 @@ vinext-monorepo/
   `pnpm -r build`、`pnpm -r lint`、`pnpm -r typecheck`、`pnpm -r test`。
 - **pre-commit hook** (`.husky/pre-commit`)：对暂存文件运行 `pnpm -r lint` 与
   `pnpm -r typecheck`，阻止越层导入被合入。
-- **Doctor**：`pnpm --filter @nextion/core nextion:doctor` 离线诊断
+- **Doctor**：`pnpm --filter @notionx/core nextion:doctor` 离线诊断
   Cloudflare 绑定、Notion 配置、已注册的内容源。它只读取本地配置和
   `process.env`，从不连接 Notion 或 Cloudflare 账户，永远不会打印密钥。
 
@@ -192,5 +192,5 @@ vinext-monorepo/
 
 - 想要新建项目：[创建新项目](./creating-new-project.md)
 - 想要添加/修改一个内容域：[自定义内容源](./customizing-content-source.md)
-- 想要升级 `@nextion/core`：[升级 Foundation](./upgrading-nextion.md)
+- 想要升级 `@notionx/core`：[升级 Foundation](./upgrading-nextion.md)
 - 想要查阅历史变更：[Foundation Changelog](./nextion-changelog.md)

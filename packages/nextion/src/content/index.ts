@@ -1,6 +1,6 @@
 // packages/nextion/src/content/index.ts
 //
-// Public surface for `@nextion/core/content`. Re-exports the
+// Public surface for `@notionx/core/content`. Re-exports the
 // content model registry helpers and the moved framework modules.
 
 export {

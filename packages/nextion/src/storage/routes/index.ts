@@ -1,4 +1,4 @@
-// Public surface for the @nextion/core/storage/routes subpath.
+// Public surface for the @notionx/core/storage/routes subpath.
 //
 // Each entry exposes a route object with both a Next.js-friendly
 // `GET`/`POST` handler and a worker-friendly `handle` function. The

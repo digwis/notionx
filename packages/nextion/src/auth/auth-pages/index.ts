@@ -1,4 +1,4 @@
-// Public surface for the @nextion/core/auth-pages subpath.
+// Public surface for the @notionx/core/auth-pages subpath.
 //
 // The package ships the React Server Component implementations of
 // `/login`, `/register`, `/forgot-password`, and `/reset-password`.

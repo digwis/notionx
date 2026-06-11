@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Extract the reusable platform, authentication, admin framework, and Notion helpers from the current vinext starter into a `@nextion/core` npm package living in a pnpm monorepo. The starter becomes a thin app that consumes the package.
+**Goal:** Extract the reusable platform, authentication, admin framework, and Notion helpers from the current vinext starter into a `@notionx/core` npm package living in a pnpm monorepo. The starter becomes a thin app that consumes the package.
 
 **Architecture:** Single pnpm monorepo. `packages/nextion` is published to GitHub Packages via changesets. `apps/starter` is the current root, moved into `apps/starter/`. The package exposes 14 subpath exports organized into 7 dependency tiers. ESLint `import/no-restricted-paths` enforces the tier rules. The migration happens in 8 phases; each phase ends with a green test suite and a working dev server.
 
@@ -235,7 +235,7 @@ prefer-workspace-packages=true
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "dev:vinext": "pnpm --filter @vinext/starter dev:vinext",
-    "nextion:doctor": "pnpm --filter @nextion/core nextion:doctor"
+    "nextion:doctor": "pnpm --filter @notionx/core nextion:doctor"
   },
   "devDependencies": {
     "typescript": "^5"
@@ -326,7 +326,7 @@ git commit -m "chore: initialize pnpm monorepo skeleton"
 
 ```json
 {
-  "name": "@nextion/core",
+  "name": "@notionx/core",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -396,8 +396,8 @@ git commit -m "chore: initialize pnpm monorepo skeleton"
     "resolveJsonModule": true,
     "noUncheckedIndexedAccess": true,
     "paths": {
-      "@nextion/core": ["./src/index.ts"],
-      "@nextion/core/*": ["./src/*"]
+      "@notionx/core": ["./src/index.ts"],
+      "@notionx/core/*": ["./src/*"]
     }
   },
   "include": ["src", "tests"],
@@ -535,8 +535,8 @@ Create `.husky/pre-commit`:
 
 ```bash
 #!/usr/bin/env sh
-pnpm -r --filter '!@nextion/core' lint
-pnpm -r --filter '!@nextion/core' typecheck
+pnpm -r --filter '!@notionx/core' lint
+pnpm -r --filter '!@notionx/core' typecheck
 ```
 
 Make it executable:
@@ -595,7 +595,7 @@ least one blog or movie route. Kill the dev server.
 Add a one-paragraph note near the top:
 
 > This repository is a pnpm workspace. The reusable platform lives in
-> `packages/nextion/` and is published as `@nextion/core`.
+> `packages/nextion/` and is published as `@notionx/core`.
 > Changes to that package are released via changesets; everything in
 > `apps/starter/` is project-local.
 
@@ -706,8 +706,8 @@ For each of the four original files, replace the body of
 `apps/starter/lib/<name>.ts` with:
 
 ```typescript
-// Re-exported from @nextion/core. Will be removed in Phase 2.
-export * from "@nextion/core/util";
+// Re-exported from @notionx/core. Will be removed in Phase 2.
+export * from "@notionx/core/util";
 ```
 
 - [ ] **Step 6: Verify the starter still runs**
@@ -820,7 +820,7 @@ Copy each `apps/starter/lib/platform/<name>.ts` into
 `packages/nextion/src/platform/`. The original files become:
 
 ```typescript
-export * from "@nextion/core/platform";
+export * from "@notionx/core/platform";
 ```
 
 Create `packages/nextion/src/platform/index.ts`:
@@ -887,7 +887,7 @@ via `tsx` during development.
 Change `"nextion:doctor": "node scripts/foundation-doctor.mjs"` to:
 
 ```json
-"nextion:doctor": "pnpm --filter @nextion/core nextion:doctor"
+"nextion:doctor": "pnpm --filter @notionx/core nextion:doctor"
 ```
 
 - [ ] **Step 6: Verify, commit**
@@ -968,7 +968,7 @@ grep -rl "from \"@/lib/notion/<name>\"" --include="*.ts" --include="*.tsx" .
 ```
 
 For each match, change `from "@/lib/notion/<name>"` to
-`from "@nextion/core/notion"`. Then delete the re-export at
+`from "@notionx/core/notion"`. Then delete the re-export at
 `apps/starter/lib/notion/<name>.ts`.
 
 - [ ] **Step 5: Run, expect PASS**
@@ -1114,13 +1114,13 @@ uses `definePage` style export. The page entry is now provided by
 
 ```typescript
 // apps/starter/app/login/page.tsx
-export { default } from "@nextion/core/auth-pages/login";
+export { default } from "@notionx/core/auth-pages/login";
 ```
 
 - [ ] **Step 4: Create `apps/starter/lib/auth.config.ts`**
 
 ```typescript
-import type { AuthConfig } from "@nextion/core/types";
+import type { AuthConfig } from "@notionx/core/types";
 
 export const authConfig: AuthConfig = {
   databaseBinding: "DB",
@@ -1290,7 +1290,7 @@ For each page, the source code moves verbatim except that:
 - [ ] **Step 2: Create `apps/starter/lib/admin/nav.ts`**
 
 ```typescript
-import { createAdminNav } from "@nextion/core/admin";
+import { createAdminNav } from "@notionx/core/admin";
 
 export const adminNav = createAdminNav([
   { href: "/admin", labelKey: "admin.nav.dashboard", icon: "Home", order: 10 },
@@ -1307,7 +1307,7 @@ export default adminNav;
 - [ ] **Step 3: Update `apps/starter/app/admin/layout.tsx`**
 
 ```typescript
-import { AdminShell } from "@nextion/core/admin";
+import { AdminShell } from "@notionx/core/admin";
 import { adminNav } from "@/lib/admin/nav";
 import { getAdminViewer } from "@/lib/admin-viewer";
 
@@ -1325,7 +1325,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
 ```typescript
 // apps/starter/app/admin/page.tsx
-export { default } from "@nextion/core/admin/pages/dashboard";
+export { default } from "@notionx/core/admin/pages/dashboard";
 ```
 
 Repeat for `users`, `settings`, `account`, `content-models`, and
@@ -1430,7 +1430,7 @@ The bodies are copied verbatim; the only changes are imports.
 
 ```typescript
 // apps/starter/app/api/files/[...key]/route.ts
-import { filesRoute } from "@nextion/core/storage/routes";
+import { filesRoute } from "@notionx/core/storage/routes";
 export const GET = filesRoute.GET;
 export const POST = filesRoute.POST;
 ```
@@ -1569,7 +1569,7 @@ returns 401 for protected admin paths.
 - [ ] **Step 5: Replace `apps/starter/worker/index.ts`**
 
 ```typescript
-import { createNextionWorker } from "@nextion/core/worker";
+import { createNextionWorker } from "@notionx/core/worker";
 import { blogSource, moviesSource } from "../lib/content/models";
 import { adminNav } from "../lib/admin/nav";
 import { authConfig } from "../lib/auth.config";
@@ -1717,8 +1717,8 @@ Same pattern as prior phases. The revalidate module uses
 
 ```typescript
 // apps/starter/lib/content/models.ts
-import { defineContentSource } from "@nextion/core/content";
-import type { ContentSource } from "@nextion/core/types";
+import { defineContentSource } from "@notionx/core/content";
+import type { ContentSource } from "@notionx/core/types";
 
 export const blogSource: ContentSource = defineContentSource({
   id: "blog",
@@ -1790,8 +1790,8 @@ import { getNotionClient } from "@/lib/notion/client";
 const post = await queryBlogBySlug(slug);
 
 // after
-import { getNotionClient } from "@nextion/core/notion";
-import { getRegisteredSources } from "@nextion/core/content";
+import { getNotionClient } from "@notionx/core/notion";
+import { getRegisteredSources } from "@notionx/core/content";
 import { blogSource } from "@/lib/content/models";
 const post = await queryBlogBySlug(slug, blogSource);
 ```
@@ -1851,7 +1851,7 @@ for project name, default locale, and first content source fields.
 - [ ] **Step 3: Implement the render**
 
 `packages/create-nextion-app/src/render.ts` writes:
-- `package.json` with `"@nextion/core": "^1.0.0"` dependency
+- `package.json` with `"@notionx/core": "^1.0.0"` dependency
 - `wrangler.jsonc` with binding placeholders
 - `migrations/0001_init.sql` with the auth schema
 - `app/page.tsx` with a placeholder landing page
@@ -1897,7 +1897,7 @@ git commit -m "feat(tools): add create-nextion-app scaffolder"
 ```json
 {
   "$schema": "https://unpkg.com/@changesets/config@2/schema.json",
-  "changelog": ["@nextion/core"],
+  "changelog": ["@notionx/core"],
   "commit": false,
   "fixed": [],
   "linked": [],
@@ -1954,7 +1954,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm, registry-url: https://npm.pkg.github.com }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @nextion/core build
+      - run: pnpm --filter @notionx/core build
       - run: pnpm changeset version
       - run: pnpm changeset publish
         env:
@@ -1971,10 +1971,10 @@ jobs:
 mkdir -p .changeset
 cat > .changeset/initial-foundation.md <<'EOF'
 ---
-"@nextion/core": major
+"@notionx/core": major
 ---
 
-Initial release of @nextion/core as a separate package.
+Initial release of @notionx/core as a separate package.
 EOF
 ```
 
@@ -1987,7 +1987,7 @@ git push
 ```
 
 Confirm that the CI job passes and (on merge to main) the release job
-publishes `@nextion/core@1.0.0` to GitHub Packages.
+publishes `@notionx/core@1.0.0` to GitHub Packages.
 
 - [ ] **Step 6: Verify a consumer can install the published package**
 
@@ -1996,7 +1996,7 @@ Create a throwaway directory and run:
 ```bash
 mkdir /tmp/consumer && cd /tmp/consumer
 npm init -y
-npm install @nextion/core@1.0.0 --registry=https://npm.pkg.github.com
+npm install @notionx/core@1.0.0 --registry=https://npm.pkg.github.com
 ```
 
 Expect the install to succeed and the package to be importable from

@@ -1,6 +1,6 @@
 # Nextion Changelog
 
-> `@nextion/core` 的发布说明。完整的 GitHub Packages release notes 见
+> `@notionx/core` 的发布说明。完整的 GitHub Packages release notes 见
 > [https://github.com/OWNER/vinext/packages](https://github.com/OWNER/vinext/packages)
 > <!-- TODO: replace OWNER -->。
 >
@@ -9,7 +9,7 @@
 
 ## 1.0.0 — 初始发布
 
-首次将 Nextion 从 `apps/moviebluebook` 拆出，独立发布为 `@nextion/core`。
+首次将 Nextion 从 `apps/moviebluebook` 拆出，独立发布为 `@notionx/core`。
 本节为占位说明：1.0.0 没有迁移 callout，**没有**消费方需要做额外动作。
 
 ### 包含

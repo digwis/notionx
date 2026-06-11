@@ -191,7 +191,7 @@ export const GET = cdnRoute.GET;
 
 /**
  * Worker-friendly single-arg handler. Used by the Cloudflare Workers
- * bootstrap in `@nextion/core/worker`. Equivalent to
+ * bootstrap in `@notionx/core/worker`. Equivalent to
  * `cdnRoute.handle`.
  */
 export async function cdnRouteHandle(request: Request): Promise<Response> {

@@ -8,8 +8,8 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "dev:moviebluebook": "pnpm --filter @nextion/moviebluebook dev",
-    "nextion:doctor": "pnpm --filter @nextion/core doctor",
-    "tools:build": "pnpm --filter create-nextion-app build",
+    "nextion:doctor": "pnpm --filter @notionx/core doctor",
+    "tools:build": "pnpm --filter @notionx/create-nextion-app build",
     "prepare": "husky"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-// Public surface for the @nextion/core/worker/routes subpath.
+// Public surface for the @notionx/core/worker/routes subpath.
 //
 // The health route is a fully self-contained handler. The content
 // revalidate and prewarm routes are factory functions that take the

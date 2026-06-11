@@ -101,7 +101,7 @@ export const GET = healthRoute.GET;
 
 /**
  * Worker-friendly single-arg handler. Used by the Cloudflare Workers
- * bootstrap in `@nextion/core/worker`. Equivalent to
+ * bootstrap in `@notionx/core/worker`. Equivalent to
  * `healthRoute.handle`.
  */
 export async function healthRouteHandle(request: Request): Promise<Response> {

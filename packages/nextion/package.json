@@ -1,7 +1,7 @@
 {
-  "name": "@nextion/core",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@notionx/core",
+  "version": "0.1.1",
+  "private": false,
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -95,5 +95,30 @@
     "tsup": "^8",
     "typescript": "^5",
     "vitest": "^2"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/digwis/nextion.git",
+    "directory": "packages/nextion"
+  },
+  "keywords": [
+    "vinext",
+    "nextion",
+    "nextjs",
+    "cloudflare",
+    "workers",
+    "notion",
+    "cms",
+    "framework"
+  ],
+  "license": "MIT",
+  "author": "zhaofilms",
+  "homepage": "https://github.com/digwis/nextion#readme",
+  "bugs": {
+    "url": "https://github.com/digwis/nextion/issues"
   }
 }

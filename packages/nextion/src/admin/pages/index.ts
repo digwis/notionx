@@ -1,4 +1,4 @@
-// Public surface for the @nextion/core/admin/pages subpath.
+// Public surface for the @notionx/core/admin/pages subpath.
 //
 // The package ships the generic admin page implementations
 // (dashboard, users, settings, account, content-models) and the

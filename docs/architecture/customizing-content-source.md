@@ -27,7 +27,7 @@ import {
   defineContentSource,
   getRegisteredSource,
   type ContentSource,
-} from "@nextion/core/content";
+} from "@notionx/core/content";
 
 export const podcastContentModel: ContentSource = defineContentSource({
   id: "podcasts",
@@ -84,7 +84,7 @@ app/podcasts/
 
 两个页面都是已有 blog/movies 页面的近复制：
 
-- 列表页调用 `@nextion/core/content` 的 `searchContentModel("podcasts")`
+- 列表页调用 `@notionx/core/content` 的 `searchContentModel("podcasts")`
   并把结果丢给项目里已经有的 `<ContentList />` 组件。
 - 详情页用 `getRegisteredSource("podcasts")` 取元数据，再用
   `mapPageToRecord(page, podcastContentModel.source.fields)` 拉字段。
@@ -106,7 +106,7 @@ app/api/podcasts/
 `apps/moviebluebook/lib/admin/nav.ts`：
 
 ```ts
-import { createAdminNav } from "@nextion/core/admin";
+import { createAdminNav } from "@notionx/core/admin";
 
 export const adminNav = createAdminNav([
   { href: "/admin", labelKey: "admin.nav.dashboard", icon: "Home", order: 10 },
@@ -131,7 +131,7 @@ export const adminNav = createAdminNav([
 
 - 想验证：在 admin 跑 `pnpm dev`，登录后访问 `/admin/content-models`，新源应
   出现在表中，列出 `routes.listPath`、env 名、字段数与 `capabilities`。
-- 想强制重建：调用 `@nextion/core/content` 的 `buildSearchIndex()` 或
+- 想强制重建：调用 `@notionx/core/content` 的 `buildSearchIndex()` 或
   `prewarmContentModel("podcasts")`，二者都会重新从 Notion 拉取数据并写入
   D1 `content_search_index` 表。
 - 想为新源加定时预热：在 `wrangler.jsonc` 的 `triggers.crons` 之外，启动时调

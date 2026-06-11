@@ -1,0 +1,18 @@
+# Source files
+src/
+tsconfig.json
+scripts/
+
+# Development files
+.DS_Store
+*.log
+.env*
+.vscode/
+.idea/
+
+# Build artifacts
+node_modules/
+*.tsbuildinfo
+
+# Keep templates
+!dist/templates/

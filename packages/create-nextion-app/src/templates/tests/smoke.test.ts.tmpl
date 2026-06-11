@@ -1,7 +1,7 @@
 // Sanity test for the generated project. Verifies that
 // `defineContentSource` registers the content source picked in the
 // scaffolder prompt under the expected id and that the
-// `@nextion/core` API surface is reachable from the generated
+// `@notionx/core` API surface is reachable from the generated
 // project.
 
 import { describe, it, expect } from "vitest";
@@ -11,7 +11,7 @@ import {
   getRegisteredSource,
   getRegisteredSources,
   type ContentSource,
-} from "@nextion/core/content";
+} from "@notionx/core/content";
 
 describe("content source registration", () => {
   it("uses the id chosen in the scaffolder prompt", () => {

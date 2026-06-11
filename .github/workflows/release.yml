@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "packages/nextion/**"
+      - "packages/create-nextion-app/**"
       - ".changeset/**"
       - ".github/workflows/release.yml"
 
@@ -14,7 +15,7 @@ concurrency:
 
 jobs:
   release:
-    name: Publish @nextion/core
+    name: Publish packages
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -31,22 +32,38 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          registry-url: https://npm.pkg.github.com
       - run: pnpm install --frozen-lockfile
+
       - name: Build nextion
-        run: pnpm --filter @nextion/core build
-      - name: Create .npmrc for GitHub Packages
-        run: |
-          echo "@nextion:registry=https://npm.pkg.github.com" >> .npmrc
-          echo "always-auth=true" >> .npmrc
-      - name: Apply changesets (version + publish + push)
+        run: pnpm --filter @notionx/core build
+      - name: Build create-nextion-app
+        run: pnpm --filter create-nextion-app build
+
+      - name: Apply changesets (version only)
         uses: changesets/action@v1
         with:
           version: pnpm changeset version
-          publish: pnpm changeset publish
+          publish: ""
           commit: "chore(release): version packages"
           title: "chore(release): version packages"
           setupGitUser: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---- @notionx/core → GitHub Packages ----
+      - name: Publish @notionx/core to GitHub Packages
+        if: steps.changesets.outputs.published != 'true'
+        run: |
+          echo "@nextion:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "always-auth=true" >> .npmrc
+          pnpm --filter @notionx/core publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---- create-nextion-app → npmjs.com ----
+      - name: Publish create-nextion-app to npm
+        if: steps.changesets.outputs.published != 'true'
+        run: pnpm --filter create-nextion-app publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

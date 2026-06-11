@@ -69,7 +69,7 @@ export type ContentModelDefinition<
 
 /**
  * Public alias for `ContentModelDefinition`. External consumers import
- * this name from `@nextion/core/content`; the internal
+ * this name from `@notionx/core/content`; the internal
  * `ContentModelDefinition` name remains available for the starter's
  * `model.ts`.
  */

@@ -2,7 +2,7 @@
 
 ## Summary
 
-This design splits the current vinext starter into a reusable `@nextion/core`
+This design splits the current vinext starter into a reusable `@notionx/core`
 npm package plus a thin starter application. The package owns the platform,
 authentication, admin framework, and Notion helpers. The starter (and every
 future project that consumes the package) owns its own content sources, public
@@ -91,7 +91,7 @@ add Turborepo later only when the package count or build cost justifies it.
 ```
 vinext-monorepo/
 ├── packages/
-│   └── foundation/                # Published as @nextion/core
+│   └── foundation/                # Published as @notionx/core
 │       ├── src/
 │       │   ├── platform/          # Cloudflare runtime + capabilities
 │       │   ├── notion/            # Notion client + generic helpers
@@ -125,7 +125,7 @@ vinext-monorepo/
 │       ├── wrangler.jsonc
 │       ├── vite.config.ts
 │       ├── next.config.ts
-│       └── package.json           # depends on "@nextion/core": "workspace:*"
+│       └── package.json           # depends on "@notionx/core": "workspace:*"
 ├── pnpm-workspace.yaml
 ├── package.json                   # Root scripts: pnpm -r build, pnpm -r test
 ├── .changeset/                    # Versioning
@@ -139,12 +139,12 @@ vinext-monorepo/
 The package exports are split by subpath so projects tree-shake cleanly.
 
 ```ts
-// @nextion/core/platform
+// @notionx/core/platform
 export { getCurrentRuntime } from './current'
 export { capabilities } from './capabilities'
 export type { Runtime, RuntimeEnv } from './runtime'
 
-// @nextion/core/notion
+// @notionx/core/notion
 export { createNotionClient, getNotionClient } from './client'
 export { listPages, queryDataSource } from './query'
 export { mapPageToRecord, defineMapper } from './mappers'
@@ -154,7 +154,7 @@ export { proxyNotionMedia, getNotionMediaCacheKey } from './media'
 export { parseNotionWebhook, verifyNotionSignature } from './webhook'
 export type { NotionClient, NotionConfig, Block } from './types'
 
-// @nextion/core/content
+// @notionx/core/content
 export { defineContentSource } from './models'
 export { revalidateContentModel, getRevalidationPaths } from './revalidate'
 export { prewarmContentModel } from './prewarm'
@@ -163,7 +163,7 @@ export { buildSearchIndex } from './search-index'
 export { summarizeAdmin } from './admin-summary'
 export type { ContentSource, ContentContext, ContentCapabilities } from './types'
 
-// @nextion/core/auth
+// @notionx/core/auth
 export { createAuth, requireViewer, requireRole } from './auth'
 export { getViewer } from './session'
 export { hashPassword, verifyPassword } from './passwords'
@@ -173,7 +173,7 @@ export { verifyTurnstile } from './turnstile'
 export { authRoutes } from './routes'             // /api/auth/login, register, etc.
 export type { AuthConfig, Viewer, Role } from './types'
 
-// @nextion/core/admin
+// @notionx/core/admin
 export { AdminShell, AdminLayout, AdminSidebar, AdminHeader } from './shell'
 export { createAdminNav } from './nav'
 export { registerAdminExtension } from './registry'
@@ -181,34 +181,34 @@ export { UserManagementPage, SettingsPage, ContentModelsPage } from './pages'
 export { authPages } from './auth-pages'          // /login, /register, /forgot-password, /reset-password
 export type { AdminExtension, AdminNavItem, AdminPageContext } from './types'
 
-// @nextion/core/storage
+// @notionx/core/storage
 export { getObject, putObject, getPublicUrl } from './r2'
 export { storageRoutes } from './routes'          // /api/files, /api/cdn
 
-// @nextion/core/media
+// @notionx/core/media
 export { proxyPublicImage, optimizeImage } from './public-image'
 export { mediaRoutes } from './routes'            // /api/notion/media/[...ref]
 
-// @nextion/core/cache
+// @notionx/core/cache
 export { getCacheKey, buildCacheKey } from './cache-keys'
 export { contentRevalidateRoute, contentPrewarmRoute } from './routes'
 
-// @nextion/core/email
+// @notionx/core/email
 export { sendEmail, ResendEmail } from './resend'
 
-// @nextion/core/worker
+// @notionx/core/worker
 export { createNextionWorker } from './bootstrap'
 export { nextionMiddleware } from './middleware'
 export { healthRoute } from './routes'
 
-// @nextion/core/doctor
+// @notionx/core/doctor
 export { runNextionDoctor } from './doctor'
 
-// @nextion/core/hooks
+// @notionx/core/hooks
 export { useAuthViewer } from './use-auth-viewer'
 export { useMobile } from './use-mobile'
 
-// @nextion/core/types
+// @notionx/core/types
 export type {
   ContentSource,
   AuthConfig,
@@ -222,7 +222,7 @@ export type {
 ### Boundary Contracts
 
 Projects consume the package through four contracts. Each is a TypeScript
-interface exported from `@nextion/core/types`.
+interface exported from `@notionx/core/types`.
 
 #### `ContentSource`
 
@@ -427,13 +427,13 @@ Forbidden imports (enforced by ESLint `import/no-restricted-paths`):
 - `auth` may not import from `admin` or `worker`
 - `admin` may not import from `worker`
 - Any package module may not import from `apps/starter` or
-  `@nextion/core`'s `@internal/*` paths
+  `@notionx/core`'s `@internal/*` paths
 
 Enforcement:
 
 - `packages/nextion/eslint.config.mjs` configures
   `import/no-restricted-paths` with a `zone` per tier. Running
-  `pnpm --filter @nextion/core lint` fails on any violation.
+  `pnpm --filter @notionx/core lint` fails on any violation.
 - `packages/nextion/package.json` `exports` field exposes only the
   documented subpaths. Internal modules are placed under `src/internal/`
   and excluded from `exports`. The `apps/starter` cannot import them
@@ -444,16 +444,16 @@ Enforcement:
 ### Distribution
 
 The package is published to **GitHub Packages** under the
-`@nextion/core` scope.
+`@notionx/core` scope.
 
 - Versioning: changesets. Each PR affecting `packages/nextion/**`
   includes a changeset file describing the change and a semver bump type.
 - Release workflow (`.github/workflows/release.yml`): on push to `main`,
   if `packages/nextion/**` changed, run `pnpm changeset version`,
-  `pnpm --filter @nextion/core build`, `pnpm changeset publish`
+  `pnpm --filter @notionx/core build`, `pnpm changeset publish`
   using a `GITHUB_TOKEN` with `packages: write` permission.
 - Consumer upgrade: each consumer project has a `.github/dependabot.yml`
-  that opens PRs on `@nextion/core` minor and patch releases. PRs run
+  that opens PRs on `@notionx/core` minor and patch releases. PRs run
   consumer tests, and Dependabot auto-merge is enabled after tests pass.
   Major version bumps are reviewed manually.
 - Optional `repository_dispatch` based auto-upgrade workflow is documented
@@ -515,7 +515,7 @@ starter must remain runnable at the end of every phase.
   package compiles.
 - Configure `packages/nextion/eslint.config.mjs` with
   `import/no-restricted-paths` zones matching the tier rules in
-  "Dependency Direction Rules". `pnpm --filter @nextion/core lint`
+  "Dependency Direction Rules". `pnpm --filter @notionx/core lint`
   must pass on the empty package.
 - Configure `packages/nextion/package.json` `exports` field with the
   documented public subpaths; reserve `src/internal/` for modules that
@@ -553,7 +553,7 @@ Stay in `apps/starter/lib/notion/`:
 - `posts.ts`, `movies.ts`, `movie-localized.ts`, `movie-translations.ts`,
   `movie-video-source.ts`
 
-Switch `apps/starter` imports to use `@nextion/core/notion` for the
+Switch `apps/starter` imports to use `@notionx/core/notion` for the
 moved modules. Drop the re-exports at the end of this phase.
 
 - **Verification**: blog list, blog detail, posts API, notion webhook
@@ -610,7 +610,7 @@ Move into the package:
 `apps/starter/worker/index.ts` becomes a thin call:
 
 ```ts
-import { createNextionWorker } from '@nextion/core/worker'
+import { createNextionWorker } from '@notionx/core/worker'
 import { blogSource, moviesSource } from '../lib/content/models'
 import adminNav from '../lib/admin/nav'
 import authConfig from '../lib/auth.config'
@@ -657,12 +657,12 @@ the source object so it can be passed into
 - Configure changesets in the repo root.
 - Add `.github/workflows/release.yml` that:
   1. Triggers on push to `main` when `packages/nextion/**` changes.
-  2. Runs `pnpm install` and `pnpm --filter @nextion/core build`.
+  2. Runs `pnpm install` and `pnpm --filter @notionx/core build`.
   3. Runs `pnpm changeset version` and commits the version bump.
   4. Runs `pnpm changeset publish` with a `GITHUB_TOKEN` having
      `packages: write`.
 - Add a docs page explaining how to install the scaffolder with
-  `pnpm create nextion-app` and how to consume `@nextion/core` from a
+  `pnpm create nextion-app` and how to consume `@notionx/core` from a
   fresh project.
 - **Verification**: scaffolder runs and produces a project that boots
   locally, has working auth, registers a sample content source, and
@@ -716,7 +716,7 @@ npm run dev:vinext
 | shadcn primitives are coupled to the starter | Do not import `components/ui/*` from the package; the package only depends on Radix/lucide. |
 | Consumers cannot customize admin internals easily | Expose `registerAdminExtension` with a documented `extraShellComponents` slot. |
 | Changeset bot noise on the monorepo | Only changesets touching `packages/nextion/**` are required; use the `private-package` config to skip other workspaces. |
-| Publishing a broken build to GitHub Packages | CI runs `pnpm --filter @nextion/core build` and the consumer's tests against the candidate before publish. |
+| Publishing a broken build to GitHub Packages | CI runs `pnpm --filter @notionx/core build` and the consumer's tests against the candidate before publish. |
 | Existing project migration friction | Phase 0–1 keep every import re-exported. Drop the re-exports only at the end of Phase 2. |
 
 ## Out of Scope / Future

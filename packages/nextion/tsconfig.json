@@ -15,8 +15,8 @@
     "resolveJsonModule": true,
     "noUncheckedIndexedAccess": true,
     "paths": {
-      "@nextion/core": ["./src/index.ts"],
-      "@nextion/core/*": ["./src/*"]
+      "@notionx/core": ["./src/index.ts"],
+      "@notionx/core/*": ["./src/*"]
     }
   },
   "include": ["src", "tests"],

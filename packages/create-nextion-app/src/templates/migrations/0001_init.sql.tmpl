@@ -1,5 +1,5 @@
 -- Foundation auth schema. Mirrors the `users`, `app_settings`, and
--- `auth_rate_limits` tables that `@nextion/core`'s `createAuth`,
+-- `auth_rate_limits` tables that `@notionx/core`'s `createAuth`,
 -- `getAuthViewer`, and `runSchemaHealthChecks` rely on. Run all
 -- statements with `wrangler d1 migrations apply <db-name>`; the
 -- generated project ships this file as `migrations/0001_init.sql`.
@@ -30,7 +30,7 @@ CREATE INDEX IF NOT EXISTS idx_users_password_reset_token
   ON users(password_reset_token);
 
 -- Single-row application settings table. The schema guard
--- (`runSchemaHealthChecks` in @nextion/core) reads the
+-- (`runSchemaHealthChecks` in @notionx/core) reads the
 -- `turnstile_enabled` column from this table to verify the schema.
 CREATE TABLE IF NOT EXISTS app_settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),
