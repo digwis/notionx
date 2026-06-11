@@ -67,6 +67,9 @@ pnpm exec wrangler r2 bucket create {{projectNameLower}}-assets
 #   Create a database under that page with properties matching the
 #   fields in lib/content/models.ts; put its data source id into
 #   .dev.vars → NOTION_DATA_SOURCE_ID
+#   (If the scaffolder already auto-created the database via `ntn`,
+#    see "Switching the Notion integration" below to use your own
+#    integration for ongoing API access.)
 
 # 7. Resend (optional)
 #   Get an API key at https://resend.com/api-keys
@@ -193,3 +196,27 @@ pnpm dlx shadcn@latest add https://21st.dev/r/sonner.json
 
 New files land in `components/ui/` and pick up the existing token
 variables automatically. After adding, import and use as usual.
+
+## Switching the Notion integration
+
+If the scaffolder auto-created the content database using the `ntn`
+CLI's saved credentials (you'll see "token from macOS Keychain …"
+or similar in the provisioning summary), the database is **owned by
+"Notion CLI"** in your Notion workspace. That is a Notion UI label
+only — it does not change the data, schema, or your access rights.
+
+If you want your own integration (`secret_…` from
+<https://www.notion.so/profile/integrations>) to manage the database
+going forward, do this once in the Notion UI:
+
+1. Open the database in Notion.
+2. Click **⋯** (top right) → **Connections** → add your own
+   integration. From now on your integration can read and write
+   this database.
+3. *(Optional)* Click **⋯** → **Transfer ownership** to make
+   your integration the new owner. The "Created by Notion CLI"
+   label disappears.
+
+After step 2, replace the `NOTION_TOKEN` line in `.dev.vars` and
+`wrangler.jsonc` with your own `secret_…` token. The data source
+id does not need to change.
