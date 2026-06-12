@@ -1,5 +1,5 @@
 ---
-"@nextion/core": major
+"@notionx/core": major
 ---
 
-Initial release of `@nextion/core` as a separate package.
+Initial release of `@notionx/core` as a separate package.

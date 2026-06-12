@@ -10,9 +10,13 @@
     "dev:moviebluebook": "pnpm --filter @nextion/moviebluebook dev",
     "nextion:doctor": "pnpm --filter @notionx/core doctor",
     "tools:build": "pnpm --filter @notionx/create-nextion-app build",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:status": "changeset status",
     "prepare": "husky"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.0",
     "@eslint/js": "^9",
     "eslint-import-resolver-typescript": "^4",
     "eslint-plugin-import": "^2",
