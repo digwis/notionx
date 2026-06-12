@@ -1,9 +1,10 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { siteConfig } from "@/lib/site/config";
 import { contentSources } from "@/lib/content/models";
+import { getSiteSettings, getStaticSiteSettings } from "@/lib/site/settings";
 import {
   ArrowRight,
   Code,
@@ -12,7 +13,20 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-export default function Home() {
+// Home page metadata. Using `title.absolute` skips the parent
+// `title.template` from `app/layout.tsx`, so the tab title reads
+// "My Site" instead of "My Site · My Site" (the bug that shipped
+// with the original scaffold).
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings().catch(() => getStaticSiteSettings());
+  return {
+    title: { absolute: settings.name },
+    description: settings.description,
+  };
+}
+
+export default async function Home() {
+  const settings = (await getSiteSettings()) ?? getStaticSiteSettings();
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
       <header className="container mx-auto flex items-center justify-end p-4">
@@ -26,14 +40,14 @@ export default function Home() {
         </Badge>
 
         <h1 className="text-5xl font-bold tracking-tight md:text-6xl">
-          {siteConfig.name}
+          {settings.name}
         </h1>
         <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-          {siteConfig.description}
+          {settings.description}
         </p>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          {siteConfig.navigation.main.map((item, index) => (
+          {settings.navigation.main.map((item, index) => (
             <Button
               key={item.href}
               asChild
@@ -48,7 +62,7 @@ export default function Home() {
             </Button>
           ))}
           <Button asChild variant="outline" size="lg">
-            <Link href={siteConfig.navigation.adminHref}>
+            <Link href={settings.navigation.adminHref}>
               <Shield className="mr-2 h-4 w-4" />
               Admin
             </Link>

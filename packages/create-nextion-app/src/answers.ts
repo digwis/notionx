@@ -6,7 +6,12 @@
 
 import * as p from "@clack/prompts";
 import * as crypto from "node:crypto";
-import type { Answers, AnswersContentField } from "./prompt.js";
+import type {
+  Answers,
+  AnswersContentField,
+  UiPreset,
+} from "./prompt.js";
+import { isUiPreset } from "./prompt.js";
 
 interface CliOverrides {
   projectName?: string;
@@ -29,6 +34,21 @@ interface CliOverrides {
   notionParentPage?: string;
   /** Number of sample pages to insert (default 3, 0 to skip). */
   notionSeedCount?: number;
+  /**
+   * When true (the default) the scaffolder creates a separate
+   * Notion data source for site-level config (name, tagline,
+   * description, default locale, social image) and the generated
+   * `lib/site/settings.ts` reads from it. Pass `--no-site-settings`
+   * to opt out.
+   */
+  enableSiteSettings?: boolean;
+  /**
+   * UI preset — see `UI_PRESETS` in `prompt.ts` for the canonical
+   * list. The string flows straight into the token map (so the
+   * generated `package.json` and the per-preset block-renderer
+   * imports can branch on it).
+   */
+  uiPreset?: UiPreset;
   yes?: boolean;
 }
 
@@ -134,6 +154,16 @@ function parseArgs(argv: string[]): CliOverrides {
         case "--notion-seed-count":
           out.notionSeedCount = Number(takeNext(next));
           break;
+        case "--ui": {
+          const raw = takeNext(next);
+          if (!isUiPreset(raw)) {
+            throw new Error(
+              `Invalid --ui value "${raw}". Expected one of: minimal, site, app.`
+            );
+          }
+          out.uiPreset = raw;
+          break;
+        }
         case "-y":
         case "--yes":
           out.yes = true;
@@ -176,6 +206,14 @@ Flags:
                                 target dir to live inside a pnpm
                                 workspace that has @notionx/core
                                 listed), or "file:../path/to/core".
+  --ui <preset>                UI preset for shadcn primitives and
+                               the Notion block renderer. One of:
+                                 minimal  - lean blog set
+                                 site     - Notion page builder set (default)
+                                 app      - admin / dashboard set
+                               Drives which files are vendored into
+                               components/ui/ and which Radix
+                               packages are added to package.json.
   --admin-email <addr>         Email granted the admin role (required).
   --admin-password <pwd>       Password for the admin account (required,
                                ≥8 chars, letters + digits). If omitted
@@ -260,6 +298,38 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
       ? Number(process.env.CREATE_NEXTION_NOTION_SEED_COUNT)
       : 3);
 
+  // `enableSiteSettings` defaults to true. `CREATE_NEXTION_NO_SITE_SETTINGS`
+  // is the env-var mirror of `--no-site-settings`; truthy values
+  // (1/true/yes) opt out, anything else falls through to the default.
+  let enableSiteSettings: boolean = true;
+  if (overrides.enableSiteSettings !== undefined) {
+    enableSiteSettings = overrides.enableSiteSettings;
+  } else if (process.env.CREATE_NEXTION_NO_SITE_SETTINGS) {
+    const v = process.env.CREATE_NEXTION_NO_SITE_SETTINGS.toLowerCase();
+    if (v === "1" || v === "true" || v === "yes") {
+      enableSiteSettings = false;
+    }
+  }
+
+  // UI preset: CLI flag, env var, then the recommended `site` default.
+  // We validate the env value with `isUiPreset` so a typo (e.g.
+  // `CREATE_NEXTION_UI=siite`) fails loud rather than silently
+  // downgrading to the default — the user almost certainly meant a
+  // preset and a typo would otherwise leave the scaffold
+  // inconsistent with the rest of their flags.
+  let uiPreset: UiPreset = "site";
+  if (overrides.uiPreset) {
+    uiPreset = overrides.uiPreset;
+  } else if (process.env.CREATE_NEXTION_UI) {
+    const envValue = process.env.CREATE_NEXTION_UI;
+    if (!isUiPreset(envValue)) {
+      throw new Error(
+        `Invalid CREATE_NEXTION_UI value "${envValue}". Expected one of: minimal, site, app.`
+      );
+    }
+    uiPreset = envValue;
+  }
+
   return {
     projectName,
     targetDir,
@@ -277,6 +347,8 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
     adminPassword,
     notionParentPage,
     notionSeedCount,
+    enableSiteSettings,
+    uiPreset,
     // Carry the random password (if any) so the CLI can echo it to
     // stdout once at the very end of the run. Never persisted to disk
     // and never sent to the database — only the hash lands in D1.

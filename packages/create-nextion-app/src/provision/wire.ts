@@ -19,6 +19,8 @@ export interface WireInputs {
   /** Optional Notion values. */
   notionToken?: string;
   notionDataSourceId?: string;
+  /** Optional site-settings data source id (NOTION_SITE_SETTINGS_DATA_SOURCE_ID). */
+  notionSiteSettingsDataSourceId?: string;
   /** Optional Resend values. */
   resendApiKey?: string;
   resendFrom?: string;
@@ -37,6 +39,12 @@ export async function patchWranglerJsonc(
   let patched = raw
     .replace(/REPLACE_WITH_D1_DATABASE_ID/g, inputs.d1DatabaseId)
     .replace(/REPLACE_WITH_KV_NAMESPACE_ID/g, inputs.kvNamespaceId);
+  if (inputs.notionSiteSettingsDataSourceId) {
+    patched = patched.replace(
+      /REPLACE_WITH_NOTION_SITE_SETTINGS_DATA_SOURCE_ID/g,
+      inputs.notionSiteSettingsDataSourceId
+    );
+  }
   await fs.writeFile(file, patched, "utf8");
 }
 
@@ -59,6 +67,8 @@ export async function writeDevVars(
     TURNSTILE_SECRET_KEY: inputs.turnstileSecret ?? "",
     NOTION_TOKEN: inputs.notionToken ?? "",
     NOTION_DATA_SOURCE_ID: inputs.notionDataSourceId ?? "",
+    NOTION_SITE_SETTINGS_DATA_SOURCE_ID:
+      inputs.notionSiteSettingsDataSourceId ?? "",
     RESEND_API_KEY: inputs.resendApiKey ?? "",
     RESEND_FROM: inputs.resendFrom ?? "",
     GOOGLE_CLIENT_ID: inputs.googleClientId ?? "",

@@ -56,6 +56,74 @@ export interface Answers {
   notionParentPage: string;
   /** Number of sample pages to insert into the new database (0 to skip). */
   notionSeedCount: number;
+  /**
+   * Create a separate Notion data source for site-level settings
+   * (name, tagline, description, default locale, social image) and
+   * wire `lib/site/settings.ts` to read from it. Set to `false` to
+   * keep site config hard-coded in `lib/site/config.ts`.
+   */
+  enableSiteSettings: boolean;
+  /**
+   * UI preset selected at scaffold time. Controls which shadcn/ui
+   * primitives are vendored into the generated project, which Radix
+   * packages are wired into `package.json`, and which block-renderer
+   * modules the generated `components/notion/` tree imports.
+   *
+   * - `minimal` — lean blog set: Button, Card, Input, Label, Badge,
+   *   Separator, Skeleton. The smallest scaffold footprint.
+   * - `site` — Notion page builder set: everything in `minimal` plus
+   *   Accordion, Alert, Table, AspectRatio, Tabs, Tooltip,
+   *   DropdownMenu, Sheet, Dialog. Recommended for Notion-driven
+   *   public sites and landing pages.
+   * - `app` — full app/dashboard set: everything in `site` plus the
+   *   form/control primitives (Select, Textarea, Checkbox, Switch,
+   *   RadioGroup, Avatar, Sonner, Form, Popover, Command,
+   *   NavigationMenu). Heaviest preset.
+   */
+  uiPreset: UiPreset;
+}
+
+/**
+ * UI preset identifier. The string values are stable and stored in
+ * package metadata / config — never rename without a migration.
+ */
+export type UiPreset = "minimal" | "site" | "app";
+
+export const UI_PRESETS: ReadonlyArray<{
+  id: UiPreset;
+  label: string;
+  hint: string;
+  description: string;
+}> = [
+  {
+    id: "site",
+    label: "Site Builder (recommended)",
+    hint: "Notion page builder, marketing sites, docs",
+    description:
+      "Rich set of shadcn primitives for Notion-driven public sites, " +
+      "landing pages, and documentation. Recommended default for " +
+      "Notion page-building projects.",
+  },
+  {
+    id: "minimal",
+    label: "Minimal",
+    hint: "lean blog, simple content site, quick demo",
+    description:
+      "Smallest footprint. Just enough primitives for blog posts and " +
+      "simple content. Easy to extend with `pnpm dlx shadcn add …`.",
+  },
+  {
+    id: "app",
+    label: "App Dashboard",
+    hint: "admin, dashboards, forms, authenticated apps",
+    description:
+      "Largest preset. Adds form controls, command palette, popover, " +
+      "and navigation menu on top of the site set.",
+  },
+] as const;
+
+export function isUiPreset(value: unknown): value is UiPreset {
+  return value === "minimal" || value === "site" || value === "app";
 }
 
 const FIELD_KEY_RE = /^[a-z][a-zA-Z0-9]*$/;
@@ -92,6 +160,18 @@ export const DEFAULT_ANSWERS: Omit<
   adminPassword: "ChangeMe1234",
   notionParentPage: "",
   notionSeedCount: 3,
+  // Site-level config lives in a separate Notion data source by
+  // default. The generated project reads site name / tagline /
+  // description / default locale / social image from there, with
+  // `lib/site/config.ts` as a static fallback. Set to `false` to
+  // skip the extra data source entirely (e.g. for projects that
+  // don't need operators to edit site copy from Notion).
+  enableSiteSettings: true,
+  // `site` is the recommended default per docs/superpowers/plans/
+  // 2026-06-12-notion-page-builder-ui-plan.md. `minimal` is kept as
+  // the escape hatch for lean blogs; the existing scaffolder flow
+  // (before the preset was introduced) behaved like `minimal`.
+  uiPreset: "site",
   contentSource: {
     id: "blog",
     title: "Blog",
@@ -164,6 +244,28 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
     throw new Error("cancelled");
   }
 
+  // UI preset — controls which shadcn primitives get vendored into
+  // `components/ui/` and which Radix packages land in
+  // `package.json`. The `site` preset is the recommended default for
+  // Notion-driven public sites; `minimal` is the lean-blog escape
+  // hatch; `app` is the heaviest set (admin / forms / dashboards).
+  const uiPresetSelection = await p.select({
+    message: "UI preset?",
+    initialValue: DEFAULT_ANSWERS.uiPreset,
+    options: UI_PRESETS.map((preset) => ({
+      value: preset.id,
+      label: preset.label,
+      hint: preset.hint,
+    })),
+  });
+  if (p.isCancel(uiPresetSelection)) {
+    p.cancel("Cancelled by user");
+    throw new Error("cancelled");
+  }
+  const uiPreset: UiPreset = isUiPreset(uiPresetSelection)
+    ? uiPresetSelection
+    : DEFAULT_ANSWERS.uiPreset;
+
   // Admin account — collected last so users see what they're agreeing
   // to before we ask for credentials. The password is hashed at
   // render time and never persisted in plaintext.
@@ -229,5 +331,7 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
     adminPassword,
     notionParentPage: DEFAULT_ANSWERS.notionParentPage,
     notionSeedCount: DEFAULT_ANSWERS.notionSeedCount,
+    enableSiteSettings: DEFAULT_ANSWERS.enableSiteSettings,
+    uiPreset,
   };
 }

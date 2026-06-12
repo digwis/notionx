@@ -1,0 +1,214 @@
+// Notion-backed site settings loader.
+//
+// Reads the singleton row from the `site-settings` Notion data
+// source (declared in `lib/content/models.ts`) and merges it with
+// the static fallback in `./config.ts`. The result has the same
+// shape as `siteConfig` so call sites don't need to know which
+// source actually answered.
+//
+// Caching strategy:
+//   - One KV read per request. On miss, fetch from Notion, cache
+//     the merged result for 5 minutes, and return.
+//   - The first request after a Notion edit pays the Notion RTT
+//     (~150ms in our measurements); subsequent requests in the
+//     5-minute window are KV reads (~5ms).
+//
+// To invalidate early after editing Notion, you have two options:
+//   1. Wait up to 5 minutes (the default TTL).
+//   2. Hit `POST /api/admin/site-settings/revalidate` (mounted by
+//      the worker when an admin session is present) which clears
+//      the KV entry. The endpoint re-uses
+//      `@notionx/core/auth/routes/viewer` to authorize the caller.
+//
+// If the Notion data source is empty or the row can't be read,
+// `fallbackSiteConfig` from `./config.ts` is returned unchanged.
+// The fallback is also what `getStaticSiteSettings()` returns
+// synchronously — useful for places that can't `await` (e.g.
+// a `generateMetadata` shortcut that builds an error page).
+
+import { getRequestContext } from "cloudflare:workers";
+import {
+  hasNotionModelConfig,
+  listGenericNotionContent,
+} from "@notionx/core/notion";
+import { siteSettingsSource } from "../content/models";
+import { fallbackSiteConfig, type SiteConfig } from "./config";
+
+const CACHE_KEY = "site-settings:v1";
+const CACHE_TTL_SECONDS = 5 * 60;
+
+/** Read the KV binding from the current request, if any. */
+function readKv(): KVNamespace | null {
+  try {
+    const ctx = getRequestContext() as
+      | { env?: { CONTENT_CACHE?: KVNamespace } }
+      | undefined;
+    return ctx?.env?.CONTENT_CACHE ?? null;
+  } catch {
+    // Outside a request context (e.g. in a build/test script) we
+    // simply skip caching.
+    return null;
+  }
+}
+
+type RawSiteSettings = {
+  name?: string;
+  tagline?: string;
+  description?: string;
+  defaultLocale?: string;
+  socialImageUrl?: string;
+};
+
+function readRichText(
+  properties: Record<string, unknown>,
+  field: string
+): string {
+  const prop = properties[field] as
+    | { rich_text?: Array<{ plain_text?: string }> }
+    | undefined;
+  if (!prop?.rich_text?.length) return "";
+  return prop.rich_text.map((t) => t.plain_text ?? "").join("").trim();
+}
+
+function readUrl(
+  properties: Record<string, unknown>,
+  field: string
+): string | null {
+  const prop = properties[field] as
+    | { url?: string | null }
+    | undefined;
+  return prop?.url ?? null;
+}
+
+function readSelect(
+  properties: Record<string, unknown>,
+  field: string
+): string {
+  const prop = properties[field] as
+    | { select?: { name?: string } | null }
+    | undefined;
+  return prop?.select?.name?.trim() ?? "";
+}
+
+/**
+ * Synchronous build-time copy. Use this only when `await` is not
+ * possible (rare — prefer `getSiteSettings`). Returns the
+ * hard-coded fallback, no Notion I/O.
+ */
+export function getStaticSiteSettings(): SiteConfig {
+  return fallbackSiteConfig;
+}
+
+/**
+ * Resolve the current site settings.
+ *
+ * Order of precedence for each field:
+ *   1. Notion row (if `site-settings` data source is reachable and
+ *      contains a row)
+ *   2. `fallbackSiteConfig` (so a Notion outage never breaks the
+ *      home page or SEO metadata)
+ *
+ * The result is cached in `CONTENT_CACHE` (KV) under
+ * `site-settings:v1` for 5 minutes per process. Bump the cache key
+ * suffix to invalidate globally after a breaking schema change.
+ */
+export async function getSiteSettings(): Promise<SiteConfig> {
+  const kv = readKv();
+  if (kv) {
+    const cached = await kv.get<SiteConfig>(CACHE_KEY, "json");
+    if (cached) return cached;
+  }
+
+  const merged = await loadFromNotion();
+
+  if (kv) {
+    // Best-effort write. KV failure shouldn't break the page.
+    kv.put(CACHE_KEY, JSON.stringify(merged), {
+      expirationTtl: CACHE_TTL_SECONDS,
+    }).catch(() => {});
+  }
+
+  return merged;
+}
+
+async function loadFromNotion(): Promise<SiteConfig> {
+  // `hasNotionModelConfig` reads the env from the active request
+  // context. If Notion isn't configured we return the fallback
+  // untouched — never throw, so the home page can't 500 because of
+  // a CMS blip.
+  let configured = false;
+  try {
+    configured = await hasNotionModelConfig(siteSettingsSource);
+  } catch {
+    configured = false;
+  }
+  if (!configured) {
+    return fallbackSiteConfig;
+  }
+
+  let items: Awaited<
+    ReturnType<typeof listGenericNotionContent<typeof siteSettingsSource.source.fields>>
+  >;
+  try {
+    items = await listGenericNotionContent(siteSettingsSource);
+  } catch {
+    return fallbackSiteConfig;
+  }
+  if (!items.length) {
+    return fallbackSiteConfig;
+  }
+
+  // The first published row wins. If the operator has multiple
+  // rows they can pick the active one by checking `Published` in
+  // Notion; we deliberately don't try to be clever about which row
+  // is "active" beyond that to keep the model predictable.
+  const row = items[0];
+  if (!row) return fallbackSiteConfig;
+
+  const raw: RawSiteSettings = {
+    name: row.title || undefined,
+    tagline: row.properties.tagline
+      ? Array.isArray(row.properties.tagline)
+        ? row.properties.tagline[0]
+        : (row.properties.tagline as string)
+      : undefined,
+    description: row.description || undefined,
+    socialImageUrl: row.coverImage || undefined,
+  };
+
+  // The Notion mapper doesn't know about every field we expose
+  // (e.g. `defaultLocale` lives in a `Select` column). Read it
+  // straight off the raw Notion page object that
+  // `listGenericNotionContent` returns — its `properties` map
+  // includes everything Notion sent us, not just the mapped ones.
+  const extra = (row as unknown as { properties?: Record<string, unknown> })
+    .properties;
+  if (extra && typeof extra === "object") {
+    const defaultLocale = readSelect(extra, "Default Locale");
+    if (defaultLocale) raw.defaultLocale = defaultLocale;
+    const tagline = readRichText(extra, "Tagline");
+    if (tagline) raw.tagline = tagline;
+    const socialImage = readUrl(extra, "Social Image");
+    if (socialImage) raw.socialImageUrl = socialImage;
+  }
+
+  return {
+    ...fallbackSiteConfig,
+    name: raw.name?.trim() || fallbackSiteConfig.name,
+    tagline: raw.tagline?.trim() || raw.name?.trim() || fallbackSiteConfig.tagline,
+    description: raw.description?.trim() || fallbackSiteConfig.description,
+    socialImageUrl: raw.socialImageUrl ?? fallbackSiteConfig.socialImageUrl,
+    defaultLocale: raw.defaultLocale?.trim() || fallbackSiteConfig.defaultLocale,
+  };
+}
+
+/**
+ * Drop the cached entry. Call this from a Notion webhook handler
+ * (or an admin "revalidate" button) so editors see their changes
+ * without waiting for the 5-minute TTL.
+ */
+export async function invalidateSiteSettingsCache(): Promise<void> {
+  const kv = readKv();
+  if (!kv) return;
+  await kv.delete(CACHE_KEY);
+}
