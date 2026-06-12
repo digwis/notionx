@@ -67,6 +67,11 @@ export async function requireWranglerAuth(): Promise<CloudflareAccount> {
     }
     const m = out.match(/\b([0-9a-f]{32})\b/);
     if (m) return { id: m[1] };
+    if (/not authenticated|wrangler login/i.test(out)) {
+      throw new Error(
+        "`wrangler` is not logged in. Run `wrangler login` first."
+      );
+    }
     throw new Error(
       "Could not parse account id from `wrangler whoami`. Run `wrangler login` first."
     );

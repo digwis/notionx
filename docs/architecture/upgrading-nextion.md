@@ -1,7 +1,17 @@
 # 升级 Nextion
 
-> 范围：消费 `@notionx/core` 的项目如何获得修复与新能力。三类升级：
-> patch/minor 自动；major 手动；canary 自行取用。
+> 范围：Nextion 项目的升级分成三层：
+> 1. `@notionx/core` 运行时依赖升级
+> 2. 脚手架模板同步：`nextion update`
+> 3. 外部资源修复与补齐：`nextion provision repair`
+
+## 命令边界
+
+| 场景 | 命令 | 默认是否改云资源 | 默认是否 deploy |
+|---|---|---:|---:|
+| 升级运行时依赖 | `pnpm update @notionx/core` | 否 | 否 |
+| 同步脚手架模板 | `nextion update` | 否 | 否 |
+| 修复 Notion / Cloudflare 资源 | `nextion provision repair` | 是，仅修差异 | 否 |
 
 ## 1. Dependabot 配置（推荐）
 
@@ -119,3 +129,12 @@ pnpm exec wrangler d1 migrations apply <db-name> --remote   # 仅当发布说明
 合入升级后，请把 [Nextion Changelog](./nextion-changelog.md) 里那段
 release notes 链接到项目的 release notes / changelog，方便 reviewer 看到本
 次升级涵盖什么。
+
+## 高频迭代期推荐流程
+
+当脚手架和 `@notionx/core` 都在快速变化时，推荐按下面顺序判断：
+
+1. 只改了运行时库能力：先跑 `pnpm update @notionx/core`
+2. 改了模板、配置、README、脚手架生成代码：跑 `nextion update`
+3. 改了 Notion schema、Cloudflare bindings、secrets 或资源对齐逻辑：跑 `nextion provision repair`
+4. 只有需要验证线上环境时，再手动 deploy

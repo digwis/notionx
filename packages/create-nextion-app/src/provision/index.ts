@@ -3,7 +3,8 @@
 // Orchestrates the post-render provisioning flow:
 //   1. Verify wrangler auth (required)
 //   2. Create / reuse D1, KV, R2 (idempotent)
-//   3. Create D1 tables locally via `d1 migrations apply --local`
+//   3. Wire real bindings, then create D1 tables locally via
+//      `d1 migrations apply --local`
 //   4. Turnstile, Resend, and Google OAuth are intentionally
 //      skipped here — users wire them up manually after scaffold.
 //   5. Create Notion data source if `NOTION_API_TOKEN` is set,
@@ -18,8 +19,10 @@
 
 import * as p from "@clack/prompts";
 import type { Answers } from "../prompt.js";
-import { runOrThrow, run } from "./shell.js";
+import { runOrThrow, run, runInteractive } from "./shell.js";
+import { defaultProvisionMode, type ProvisionMode } from "./options.js";
 import {
+  type CloudflareAccount,
   requireWranglerAuth,
   ensureD1,
   ensureKV,
@@ -30,9 +33,15 @@ import {
   isNtnAvailable,
   verifyNotionToken,
   ensureNotionDatabase,
+  ensurePagesDatabase,
 } from "./notion.js";
 import { promptNotion } from "./prompts.js";
-import { patchWranglerJsonc, writeDevVars, type WireInputs } from "./wire.js";
+import {
+  patchSiteUrl,
+  patchWranglerJsonc,
+  writeDevVars,
+  type WireInputs,
+} from "./wire.js";
 import { ensureDependencies } from "./dependencies.js";
 import {
   readNtnToken,
@@ -44,6 +53,8 @@ import {
 export interface ProvisionResult {
   d1: { ok: boolean; id?: string; message?: string; created?: boolean };
   kv: { ok: boolean; id?: string; message?: string; created?: boolean };
+  /** vinext@0.1.1 ISR data cache KV (binding `VINEXT_KV_CACHE`). */
+  vinextKv: { ok: boolean; id?: string; message?: string; created?: boolean };
   r2: { ok: boolean; name?: string; message?: string; created?: boolean };
   turnstile: {
     ok: boolean;
@@ -55,9 +66,11 @@ export interface ProvisionResult {
   notion: {
     ok: boolean;
     dataSourceId?: string;
+    pagesDataSourceId?: string;
     message?: string;
     skipped?: boolean;
     seeded?: number;
+    pagesSeeded?: number;
   };
   resend: { ok: boolean; enabled: boolean; message?: string };
   google: { ok: boolean; enabled: boolean; message?: string };
@@ -79,11 +92,13 @@ export interface ProvisionResult {
 export async function provision(
   answers: Answers,
   projectDir: string,
-  options: { interactive: boolean }
+  options: { interactive: boolean; mode?: ProvisionMode }
 ): Promise<ProvisionResult> {
+  const mode = options.mode ?? defaultProvisionMode("create");
   const result: ProvisionResult = {
     d1: { ok: false },
     kv: { ok: false },
+    vinextKv: { ok: false },
     r2: { ok: false },
     turnstile: { ok: false },
     notion: { ok: false },
@@ -91,7 +106,11 @@ export async function provision(
     google: { ok: false, enabled: false },
     migrationsApplied: false,
     deploy: { ok: false, skipped: true },
-    admin: { ok: false, email: answers.adminEmail },
+    admin: {
+      ok: true,
+      email: answers.adminEmail,
+      message: "seed migration generated",
+    },
   };
 
   // The project uses kebab-case for resource names.
@@ -126,7 +145,7 @@ export async function provision(
 
   // ---- 1. Wrangler auth ----
   try {
-    const acc = await requireWranglerAuth();
+    const acc = await requireWranglerAuthWithOptionalLogin(options.interactive);
     p.log.success(`Cloudflare: logged in (account ${acc.id.slice(0, 8)}…)`);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -134,6 +153,16 @@ export async function provision(
     p.log.info(
       "Re-run after `wrangler login`. You can still use the project; just create D1/KV/R2 by hand."
     );
+    result.turnstile = {
+      ok: false,
+      skipped: true,
+      message: "skipped until Cloudflare login",
+    };
+    result.notion = {
+      ok: false,
+      skipped: true,
+      message: "skipped because Cloudflare provisioning did not start",
+    };
     return finalize(result, projectDir, slug);
   }
 
@@ -166,6 +195,24 @@ export async function provision(
     p.log.error(`KV: ${result.kv.message}`);
   }
 
+  // Second KV namespace: vinext@0.1.1's deploy check requires a
+  // `VINEXT_KV_CACHE` binding whenever a route uses ISR / `revalidate`.
+  // Skipping this would surface a hard deploy-time error from
+  // `vinext deploy` even though `pnpm install` would have succeeded.
+  try {
+    const r = await ensureKV("VINEXT_KV_CACHE");
+    result.vinextKv = { ok: true, id: r.namespaceId, created: r.created };
+    p.log.success(
+      `KV: ${r.created ? "created" : "reused"} VINEXT_KV_CACHE (${r.namespaceId.slice(0, 8)}…)`
+    );
+  } catch (err) {
+    result.vinextKv = {
+      ok: false,
+      message: err instanceof Error ? err.message : String(err),
+    };
+    p.log.error(`KV (vinext cache): ${result.vinextKv.message}`);
+  }
+
   try {
     const r = await ensureR2(r2Name);
     result.r2 = { ok: true, name: r.bucketName, created: r.created };
@@ -178,25 +225,6 @@ export async function provision(
       message: err instanceof Error ? err.message : String(err),
     };
     p.log.error(`R2: ${result.r2.message}`);
-  }
-
-  // ---- 3b. Apply D1 migrations locally (best-effort, no project deps required) ----
-  if (result.d1.ok && result.d1.id) {
-    try {
-      // Local D1 apply: wrangler reads the binding from wrangler.jsonc
-      // and uses the local sqlite-backed miniflare store. This works
-      // even before `pnpm install`.
-      await runOrThrow(
-        "wrangler",
-        ["d1", "migrations", "apply", d1Name, "--local"],
-        { cwd: projectDir }
-      );
-      result.migrationsApplied = true;
-      p.log.success(`D1 migrations: applied to local store`);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      p.log.warn(`D1 migrations: ${msg}`);
-    }
   }
 
   // ---- 4. Turnstile ----
@@ -238,6 +266,13 @@ export async function provision(
           p.log.info(
             "Notion: no credentials detected. Run `ntn login` once to skip the token prompt, or paste a `secret_…` token below."
           );
+          autoToken = await promptNtnLogin(options.interactive);
+          if (autoToken) {
+            resolvedToken = autoToken.token;
+            p.log.success(
+              `Notion: auto-detected credentials (${describeNtnSource(autoToken.source)})`
+            );
+          }
         }
       }
     }
@@ -264,28 +299,29 @@ export async function provision(
         notionInputs = await promptNotion(
           { interactive: options.interactive },
           answers.contentSource.fields,
-          resolvedToken
+          resolvedToken,
+          answers.notionSeedCount
         );
       }
       if (notionInputs) {
-        const notionDatabaseTitle = `${answers.projectName} ${answers.contentSource.title}`;
-        const r = await ensureNotionDatabase({
+        const { content, pages } = await provisionNotionContentAndPages({
+          answers,
           apiToken: notionInputs.apiToken,
           parentPageId: notionInputs.parentPageId,
-          title: notionDatabaseTitle,
-          fields: answers.contentSource.fields,
           seedCount: notionInputs.seedCount,
         });
         result.notion = {
           ok: true,
-          dataSourceId: r.dataSourceId,
-          seeded: r.seeded,
+          dataSourceId: content.dataSourceId,
+          pagesDataSourceId: pages.dataSourceId,
+          seeded: content.seeded,
+          pagesSeeded: pages.seeded,
           ...(autoToken
             ? { message: `token from ${describeNtnSource(autoToken.source)}` }
             : {}),
         };
         p.log.success(
-          `Notion: database created (${r.dataSourceId.slice(0, 8)}…), seeded ${r.seeded} pages.`
+          `Notion: content data source ${content.dataSourceId.slice(0, 8)}… seeded ${content.seeded}; Pages ${pages.dataSourceId.slice(0, 8)}… seeded ${pages.seeded}.`
         );
         result._notionToken = resolvedToken;
       } else {
@@ -301,24 +337,26 @@ export async function provision(
       // interactive paste prompt.
       const notion = await promptNotion(
         { interactive: options.interactive },
-        answers.contentSource.fields
+        answers.contentSource.fields,
+        undefined,
+        answers.notionSeedCount
       );
       if (notion) {
-        const notionDatabaseTitle = `${answers.projectName} ${answers.contentSource.title}`;
-        const r = await ensureNotionDatabase({
+        const { content, pages } = await provisionNotionContentAndPages({
+          answers,
           apiToken: notion.apiToken,
           parentPageId: notion.parentPageId,
-          title: notionDatabaseTitle,
-          fields: answers.contentSource.fields,
           seedCount: notion.seedCount,
         });
         result.notion = {
           ok: true,
-          dataSourceId: r.dataSourceId,
-          seeded: r.seeded,
+          dataSourceId: content.dataSourceId,
+          pagesDataSourceId: pages.dataSourceId,
+          seeded: content.seeded,
+          pagesSeeded: pages.seeded,
         };
         p.log.success(
-          `Notion: database created (${r.dataSourceId.slice(0, 8)}…), seeded ${r.seeded} pages.`
+          `Notion: content data source ${content.dataSourceId.slice(0, 8)}… seeded ${content.seeded}; Pages ${pages.dataSourceId.slice(0, 8)}… seeded ${pages.seeded}.`
         );
         result._notionToken = notion.apiToken;
       } else {
@@ -349,44 +387,58 @@ export async function provision(
   result.google = { ok: true, enabled: false, message: "skipped (configure manually later)" };
 
   // ---- 7. Wire everything into wrangler.jsonc + .dev.vars ----
-  if (result.d1.ok && result.kv.ok) {
-    const wireInputs: WireInputs = {
+  let wireInputs: WireInputs | null = null;
+  if (result.d1.ok && result.kv.ok && result.vinextKv.ok) {
+    wireInputs = {
       d1DatabaseId: result.d1.id!,
       kvNamespaceId: result.kv.id!,
+      vinextKvNamespaceId: result.vinextKv.id!,
       turnstileSitekey: result.turnstile.sitekey,
       turnstileSecret: result.turnstile.ok ? result.turnstile.secret : undefined,
       notionToken: result._notionToken,
       notionDataSourceId: result.notion.dataSourceId,
+      notionPagesDataSourceId: result.notion.pagesDataSourceId,
     };
     try {
       await patchWranglerJsonc(projectDir, wireInputs);
       await writeDevVars(projectDir, wireInputs);
       p.log.success(`Wired: wrangler.jsonc + .dev.vars updated.`);
+      if (result.d1.ok && result.d1.id) {
+        try {
+          await runOrThrow(
+            "wrangler",
+            ["d1", "migrations", "apply", d1Name, "--local"],
+            { cwd: projectDir }
+          );
+          result.migrationsApplied = true;
+          p.log.success(`D1 migrations: applied to local store`);
+          await runOrThrow(
+            "wrangler",
+            [
+              "d1",
+              "execute",
+              d1Name,
+              "--local",
+              "--file",
+              "migrations/0002_admin_seed.sql",
+            ],
+            { cwd: projectDir }
+          );
+          p.log.success(`D1 admin seed: refreshed locally`);
+        } catch (migrationErr) {
+          const msg =
+            migrationErr instanceof Error
+              ? migrationErr.message
+              : String(migrationErr);
+          p.log.warn(`D1 migrations: ${msg}`);
+        }
+      }
     } catch (err) {
       p.log.error(
         `Wiring failed: ${err instanceof Error ? err.message : err}`
       );
     }
 
-    // Set the Turnstile secret on the worker (best-effort, requires
-    // the worker to be deployable — i.e. `pnpm install` must have
-    // happened). Skip silently if wrangler secret put fails because
-    // the worker hasn't been built yet.
-    if (wireInputs.turnstileSecret) {
-      try {
-        await setWorkerSecret(
-          "TURNSTILE_SECRET_KEY",
-          wireInputs.turnstileSecret,
-          projectDir,
-          [wireInputs.turnstileSecret]
-        );
-        p.log.success(`Worker secret: TURNSTILE_SECRET_KEY set.`);
-      } catch {
-        p.log.info(
-          "Worker secret: skipped (run `pnpm install && pnpm exec wrangler secret put TURNSTILE_SECRET_KEY` after install)."
-        );
-      }
-    }
   }
 
   // ---- 6. Admin account ----
@@ -400,8 +452,18 @@ export async function provision(
   result.admin = {
     ok: true,
     email: answers.adminEmail,
-    message: "seeded via 0002_admin_seed.sql",
+    message: "seed refreshed via 0002_admin_seed.sql",
   };
+
+  if (!mode.deploy) {
+    result.deploy = {
+      ok: false,
+      workerName: slug,
+      skipped: true,
+      message: "deploy disabled for this provisioning mode",
+    };
+    return finalize(result, projectDir, slug);
+  }
 
   // ---- 7. Deploy ----
   // Goal: one scaffolder command = a live `https://<name>.<subdomain>.workers.dev`
@@ -444,6 +506,32 @@ export async function provision(
     }
     p.log.success("D1 migrations: applied to remote.");
 
+    const remoteAdminSeed = await run(
+      "pnpm",
+      [
+        "exec",
+        "wrangler",
+        "d1",
+        "execute",
+        d1Name,
+        "--remote",
+        "--file",
+        "migrations/0002_admin_seed.sql",
+      ],
+      { cwd: projectDir }
+    );
+    if (remoteAdminSeed.code !== 0) {
+      const tail = (remoteAdminSeed.stderr || remoteAdminSeed.stdout)
+        .trim()
+        .split("\n")
+        .slice(-6)
+        .join("\n");
+      throw new Error(
+        `wrangler d1 execute admin seed --remote failed (exit ${remoteAdminSeed.code}):\n${tail}`
+      );
+    }
+    p.log.success("D1 admin seed: refreshed on remote.");
+
     const deploy = await run("pnpm", ["exec", "vinext", "deploy"], {
       cwd: projectDir,
     });
@@ -451,24 +539,37 @@ export async function provision(
       const tail = (deploy.stderr || deploy.stdout).trim().split("\n").slice(-8).join("\n");
       throw new Error(`vinext deploy failed (exit ${deploy.code}):\n${tail}`);
     }
-    // wrangler prints lines like:
-    //   Published <name> (X.XX sec)
-    //     https://<name>.<subdomain>.workers.dev
-    // Pull the URL out so the status card can link to it.
-    const deployText = (deploy.stdout + "\n" + deploy.stderr).replace(
-      /\u001b\[[0-9;]*m/g,
-      ""
-    );
-    const urlMatch = deployText.match(
-      /https:\/\/[a-zA-Z0-9._-]+\.workers\.dev/
-    );
+    const firstDeployUrl = parseWorkerUrl(deploy.stdout + "\n" + deploy.stderr);
+    const secretsChanged = await setProvisionedWorkerSecrets({
+      projectDir,
+      wireInputs,
+      requireNotionSecrets: result.notion.ok,
+    });
+
+    let finalUrl = firstDeployUrl;
+    if (firstDeployUrl) {
+      await patchSiteUrl(projectDir, firstDeployUrl);
+      p.log.success(`SITE_URL: ${firstDeployUrl}`);
+    }
+
+    if (firstDeployUrl || secretsChanged) {
+      const redeploy = await run("pnpm", ["exec", "vinext", "deploy"], {
+        cwd: projectDir,
+      });
+      if (redeploy.code !== 0) {
+        const tail = (redeploy.stderr || redeploy.stdout).trim().split("\n").slice(-8).join("\n");
+        throw new Error(`vinext deploy failed after secrets/SITE_URL update (exit ${redeploy.code}):\n${tail}`);
+      }
+      finalUrl = parseWorkerUrl(redeploy.stdout + "\n" + redeploy.stderr) ?? finalUrl;
+    }
+
     result.deploy = {
       ok: true,
-      url: urlMatch?.[0],
+      url: finalUrl,
       workerName: slug,
     };
     p.log.success(
-      `Worker deployed: ${urlMatch?.[0] ?? "(url not detected in output)"}`
+      `Worker deployed: ${finalUrl ?? "(url not detected in output)"}`
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -486,6 +587,172 @@ export async function provision(
   return finalize(result, projectDir, slug);
 }
 
+async function requireWranglerAuthWithOptionalLogin(
+  interactive: boolean
+): Promise<CloudflareAccount> {
+  try {
+    return await requireWranglerAuth();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!interactive || !/wrangler.*not logged in|wrangler login/i.test(message)) {
+      throw err;
+    }
+
+    const login = await p.confirm({
+      message:
+        "Cloudflare is not logged in. Run `wrangler login` now and continue provisioning?",
+      initialValue: true,
+    });
+    if (p.isCancel(login) || !login) throw err;
+
+    const loginResult = await runInteractive("wrangler", ["login"]);
+    if (loginResult.code !== 0) {
+      throw new Error(
+        `wrangler login failed (exit ${loginResult.code ?? "unknown"})`
+      );
+    }
+    return requireWranglerAuth();
+  }
+}
+
+async function promptNtnLogin(
+  interactive: boolean
+): Promise<NtnCredential | null> {
+  if (!interactive) return null;
+  const login = await p.confirm({
+    message:
+      "Notion is not logged in. Run `ntn login` now so the scaffolder can create and seed the content database?",
+    initialValue: true,
+  });
+  if (p.isCancel(login) || !login) return null;
+
+  const start = await run("ntn", ["login", "--no-browser"]);
+  if (start.code !== 0) {
+    p.log.warn(
+      `ntn login --no-browser failed (exit ${start.code ?? "unknown"}).`
+    );
+    return null;
+  }
+  const output = start.stdout.trim();
+  if (output) {
+    console.log("");
+    console.log(output);
+    console.log("");
+  }
+
+  const url = output.match(/https?:\/\/\S+/)?.[0];
+  if (url) {
+    p.log.info(`Opening Notion login URL in your browser:\n  ${url}`);
+    // Best-effort macOS/browser launcher. The URL is printed above so
+    // users still have a manual path when `open` is unavailable.
+    await run("open", [url]).catch(() => null);
+  }
+
+  const poll = await runInteractive("ntn", ["login", "poll"]);
+  if (poll.code !== 0) {
+    p.log.warn(`ntn login poll failed (exit ${poll.code ?? "unknown"}).`);
+    return null;
+  }
+
+  const token = await readNtnToken();
+  if (token) return token;
+  p.log.warn(
+    "ntn login finished, but the scaffolder could not read the saved token. You can paste a `secret_…` integration token instead."
+  );
+  return null;
+}
+
+function parseWorkerUrl(text: string): string | undefined {
+  // wrangler prints lines like:
+  //   Published <name> (X.XX sec)
+  //     https://<name>.<subdomain>.workers.dev
+  const clean = text.replace(/\u001b\[[0-9;]*m/g, "");
+  return clean.match(/https:\/\/[a-zA-Z0-9._-]+\.workers\.dev/)?.[0];
+}
+
+async function provisionNotionContentAndPages({
+  answers,
+  apiToken,
+  parentPageId,
+  seedCount,
+}: {
+  answers: Answers;
+  apiToken: string;
+  parentPageId: string;
+  seedCount: number;
+}) {
+  const content = await ensureNotionDatabase({
+    apiToken,
+    parentPageId,
+    title: `${answers.projectName} ${answers.contentSource.title}`,
+    stableKey: `content:${answers.contentSource.id}`,
+    locale: answers.defaultLocale,
+    fields: answers.contentSource.fields,
+    seedCount,
+  });
+
+  const pages = await ensurePagesDatabase({
+    apiToken,
+    parentPageId,
+    projectName: answers.projectName,
+    contentSourceId: answers.contentSource.id,
+    contentSourceTitle: answers.contentSource.title,
+    contentSourceListPath: `/${answers.contentSource.id}`,
+    locale: answers.defaultLocale,
+  });
+
+  return { content, pages };
+}
+
+async function setProvisionedWorkerSecrets({
+  projectDir,
+  wireInputs,
+  requireNotionSecrets,
+}: {
+  projectDir: string;
+  wireInputs: WireInputs | null;
+  requireNotionSecrets: boolean;
+}): Promise<boolean> {
+  if (!wireInputs) return false;
+  let changed = false;
+
+  const putSecret = async (
+    name: string,
+    value: string | undefined,
+    required: boolean
+  ) => {
+    if (!value) return;
+    try {
+      await setWorkerSecret(name, value, projectDir, [value]);
+      p.log.success(`Worker secret: ${name} set.`);
+      changed = true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (required) {
+        throw new Error(
+          `failed to set ${name}; production content will be empty until this secret is set:\n${message}`
+        );
+      }
+      p.log.info(`Worker secret: ${name} skipped (${message.split("\n")[0]}).`);
+    }
+  };
+
+  await putSecret("TURNSTILE_SECRET_KEY", wireInputs.turnstileSecret, false);
+  await putSecret("NOTION_TOKEN", wireInputs.notionToken, requireNotionSecrets);
+  await putSecret(
+    "NOTION_DATA_SOURCE_ID",
+    wireInputs.notionDataSourceId,
+    requireNotionSecrets
+  );
+  await putSecret(
+    "NOTION_PAGES_DATA_SOURCE_ID",
+    wireInputs.notionPagesDataSourceId,
+    requireNotionSecrets
+  );
+
+  return changed;
+}
+
 function finalize(
   result: ProvisionResult,
   _projectDir: string,
@@ -500,6 +767,13 @@ function finalize(
   };
   row("D1", result.d1.ok ? "ok" : "fail", result.d1.ok ? `${slug}-db (${result.d1.id?.slice(0, 8)}…)` : (result.d1.message ?? "failed"));
   row("KV", result.kv.ok ? "ok" : "fail", result.kv.ok ? `CONTENT_CACHE (${result.kv.id?.slice(0, 8)}…)` : (result.kv.message ?? "failed"));
+  row(
+    "KV (cache)",
+    result.vinextKv.ok ? "ok" : "fail",
+    result.vinextKv.ok
+      ? `VINEXT_KV_CACHE (${result.vinextKv.id?.slice(0, 8)}…)`
+      : (result.vinextKv.message ?? "failed")
+  );
   row("R2", result.r2.ok ? "ok" : "fail", result.r2.ok ? `${slug}-assets` : (result.r2.message ?? "failed"));
   row("Migrations", result.migrationsApplied ? "ok" : "warn", result.migrationsApplied ? "applied locally" : "skipped or failed (run `pnpm run migrate:local` after install)");
   row(
@@ -515,7 +789,7 @@ function finalize(
     "Notion",
     result.notion.ok ? "ok" : result.notion.skipped ? "warn" : "fail",
     result.notion.ok
-      ? `data source ${result.notion.dataSourceId?.slice(0, 8)}…, seeded ${result.notion.seeded ?? 0} pages${result.notion.message ? " (" + result.notion.message + ")" : ""}`
+      ? `content ${result.notion.dataSourceId?.slice(0, 8)}… (${result.notion.seeded ?? 0} posts), pages ${result.notion.pagesDataSourceId?.slice(0, 8)}… (${result.notion.pagesSeeded ?? 0} pages)${result.notion.message ? " (" + result.notion.message + ")" : ""}`
       : result.notion.skipped
         ? "skipped (set NOTION_API_TOKEN or run `ntn login` to auto-create)"
         : (result.notion.message ?? "failed")

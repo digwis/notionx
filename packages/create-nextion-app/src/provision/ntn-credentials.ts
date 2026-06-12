@@ -32,7 +32,7 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { homedir, platform } from "node:os";
-import { run } from "./shell.js";
+import { run, runNtn } from "./shell.js";
 
 export interface NtnCredential {
   token: string;
@@ -200,7 +200,11 @@ async function readFromAuthJson(): Promise<NtnCredential | null> {
  * hint when we fail to read the token directly.
  */
 export async function isNtnLoggedIn(): Promise<boolean> {
-  const r = await run("ntn", ["whoami"], {});
+  // `ntn whoami` is read-only but still calls libuv's
+  // `uv_tty_init` on startup, so we keep the PTY-aware wrapper for
+  // it to actually exit 0 on hosts where the libuv TTY dance is
+  // strict.
+  const r = await runNtn(["whoami"]);
   return r.code === 0;
 }
 

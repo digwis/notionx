@@ -85,8 +85,12 @@ export interface CliStatus {
 }
 
 async function probeCli(name: string): Promise<{ ok: boolean; stdout: string }> {
-  const r = await run(name, ["--version"], {});
-  return { ok: r.code === 0, stdout: r.stdout };
+  try {
+    const r = await run(name, ["--version"], {});
+    return { ok: r.code === 0, stdout: r.stdout };
+  } catch {
+    return { ok: false, stdout: "" };
+  }
 }
 
 function isVersionAtLeast(actual: string, min: string): boolean {

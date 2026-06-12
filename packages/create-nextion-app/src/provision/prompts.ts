@@ -99,7 +99,8 @@ export async function promptGoogle(
 export async function promptNotion(
   ctx: PromptContext,
   fields: AnswersContentField[],
-  preloadedToken?: string
+  preloadedToken?: string,
+  seedCount = 3
 ): Promise<OptionalNotion | null> {
   if (!ctx.interactive) return null;
   let apiToken = preloadedToken ?? "";
@@ -113,33 +114,36 @@ export async function promptNotion(
     if (p.isCancel(input) || !input) return null;
     apiToken = String(input).trim();
   }
+  p.log.info(
+    [
+      "Notion parent page:",
+      "  1. Create or choose a Notion page.",
+      "  2. Add the Notion CLI / integration connection to that page.",
+      "  3. Paste the page URL or page id below.",
+      "The scaffolder will create the blog database and 3 realistic sample posts under it.",
+    ].join("\n")
+  );
   const parentPageId = await p.text({
-    message: "Parent page id (the page your integration can edit)",
-    placeholder: "00000000000000000000000000",
+    message: "Parent page URL or id (the page your integration can edit)",
+    placeholder: "https://www.notion.so/workspace/Page-00000000000000000000000000000000",
     initialValue: preloadedToken ? "" : undefined,
-    validate: (v) =>
-      !v || !/^[0-9a-f]{32}$/.test(v.trim())
-        ? "Must be a 32-char hex page id"
-        : undefined,
-  });
-  if (p.isCancel(parentPageId)) return null;
-  const seedCountRaw = await p.text({
-    message: "How many sample pages to seed? (0 to skip)",
-    placeholder: "3",
-    initialValue: "3",
     validate: (v) => {
-      const n = Number(v);
-      return Number.isInteger(n) && n >= 0 && n <= 50
-        ? undefined
-        : "Enter an integer 0–50";
+      const id = extractNotionPageId(v ?? "");
+      return id ? undefined : "Paste a Notion page URL or a 32-char page id";
     },
   });
-  if (p.isCancel(seedCountRaw)) return null;
+  if (p.isCancel(parentPageId)) return null;
   return {
     apiToken,
-    parentPageId: String(parentPageId).trim(),
-    seedCount: Number(seedCountRaw),
+    parentPageId: extractNotionPageId(String(parentPageId))!,
+    seedCount,
   };
+}
+
+function extractNotionPageId(value: string): string | null {
+  const compact = value.trim().replace(/-/g, "");
+  const matches = compact.match(/[0-9a-fA-F]{32}/g);
+  return matches?.at(-1)?.toLowerCase() ?? null;
 }
 
 export const _internal = { SAFE_NON_TTY };

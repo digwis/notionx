@@ -7,8 +7,14 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { buildScaffoldMetadata, SCAFFOLD_METADATA_FILE } from "./metadata.js";
 import type { Answers } from "./prompt.js";
 import { hashPasswordForScaffold } from "./provision/password-hash.js";
+import {
+  renderDependencyLines,
+  uiComponentsForPreset,
+  uiDependenciesForPreset,
+} from "./ui-presets.js";
 
 interface TokenMap {
   projectName: string;
@@ -38,6 +44,10 @@ interface TokenMap {
   adminEmail: string;
   adminName: string;
   adminPasswordHash: string;
+  uiPreset: string;
+  uiDependencies: string;
+  uiComponentList: string;
+  uiComponents: readonly string[];
 }
 
 function toKebab(input: string): string {
@@ -86,6 +96,7 @@ async function buildTokenMap(answers: Answers): Promise<TokenMap> {
   const adminPasswordHash = await hashPasswordForScaffold(
     answers.adminPassword
   );
+  const uiComponents = uiComponentsForPreset(answers.uiPreset);
 
   return {
     projectName: answers.projectName,
@@ -119,16 +130,35 @@ async function buildTokenMap(answers: Answers): Promise<TokenMap> {
     adminEmail: answers.adminEmail,
     adminName: localPart(answers.adminEmail),
     adminPasswordHash,
+    uiPreset: answers.uiPreset,
+    uiDependencies: renderDependencyLines(
+      uiDependenciesForPreset(answers.uiPreset)
+    ),
+    uiComponentList: uiComponents.map((name) => `\`${name}\``).join(", "),
+    uiComponents,
   };
 }
 
 function renderTemplate(input: string, tokens: TokenMap): string {
   return input.replace(/\{\{\s*([a-zA-Z][a-zA-Z0-9_]*)\s*\}\}/g, (full, key: string) => {
-    if (key in tokens) {
-      return String((tokens as unknown as Record<string, string>)[key]);
+    const value = (tokens as unknown as Record<string, unknown>)[key];
+    if (typeof value === "string") {
+      return value;
     }
     return full;
   });
+}
+
+function templateUiComponentName(filePath: string): string | null {
+  if (path.basename(path.dirname(filePath)) !== "ui") return null;
+  const baseName = path.basename(filePath);
+  if (!baseName.endsWith(".tsx.tmpl")) return null;
+  return baseName.slice(0, -".tsx.tmpl".length);
+}
+
+function shouldSkipTemplate(filePath: string, tokens: TokenMap): boolean {
+  const component = templateUiComponentName(filePath);
+  return Boolean(component && !tokens.uiComponents.includes(component));
 }
 
 async function exists(p: string): Promise<boolean> {
@@ -142,6 +172,19 @@ async function exists(p: string): Promise<boolean> {
 
 async function ensureDir(p: string): Promise<void> {
   await fs.mkdir(p, { recursive: true });
+}
+
+async function readPackageVersion(): Promise<string> {
+  const packageJsonUrl = new URL("../package.json", import.meta.url);
+  const raw = await fs.readFile(packageJsonUrl, "utf8");
+  const parsed = JSON.parse(raw) as { version?: string };
+  return parsed.version ?? "0.0.0";
+}
+
+export async function resolveTemplatesDir(): Promise<string> {
+  const compiled = path.resolve(import.meta.dirname, "templates");
+  const fromSource = path.resolve(import.meta.dirname, "..", "src", "templates");
+  return (await exists(compiled)) ? compiled : fromSource;
 }
 
 async function copyDir(src: string, dest: string): Promise<void> {
@@ -183,6 +226,11 @@ export async function render(
   }
 
   await ensureDir(absoluteOut);
+  const scaffoldVersion = await readPackageVersion();
+  const metadata = buildScaffoldMetadata(answers, scaffoldVersion);
+  const metadataPath = path.join(absoluteOut, SCAFFOLD_METADATA_FILE);
+  await ensureDir(path.dirname(metadataPath));
+  await fs.writeFile(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`, "utf8");
 
   // Walk templates/ — every file is either a `.tmpl` (interpolated and
   // written without the `.tmpl` suffix) or a literal copy.
@@ -193,6 +241,7 @@ export async function render(
       const dest = path.join(absoluteOut, entry.name);
       await copyDirWithRender(from, dest, tokens);
     } else if (entry.isFile()) {
+      if (shouldSkipTemplate(from, tokens)) continue;
       await writeFileWithRender(from, absoluteOut, tokens);
     }
   }
@@ -208,8 +257,15 @@ async function copyDirWithRender(
   for (const entry of entries) {
     const from = path.join(src, entry.name);
     if (entry.isDirectory()) {
-      await copyDirWithRender(from, path.join(dest, entry.name), tokens);
+      // Directory names may also contain tokens (e.g. the blog page
+      // lives at `app/{{contentSourceListPath}}/page.tsx.tmpl` so
+      // the directory itself must be rendered to `/blog` at scaffold
+      // time). Falling through to a literal name would produce an
+      // invalid `{{contentSourceListPath}}` folder in the project.
+      const renderedName = renderTemplate(entry.name, tokens);
+      await copyDirWithRender(from, path.join(dest, renderedName), tokens);
     } else if (entry.isFile()) {
+      if (shouldSkipTemplate(from, tokens)) continue;
       await writeFileWithRender(from, dest, tokens);
     }
   }

@@ -13,12 +13,15 @@ import path from "node:path";
 export interface WireInputs {
   d1DatabaseId: string;
   kvNamespaceId: string;
+  /** vinext@0.1.1 ISR data cache KV (`VINEXT_KV_CACHE` binding). */
+  vinextKvNamespaceId: string;
   /** Optional Turnstile values. */
   turnstileSitekey?: string;
   turnstileSecret?: string;
   /** Optional Notion values. */
   notionToken?: string;
   notionDataSourceId?: string;
+  notionPagesDataSourceId?: string;
   /** Optional Resend values. */
   resendApiKey?: string;
   resendFrom?: string;
@@ -36,7 +39,22 @@ export async function patchWranglerJsonc(
   const raw = await fs.readFile(file, "utf8");
   let patched = raw
     .replace(/REPLACE_WITH_D1_DATABASE_ID/g, inputs.d1DatabaseId)
-    .replace(/REPLACE_WITH_KV_NAMESPACE_ID/g, inputs.kvNamespaceId);
+    .replace(/REPLACE_WITH_KV_NAMESPACE_ID/g, inputs.kvNamespaceId)
+    .replace(/REPLACE_WITH_VINEXT_KV_NAMESPACE_ID/g, inputs.vinextKvNamespaceId);
+  await fs.writeFile(file, patched, "utf8");
+}
+
+/** Patch the deployed worker URL back into `vars.SITE_URL`. */
+export async function patchSiteUrl(
+  projectDir: string,
+  siteUrl: string
+): Promise<void> {
+  const file = path.join(projectDir, "wrangler.jsonc");
+  const raw = await fs.readFile(file, "utf8");
+  const patched = raw.replace(
+    /"SITE_URL"\s*:\s*"[^"]*"/,
+    `"SITE_URL": "${siteUrl}"`
+  );
   await fs.writeFile(file, patched, "utf8");
 }
 
@@ -59,6 +77,7 @@ export async function writeDevVars(
     TURNSTILE_SECRET_KEY: inputs.turnstileSecret ?? "",
     NOTION_TOKEN: inputs.notionToken ?? "",
     NOTION_DATA_SOURCE_ID: inputs.notionDataSourceId ?? "",
+    NOTION_PAGES_DATA_SOURCE_ID: inputs.notionPagesDataSourceId ?? "",
     RESEND_API_KEY: inputs.resendApiKey ?? "",
     RESEND_FROM: inputs.resendFrom ?? "",
     GOOGLE_CLIENT_ID: inputs.googleClientId ?? "",
