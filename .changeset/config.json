@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@2/schema.json",
-  "changelog": ["@notionx/core", "create-nextion-app"],
+  "changelog": false,
   "commit": false,
   "fixed": [],
   "linked": [],
