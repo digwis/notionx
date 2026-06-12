@@ -1,28 +1,47 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { siteConfig } from "@/lib/site/config";
+import { getSiteSettings, getStaticSiteSettings } from "@/lib/site/settings";
+import { fallbackSiteConfig } from "@/lib/site/config";
 
-export const metadata: Metadata = {
-  title: {
-    default: siteConfig.name,
-    template: `%s · ${siteConfig.name}`,
-  },
-  description: siteConfig.description,
-  openGraph: {
-    title: siteConfig.name,
-    description: siteConfig.description,
-    type: "website",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  // `generateMetadata` is async, so we can read site settings from
+  // Notion at request time. The KV cache in `getSiteSettings` keeps
+  // this cheap — only the first request after a Notion edit pays the
+  // upstream RTT.
+  const settings = await getSiteSettings();
+  return {
+    title: {
+      default: settings.name,
+      // The `template` only applies to *child* segments. The home
+      // page below overrides with `title: { absolute: ... }` so the
+      // tab title doesn't render as `${name} · ${name}`.
+      template: `%s · ${settings.name}`,
+    },
+    description: settings.description,
+    openGraph: {
+      title: settings.name,
+      description: settings.description,
+      ...(settings.socialImageUrl ? { images: [{ url: settings.socialImageUrl }] } : {}),
+      type: "website",
+    },
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Read once on the server so children can use a synchronous
+  // reference. Falls back to the hard-coded values when Notion is
+  // unreachable.
+  const settings = (await getSiteSettings()) ?? getStaticSiteSettings();
   return (
-    <html lang="{{defaultLocale}}" suppressHydrationWarning>
+    <html
+      lang={settings.defaultLocale ?? fallbackSiteConfig.defaultLocale}
+      suppressHydrationWarning
+    >
       <body className="min-h-screen bg-background font-sans antialiased">
         <ThemeProvider
           attribute="class"

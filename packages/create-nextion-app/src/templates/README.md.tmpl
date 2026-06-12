@@ -71,6 +71,12 @@ pnpm exec wrangler r2 bucket create {{projectNameLower}}-assets
 #   (If the scaffolder already auto-created the database via `ntn`,
 #    see "Switching the Notion integration" below to use your own
 #    integration for ongoing API access.)
+#   The scaffolder also creates a SECOND Notion data source for
+#   site-level settings (name, tagline, description, default locale,
+#   social image) — its id lands in
+#   .dev.vars → NOTION_SITE_SETTINGS_DATA_SOURCE_ID. Edit the single
+#   row in that database to update your home page / SEO metadata
+#   without redeploying.
 
 # 7. Resend (optional)
 #   Get an API key at https://resend.com/api-keys
@@ -90,8 +96,9 @@ pnpm exec wrangler r2 bucket create {{projectNameLower}}-assets
 - `app/login/page.tsx` — email/password login wired to `authConfig`
 - `lib/auth.config.ts` — `AuthConfig` consumed by `createAuth`
 - `lib/admin/nav.ts` — sidebar items for `/admin/*`
-- `lib/site/config.ts` — site-level config rendered on the landing page
-- `lib/content/models.ts` — one Notion-backed content source: `{{contentSourceId}}`
+- `lib/site/config.ts` — static fallback values for site-level config
+- `lib/site/settings.ts` — Notion-backed loader for the same config (KV-cached, 5 min TTL)
+- `lib/content/models.ts` — Notion-backed content sources: `{{contentSourceId}}` + `site-settings` (singleton)
 - `worker/index.ts` — `createNextionWorker` + vinext fallthrough
 - `migrations/0001_init.sql` — nextion auth schema (users, app_settings, auth_rate_limits)
 - `wrangler.jsonc` — D1 + KV + R2 + Images + Assets bindings
@@ -202,6 +209,18 @@ pnpm dlx shadcn@latest add https://21st.dev/r/sonner.json
 
 New files land in `components/ui/` and pick up the existing token
 variables automatically. After adding, import and use as usual.
+
+## Site settings
+
+The `lib/site/settings.ts` module reads site-level config (name, tagline, description, default locale, social image) from a dedicated Notion data source (`NOTION_SITE_SETTINGS_DATA_SOURCE_ID`). The scaffolder creates this data source automatically alongside the main content source and seeds a single row populated with the project name.
+
+To edit site copy:
+
+1. Open the site-settings database in Notion (its title is `<projectName> Site Settings`).
+2. Edit the `Site Name`, `Tagline`, `Description`, `Default Locale`, or `Social Image` columns of the single row.
+3. Changes show up within 5 minutes (KV cache TTL) — or hit the admin revalidate endpoint for an instant refresh.
+
+If Notion is unreachable, the loader returns the hard-coded values from `lib/site/config.ts`, so the site stays up even when the CMS is down. To opt out of the Notion-backed loader entirely, re-run the scaffolder with `--no-site-settings` and revert `lib/site/settings.ts` to a one-liner that returns `siteConfig`.
 
 ## Switching the Notion integration
 
