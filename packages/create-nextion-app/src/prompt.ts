@@ -1,11 +1,12 @@
 // packages/create-nextion-app/src/prompt.ts
 //
 // Interactive prompt for `create-nextion-app`. The flow is intentionally
-// minimal: we only ask for the project name. Everything else (locale,
-// content-source shape, etc.) uses sensible defaults that can be edited
-// in the generated project after scaffolding.
+// minimal: we ask for the project name, language mode, and admin email.
+// Everything else (content-source shape, etc.) uses sensible defaults
+// that can be edited in the generated project after scaffolding.
 
 import * as p from "@clack/prompts";
+import { generateRandomPassword } from "./password.js";
 
 export interface AnswersContentField {
   /** Field name in camelCase used in the generated TS model, e.g. "title". */
@@ -20,15 +21,19 @@ export interface AnswersContentSource {
   fields: AnswersContentField[];
 }
 
+export type UiPreset = "minimal" | "site" | "app";
+
 export interface Answers {
   projectName: string;
   targetDir: string;
   defaultLocale: string;
   supportedLocales: string[];
   contentSource: AnswersContentSource;
+  /** UI component preset copied into the generated project. */
+  uiPreset: UiPreset;
   /**
    * Dependency specifier used for `@notionx/core` in the
-   * generated `package.json`. Default: `"^0.1.1"` (the version
+   * generated `package.json`. Default: `"^0.1.2"` (the version
    * published to npm). When developing inside the vinext monorepo,
    * pass `--nextion-source workspace:*` (or `link:…` / `file:…`)
    * so the scaffold consumes the local checkout instead.
@@ -41,11 +46,10 @@ export interface Answers {
    */
   adminEmail: string;
   /**
-   * Plaintext password for the admin account. Hashed via PBKDF2-SHA256
-   * (matching `@notionx/core`'s `hashPassword`) at render time and
-   * baked into `migrations/0002_admin_seed.sql`. Never persisted in
-   * plaintext — it lives only in memory for the duration of one
-   * scaffolder run.
+   * Plaintext password for the admin account. The scaffolder generates
+   * it by default, hashes it via PBKDF2-SHA256 at render time, and
+   * prints the plaintext once at the end. It is never persisted in
+   * plaintext.
    */
   adminPassword: string;
   /**
@@ -59,6 +63,23 @@ export interface Answers {
 }
 
 const FIELD_KEY_RE = /^[a-z][a-zA-Z0-9]*$/;
+const LANGUAGE_OPTIONS = {
+  en: {
+    defaultLocale: "en",
+    supportedLocales: ["en"],
+    label: "English",
+  },
+  zh: {
+    defaultLocale: "zh-CN",
+    supportedLocales: ["zh-CN"],
+    label: "中文",
+  },
+  bilingual: {
+    defaultLocale: "en",
+    supportedLocales: ["en", "zh-CN"],
+    label: "English + 中文",
+  },
+} as const;
 
 function asString(value: unknown, fallback: string): string {
   if (typeof value === "string" && value.trim().length > 0) return value.trim();
@@ -83,13 +104,14 @@ export const DEFAULT_ANSWERS: Omit<
 > = {
   defaultLocale: "en",
   supportedLocales: ["en"],
-  nextionSource: "^0.1.1",
+  nextionSource: "^0.1.2",
   // Admin defaults are placeholders only — `gatherAnswers()` and the
   // interactive prompt both overwrite them. The strings here are
   // chosen so any logic that accidentally reads them sees clearly
   // non-runnable values.
   adminEmail: "admin@example.com",
   adminPassword: "ChangeMe1234",
+  uiPreset: "site",
   notionParentPage: "",
   notionSeedCount: 3,
   contentSource: {
@@ -140,6 +162,61 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
       ? targetFromArg.trim()
       : `./${projectName}`;
 
+  const languageMode = await p.select({
+    message: "Project language?",
+    initialValue: "en",
+    options: [
+      {
+        value: "en",
+        label: "English",
+        hint: "single-language starter",
+      },
+      {
+        value: "zh",
+        label: "中文",
+        hint: "单语言中文项目",
+      },
+      {
+        value: "bilingual",
+        label: "English + 中文",
+        hint: "ready for future multilingual content",
+      },
+    ],
+  });
+  if (p.isCancel(languageMode)) {
+    p.cancel("Cancelled by user");
+    throw new Error("cancelled");
+  }
+  const localeConfig =
+    LANGUAGE_OPTIONS[String(languageMode) as keyof typeof LANGUAGE_OPTIONS] ??
+    LANGUAGE_OPTIONS.en;
+
+  const uiPreset = await p.select({
+    message: "UI preset?",
+    initialValue: DEFAULT_ANSWERS.uiPreset,
+    options: [
+      {
+        value: "site",
+        label: "Site Builder",
+        hint: "recommended for Notion pages",
+      },
+      {
+        value: "minimal",
+        label: "Minimal",
+        hint: "lean blog and simple content",
+      },
+      {
+        value: "app",
+        label: "App Dashboard",
+        hint: "forms, admin, and richer app UI",
+      },
+    ],
+  });
+  if (p.isCancel(uiPreset)) {
+    p.cancel("Cancelled by user");
+    throw new Error("cancelled");
+  }
+
   // Summarise the canned defaults so the user knows what they're agreeing to.
   const fieldsList = DEFAULT_ANSWERS.contentSource.fields
     .map((f) => f.notionName)
@@ -148,8 +225,10 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
     [
       `Defaults:`,
       `  target dir      : ${targetDir}`,
-      `  default locale  : ${DEFAULT_ANSWERS.defaultLocale}`,
-      `  supported locale: ${DEFAULT_ANSWERS.supportedLocales.join(", ")}`,
+      `  language        : ${localeConfig.label}`,
+      `  default locale  : ${localeConfig.defaultLocale} (fallback/current)`,
+      `  supported locales: ${localeConfig.supportedLocales.join(", ")} (available)`,
+      `  UI preset      : ${String(uiPreset)}`,
       `  content source  : ${DEFAULT_ANSWERS.contentSource.id} (${DEFAULT_ANSWERS.contentSource.title})`,
       `  fields          : ${fieldsList}`,
     ].join("\n")
@@ -165,12 +244,12 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
   }
 
   // Admin account — collected last so users see what they're agreeing
-  // to before we ask for credentials. The password is hashed at
-  // render time and never persisted in plaintext.
+  // to before we ask for credentials. The password is generated here,
+  // hashed at render time, and printed once at the end by index.ts.
   p.log.info(
     "Admin account: the email below is granted the `admin` role on first login. " +
-      "The password is hashed (PBKDF2-SHA256, 100k iter) and stored in D1; the scaffolder " +
-      "does not save it anywhere on disk."
+      "The scaffolder will generate an initial password, hash it into D1, " +
+      "and print it once after setup so you can log in and change it."
   );
   const adminEmail = asString(
     await p.text({
@@ -186,19 +265,7 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
     }),
     ""
   );
-  const adminPassword = asString(
-    await p.password({
-      message: "Admin password? (≥8 chars, letters + digits)",
-      validate: (v) => {
-        const t = (v ?? "").trim();
-        if (t.length < 8) return "Password must be at least 8 characters";
-        if (!/[a-zA-Z]/.test(t) || !/\d/.test(t))
-          return "Password must contain both letters and digits";
-        return undefined;
-      },
-    }),
-    ""
-  );
+  const adminPassword = generateRandomPassword();
 
   p.outro("Prompt complete — generating files…");
 
@@ -217,9 +284,10 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
   return {
     projectName: projectName.trim(),
     targetDir,
-    defaultLocale: DEFAULT_ANSWERS.defaultLocale,
-    supportedLocales: DEFAULT_ANSWERS.supportedLocales,
+    defaultLocale: localeConfig.defaultLocale,
+    supportedLocales: [...localeConfig.supportedLocales],
     nextionSource: DEFAULT_ANSWERS.nextionSource,
+    uiPreset: String(uiPreset) as UiPreset,
     contentSource: {
       id: DEFAULT_ANSWERS.contentSource.id,
       title: DEFAULT_ANSWERS.contentSource.title,
@@ -229,5 +297,6 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
     adminPassword,
     notionParentPage: DEFAULT_ANSWERS.notionParentPage,
     notionSeedCount: DEFAULT_ANSWERS.notionSeedCount,
-  };
+    _generatedAdminPassword: adminPassword,
+  } as Answers & { _generatedAdminPassword: string };
 }

@@ -2,6 +2,7 @@ import { defineConfig, type Plugin } from "vite";
 import vinext from "vinext";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
+import { kvDataAdapter } from "@vinext/cloudflare/cache/kv-data-adapter";
 import { fileURLToPath } from "node:url";
 
 /**
@@ -34,7 +35,12 @@ function serverOnlyShimsForClient(): Plugin {
 
 export default defineConfig({
   plugins: [
-    vinext(),
+    // `kvDataAdapter()` is a config-time builder: it just returns a
+    // serializable descriptor pointing at the runtime KV cache factory.
+    // The actual KV handler is instantiated lazily on the first request
+    // (it reads the `VINEXT_KV_CACHE` binding from `env`), so this is
+    // safe to call from `vite.config.ts` — it never touches workerd.
+    vinext({ cache: { data: kvDataAdapter() } }),
     cloudflare({ viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] } }),
     tailwindcss(),
     serverOnlyShimsForClient(),

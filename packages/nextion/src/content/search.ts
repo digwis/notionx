@@ -2,11 +2,6 @@
 //
 // Generic text-search helpers for content sources.
 
-import type {
-  NotionMovieListItem,
-  NotionPostListItem,
-} from "../notion/types";
-
 export function normalizeSearchQuery(query: string | null | undefined) {
   return String(query ?? "")
     .normalize("NFKC")
@@ -43,41 +38,10 @@ export function matchesSearchQuery(
   return terms.every((term) => haystack.includes(term));
 }
 
-export function filterPostsBySearch<TPost extends NotionPostListItem>(
-  posts: readonly TPost[],
+export function filterItemsBySearch<TItem>(
+  items: readonly TItem[],
+  valuesForItem: (item: TItem) => readonly unknown[],
   query: string | null | undefined
 ) {
-  return posts.filter((post) =>
-    matchesSearchQuery(
-      [
-        post.title,
-        post.description,
-        post.author,
-        post.tags,
-        post.slug,
-        post.date,
-      ],
-      query
-    )
-  );
-}
-
-export function filterMoviesBySearch<TMovie extends NotionMovieListItem>(
-  movies: readonly TMovie[],
-  query: string | null | undefined
-) {
-  return movies.filter((movie) =>
-    matchesSearchQuery(
-      [
-        movie.title,
-        movie.summary,
-        movie.director,
-        movie.actors,
-        movie.genres,
-        movie.releaseDate,
-        movie.routeId,
-      ],
-      query
-    )
-  );
+  return items.filter((item) => matchesSearchQuery(valuesForItem(item), query));
 }

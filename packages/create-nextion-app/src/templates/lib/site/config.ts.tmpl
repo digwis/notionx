@@ -1,6 +1,7 @@
-// Site-level configuration consumed by the nextion worker. The
-// `navigation.main` array is rendered on the landing page. Add
-// additional entries to wire up more content sources.
+// Site-level configuration consumed by the nextion worker. Runtime
+// navigation/footer links come from the Notion-backed Pages model;
+// `navigation.main` is kept as a small fallback when Notion is not
+// configured yet.
 
 import { contentSources } from "../content/models.ts";
 

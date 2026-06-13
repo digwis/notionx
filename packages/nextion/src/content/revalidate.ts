@@ -1,12 +1,8 @@
 // packages/nextion/src/content/revalidate.ts
 //
-// Generic content revalidation helpers. The starter's
-// `revalidateContentModel` is project-specific (it knows how to
-// resolve localized movie paths and which content models exist) and
-// lives in the starter. The helpers below are model-agnostic and are
-// re-exported by the starter's `lib/content/revalidate.ts`.
+// Generic content revalidation helpers. Projects can layer domain-specific
+// path expansion (for example localized routes) through `expandPagePaths`.
 
-import { expandLocalizedMoviePaths } from "../i18n/config";
 import type { ContentModelDefinition } from "./models";
 import { getRegisteredSource } from "./models";
 
@@ -75,17 +71,14 @@ function timingSafeEqualString(a: string, b: string) {
   return diff === 0;
 }
 
-function shouldLocalizeMoviePaths(modelId: string) {
-  return modelId === "movies" || modelId === "movie-translations";
-}
-
 export function buildContentRevalidationPaths(input: {
   model: Pick<ContentModelDefinition, "id" | "routes">;
   routeId?: string;
   previousRouteId?: string;
   locale?: string;
   includeApi?: boolean;
-  localizedMovieDetailPaths?: readonly string[];
+  extraPagePaths?: readonly string[];
+  expandPagePaths?: (paths: readonly string[], locale?: string) => readonly string[];
 }) {
   const pagePaths = [input.model.routes.listPath];
   const routePaths: string[] = [];
@@ -103,8 +96,8 @@ export function buildContentRevalidationPaths(input: {
       )
     );
   }
-  if (input.localizedMovieDetailPaths?.length) {
-    pagePaths.push(...input.localizedMovieDetailPaths);
+  if (input.extraPagePaths?.length) {
+    pagePaths.push(...input.extraPagePaths);
   }
   if (input.includeApi !== false && input.model.routes.publicApiPath) {
     routePaths.push(input.model.routes.publicApiPath);
@@ -126,14 +119,14 @@ export function buildContentRevalidationPaths(input: {
     }
   }
 
-  const localizedPagePaths = shouldLocalizeMoviePaths(input.model.id)
-    ? expandLocalizedMoviePaths(pagePaths, input.locale)
+  const expandedPagePaths = input.expandPagePaths
+    ? input.expandPagePaths(pagePaths, input.locale)
     : pagePaths;
 
   return {
-    pagePaths: Array.from(new Set(localizedPagePaths)),
+    pagePaths: Array.from(new Set(expandedPagePaths)),
     routePaths: Array.from(new Set(routePaths)),
-    all: Array.from(new Set([...localizedPagePaths, ...routePaths])),
+    all: Array.from(new Set([...expandedPagePaths, ...routePaths])),
   };
 }
 

@@ -3,15 +3,11 @@ import type { NotionContentModelLike } from "./types";
 type NotionEnv = {
   NOTION_TOKEN?: string;
   NOTION_DATA_SOURCE_ID?: string;
-  NOTION_MOVIES_DATA_SOURCE_ID?: string;
   NOTION_API_BASE_URL?: string;
   NOTION_EDIT_BASE_URL?: string;
   NOTION_WEBHOOK_VERIFICATION_TOKEN?: string;
   [key: string]: string | undefined;
 };
-
-export const DEFAULT_NOTION_MOVIES_DATA_SOURCE_ID =
-  "371dc62d-0738-8015-a601-000bc3944fcb";
 
 export type NotionClientConfig = {
   token: string;
@@ -30,7 +26,6 @@ function readProcessEnv(): NotionEnv {
   const env: NotionEnv = {
     NOTION_TOKEN: process.env.NOTION_TOKEN,
     NOTION_DATA_SOURCE_ID: process.env.NOTION_DATA_SOURCE_ID,
-    NOTION_MOVIES_DATA_SOURCE_ID: process.env.NOTION_MOVIES_DATA_SOURCE_ID,
     NOTION_API_BASE_URL: process.env.NOTION_API_BASE_URL,
     NOTION_EDIT_BASE_URL: process.env.NOTION_EDIT_BASE_URL,
     NOTION_WEBHOOK_VERIFICATION_TOKEN:
@@ -109,11 +104,6 @@ export async function hasNotionConfig(): Promise<boolean> {
   );
 }
 
-export async function hasNotionMovieConfig(): Promise<boolean> {
-  const env = await readEnv();
-  return Boolean(readString(env, "NOTION_TOKEN"));
-}
-
 export async function hasNotionModelConfig(
   model: NotionContentModelLike
 ): Promise<boolean> {
@@ -152,22 +142,6 @@ export async function getNotionWebhookVerificationToken(): Promise<
 > {
   const env = await readEnv();
   return readString(env, "NOTION_WEBHOOK_VERIFICATION_TOKEN");
-}
-
-export async function getNotionMovieConfig(): Promise<NotionConfig> {
-  const env = await readEnv();
-  return {
-    token: readRequired(env, "NOTION_TOKEN"),
-    dataSourceId:
-      readString(env, "NOTION_MOVIES_DATA_SOURCE_ID") ??
-      DEFAULT_NOTION_MOVIES_DATA_SOURCE_ID,
-    apiBaseUrl: readString(env, "NOTION_API_BASE_URL"),
-    editBaseUrl: readString(env, "NOTION_EDIT_BASE_URL"),
-    webhookVerificationToken: readString(
-      env,
-      "NOTION_WEBHOOK_VERIFICATION_TOKEN"
-    ),
-  };
 }
 
 export async function getNotionConfigForModel(

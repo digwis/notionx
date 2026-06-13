@@ -13,7 +13,6 @@ import {
   writeUtf8,
   writeUnlessExists,
   planDirectoryFiles,
-  planSingleFile,
 } from "../src/targets/base.js";
 import type { SkillBundle } from "../src/types.js";
 
@@ -45,21 +44,6 @@ describe("resolveBaseDir", () => {
     expect(dir).toMatch(/\.codex$/);
   });
 
-  it("user scope: cursor -> ~/.cursor/rules", () => {
-    const dir = resolveBaseDir("cursor", "user", cwd);
-    expect(dir).toMatch(/\.cursor[\\/]rules$/);
-  });
-
-  it("user scope: windsurf -> ~/.codeium/windsurf/memories", () => {
-    const dir = resolveBaseDir("windsurf", "user", cwd);
-    expect(dir).toMatch(/\.codeium[\\/]windsurf[\\/]memories$/);
-  });
-
-  it("user scope: copilot -> ~/.config/github-copilot/instructions", () => {
-    const dir = resolveBaseDir("copilot", "user", cwd);
-    expect(dir).toMatch(/\.config[\\/]github-copilot[\\/]instructions$/);
-  });
-
   it("project scope: claude -> <cwd>/.claude/skills/nextion", () => {
     const dir = resolveBaseDir("claude", "project", cwd);
     expect(dir).toBe(resolve(cwd, ".claude", "skills", "nextion"));
@@ -68,11 +52,6 @@ describe("resolveBaseDir", () => {
   it("project scope: codex -> <cwd> (AGENTS.md lives at repo root)", () => {
     const dir = resolveBaseDir("codex", "project", cwd);
     expect(dir).toBe(resolve(cwd));
-  });
-
-  it("project scope: cursor -> <cwd>/.cursor/rules", () => {
-    const dir = resolveBaseDir("cursor", "project", cwd);
-    expect(dir).toBe(resolve(cwd, ".cursor", "rules"));
   });
 });
 
@@ -152,7 +131,7 @@ describe("planDirectoryFiles", () => {
       skill: "SKILL",
       installGuide: "INSTALL",
       references: { architecture: "ARCH", deploy: "DEPLOY" },
-      rules: { claude: "", trae: "", codex: "", cursor: "", windsurf: "", copilot: "" },
+      rules: { claude: "", codex: "", trae: "" },
       version: "0.0.0",
     };
     const files = planDirectoryFiles("/base", bundle);
@@ -161,14 +140,5 @@ describe("planDirectoryFiles", () => {
     expect(paths).toContain("/base/INSTALL.md");
     expect(paths).toContain("/base/references/architecture.md");
     expect(paths).toContain("/base/references/deploy.md");
-  });
-});
-
-describe("planSingleFile", () => {
-  it("produces a single file", () => {
-    const files = planSingleFile("/dir", "rule.mdc", "BODY");
-    expect(files).toHaveLength(1);
-    expect(files[0]?.path).toBe("/dir/rule.mdc");
-    expect(files[0]?.content).toBe("BODY");
   });
 });

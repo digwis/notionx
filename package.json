@@ -10,6 +10,10 @@
     "dev:moviebluebook": "pnpm --filter @nextion/moviebluebook dev",
     "nextion:doctor": "pnpm --filter @notionx/core doctor",
     "tools:build": "pnpm --filter @notionx/create-nextion-app build",
+    "release:check": "pnpm -r typecheck && pnpm -r lint && pnpm changeset status --help",
+    "release:check:core": "pnpm --filter @notionx/core typecheck && pnpm --filter @notionx/core lint",
+    "release:check:create": "pnpm --filter @notionx/create-nextion-app test",
+    "release:check:skill": "pnpm --filter @notionx/skill typecheck && pnpm --filter @notionx/skill lint",
     "prepare": "husky"
   },
   "devDependencies": {

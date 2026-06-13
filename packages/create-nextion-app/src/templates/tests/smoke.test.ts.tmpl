@@ -6,6 +6,7 @@
 
 import { describe, it, expect } from "vitest";
 import { {{contentSourceVarName}} } from "../lib/content/models.ts";
+import { pageFields, pagesDataSourceEnv } from "../lib/pages/model.ts";
 import {
   defineContentSource,
   getRegisteredSource,
@@ -25,6 +26,16 @@ describe("content source registration", () => {
 
   it("returns the same instance from getRegisteredSource", () => {
     expect(getRegisteredSource("{{contentSourceId}}")).toBe({{contentSourceVarName}});
+  });
+});
+
+describe("pages model", () => {
+  it("declares the Notion fields used for navigation and page rendering", () => {
+    expect(pagesDataSourceEnv).toBe("NOTION_PAGES_DATA_SOURCE_ID");
+    expect(pageFields.key).toBe("Key");
+    expect(pageFields.showInNav).toBe("Show in Nav");
+    expect(pageFields.footerOrder).toBe("Footer Order");
+    expect(pageFields.contentSource).toBe("Content Source");
   });
 });
 

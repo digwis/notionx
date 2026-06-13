@@ -3,7 +3,7 @@
  * CLI entry point for `nextion-skill`.
  *
  * Usage:
- *   nextion-skill install --target <claude|trae|cursor|windsurf|copilot|all>
+ *   nextion-skill install --target <claude|trae|codex|all>
  *                        [--scope <user|project>]
  *                        [--source <local|github|npm>]
  *                        [--ref <github-ref>]
@@ -39,7 +39,7 @@ COMMANDS
   help        Show this help
 
 OPTIONS (install / uninstall)
-  --target <id>         claude | trae | codex | cursor | windsurf | copilot | all  (default: all)
+  --target <id>         claude | codex | trae | all  (default: all)
   --scope <scope>       user | project                                     (default: user)
   --source <source>     local | github | npm                               (default: npm)
   --ref <git-ref>       GitHub ref when --source=github                    (default: main)
@@ -191,11 +191,6 @@ function describePaths(scope: Scope, cwd: string): Array<{ target: Target; paths
       // Codex reads a single AGENTS.md.
       return { target, paths: [resolve(base, "AGENTS.md")] };
     }
-    if (target === "cursor" || target === "windsurf" || target === "copilot") {
-      const filename =
-        target === "copilot" ? "copilot-instructions.md" : `${target === "cursor" ? "nextion" : "nextion"}.${target === "cursor" ? "mdc" : "md"}`;
-      return { target, paths: [resolve(base, filename)] };
-    }
     return {
       target,
       paths: [
@@ -268,24 +263,12 @@ async function runUninstall(args: ParsedArgs): Promise<number> {
     }
 
     const base = resolveBaseDir(target, args.scope, args.cwd);
-    if (target === "cursor" || target === "windsurf" || target === "copilot") {
-      const filename =
-        target === "copilot" ? "copilot-instructions.md" : target === "cursor" ? "nextion.mdc" : "nextion.md";
-      const file = resolve(base, filename);
-      if (existsSync(file)) {
-        if (!args.dryRun) await rm(file, { force: true });
-        removed.push(file);
-      } else {
-        missing.push(file);
-      }
+    // claude / trae: full directory
+    if (existsSync(base)) {
+      if (!args.dryRun) await rm(base, { recursive: true, force: true });
+      removed.push(base);
     } else {
-      // claude / trae: full directory
-      if (existsSync(base)) {
-        if (!args.dryRun) await rm(base, { recursive: true, force: true });
-        removed.push(base);
-      } else {
-        missing.push(base);
-      }
+      missing.push(base);
     }
   }
 

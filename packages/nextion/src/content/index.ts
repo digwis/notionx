@@ -39,8 +39,7 @@ export {
 } from "./search-index";
 
 export {
-  filterMoviesBySearch,
-  filterPostsBySearch,
+  filterItemsBySearch,
   matchesSearchQuery,
   normalizeSearchQuery,
 } from "./search";
@@ -51,6 +50,18 @@ export {
   type ContentPrewarmResult,
   type PrewarmTarget,
 } from "./prewarm";
+
+export {
+  getAlternateLocalizedContentLinks,
+  localizeContentList,
+  mapNotionPageToLocalizedContentTranslation,
+  type LocalizedContentExtraFieldKind,
+  type LocalizedContentExtraFields,
+  type LocalizedContentExtraValue,
+  type LocalizedContentFields,
+  type LocalizedContentTranslation,
+  type LocalizedContentTranslationBase,
+} from "./localized";
 
 export {
   getContentModelAdminSummaries,

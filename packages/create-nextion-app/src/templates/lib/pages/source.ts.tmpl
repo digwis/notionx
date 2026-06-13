@@ -1,0 +1,104 @@
+import type { NotionBlock } from "@notionx/core/notion";
+import {
+  createSitePagesApi,
+  type SitePage,
+} from "@notionx/core/pages";
+import { contentSources } from "@/lib/content/models";
+import { pageFields, pagesDataSourceEnv } from "./model";
+
+const pagesModel = {
+  source: {
+    tokenEnv: "NOTION_TOKEN",
+    dataSourceEnv: pagesDataSourceEnv,
+    fields: pageFields,
+  },
+};
+
+const fallbackBlocks = (text: string): NotionBlock[] => [
+  {
+    id: "fallback-intro",
+    type: "paragraph",
+    paragraph: {
+      rich_text: [
+        {
+          type: "text",
+          text: { content: text },
+          plain_text: text,
+        },
+      ],
+    },
+  },
+];
+
+const fallbackPages: SitePage[] = [
+  {
+    pageId: "fallback-home",
+    key: "home",
+    slug: "",
+    href: "/",
+    title: "{{projectName}}",
+    description:
+      "A Notion-powered site built on @notionx/core, running on Cloudflare Workers with D1, R2, and Cloudflare Images.",
+    seoTitle: "{{projectName}}",
+    seoDescription:
+      "A Notion-powered site built on @notionx/core, running on Cloudflare Workers with D1, R2, and Cloudflare Images.",
+    layout: "home",
+    published: true,
+    showHeader: true,
+    showFooter: true,
+    showInNav: false,
+    navLabel: "Home",
+    navOrder: 0,
+    showInFooter: false,
+    footerLabel: "Home",
+    footerGroup: "Company",
+    footerOrder: 0,
+    contentSource: "",
+    coverImage: null,
+    editUrl: null,
+    blocks: fallbackBlocks("Configure Notion Pages to edit this homepage from Notion."),
+  },
+  {
+    pageId: "fallback-blog",
+    key: "{{contentSourceId}}",
+    slug: "{{contentSourceId}}",
+    href: "{{contentSourceListPath}}",
+    title: "{{contentSourceListTitle}}",
+    description: "{{contentSourceListDescription}}",
+    seoTitle: "{{contentSourceListTitle}}",
+    seoDescription: "{{contentSourceListDescription}}",
+    layout: "content-list",
+    published: true,
+    showHeader: true,
+    showFooter: true,
+    showInNav: true,
+    navLabel: "{{contentSourceNavLabel}}",
+    navOrder: 30,
+    showInFooter: true,
+    footerLabel: "{{contentSourceNavLabel}}",
+    footerGroup: "Content",
+    footerOrder: 10,
+    contentSource: "{{contentSourceId}}",
+    coverImage: null,
+    editUrl: null,
+    blocks: fallbackBlocks("Latest posts from the default Notion content source."),
+  },
+];
+
+const pagesApi = createSitePagesApi({
+  model: pagesModel,
+  fallbackPages,
+});
+
+export const listSitePages = pagesApi.listSitePages;
+export const getSitePageByKey = pagesApi.getSitePageByKey;
+export const getSitePageBySlug = pagesApi.getSitePageBySlug;
+export const getSitePageForContentSource = pagesApi.getSitePageForContentSource;
+export const getSiteNavigation = pagesApi.getSiteNavigation;
+export const getSiteFooterGroups = pagesApi.getSiteFooterGroups;
+
+export type { SitePage, SitePageFooterGroup, SitePageNavItem } from "@notionx/core/pages";
+
+export function findContentSource(id: string) {
+  return contentSources.find((source) => source.id === id) ?? null;
+}

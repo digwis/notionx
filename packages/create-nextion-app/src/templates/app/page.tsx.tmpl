@@ -1,100 +1,79 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import { ArrowRight, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { NotionBlocks } from "@/components/notion-blocks";
+import { SiteShell } from "@/components/site/site-shell";
 import { siteConfig } from "@/lib/site/config";
-import { contentSources } from "@/lib/content/models";
-import {
-  ArrowRight,
-  Code,
-  Database,
-  Shield,
-} from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { getSiteNavigation, getSitePageByKey } from "@/lib/pages/source";
 
-export default function Home() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
-      <header className="container mx-auto flex items-center justify-end p-4">
-        <ThemeToggle />
-      </header>
+export const revalidate = 300;
 
-      <main className="container mx-auto flex max-w-3xl flex-col items-center px-4 py-16 text-center">
-        <Badge variant="outline" className="mb-6 gap-2 px-3 py-1 text-xs font-normal">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          RSC + Cloudflare Workers + D1 + Notion
-        </Badge>
-
-        <h1 className="text-5xl font-bold tracking-tight md:text-6xl">
-          {siteConfig.name}
-        </h1>
-        <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-          {siteConfig.description}
-        </p>
-
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          {siteConfig.navigation.main.map((item, index) => (
-            <Button
-              key={item.href}
-              asChild
-              size="lg"
-              variant={index === 0 ? "default" : "secondary"}
-            >
-              <Link href={item.href}>
-                <Database className="mr-2 h-4 w-4" />
-                {item.label}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          ))}
-          <Button asChild variant="outline" size="lg">
-            <Link href={siteConfig.navigation.adminHref}>
-              <Shield className="mr-2 h-4 w-4" />
-              Admin
-            </Link>
-          </Button>
-        </div>
-
-        <Card className="mt-16 w-full text-left">
-          <CardContent className="grid gap-6 p-6 md:grid-cols-3">
-            <Feature
-              title="Edge RSC"
-              desc="React Server Components run on Cloudflare Workers, served from the edge."
-            />
-            <Feature
-              title="Notion Content"
-              desc="Content models register Notion fields, routes, and capabilities in one place."
-            />
-            <Feature
-              title="AI-Customized UI"
-              desc={`${contentSources.length} content source${contentSources.length === 1 ? "" : "s"} registered. New domains can be shaped directly with React, Tailwind, and shadcn/ui.`}
-            />
-            <Feature
-              title="Admin Panel"
-              desc="Password-gated admin with a read-only article index and Notion handoff."
-            />
-          </CardContent>
-        </Card>
-
-        <p className="mt-12 text-xs text-muted-foreground">
-          <a
-            href="https://github.com/your-username/{{projectNameLower}}"
-            className="inline-flex items-center hover:text-foreground"
-          >
-            <Code className="mr-1 h-3 w-3" />
-            Source
-          </a>
-        </p>
-      </main>
-    </div>
-  );
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getSitePageByKey("home");
+  return {
+    title: page?.seoTitle ?? siteConfig.name,
+    description: page?.seoDescription ?? siteConfig.description,
+    openGraph: page?.coverImage
+      ? { images: [{ url: page.coverImage }] }
+      : undefined,
+  };
 }
 
-function Feature({ title, desc }: { title: string; desc: string }) {
+export default async function Home() {
+  const page = await getSitePageByKey("home");
+  const nav = await getSiteNavigation();
+  const title = page?.title ?? siteConfig.name;
+  const description = page?.description ?? siteConfig.description;
+
   return (
-    <div>
-      <h3 className="font-semibold">{title}</h3>
-      <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
-    </div>
+    <SiteShell
+      showHeader={page?.showHeader ?? true}
+      showFooter={page?.showFooter ?? true}
+    >
+      <main>
+        <section className="container mx-auto max-w-4xl px-4 py-20 text-center md:py-28">
+          <Badge variant="outline" className="mb-6 gap-2 px-3 py-1 text-xs font-normal">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Notion Pages + Cloudflare Workers
+          </Badge>
+
+          <h1 className="text-5xl font-bold tracking-tight md:text-6xl">
+            {title}
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+            {description}
+          </p>
+
+          {nav.length > 0 ? (
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+              {nav.slice(0, 3).map((item, index) => (
+                <Button
+                  key={item.href}
+                  asChild
+                  size="lg"
+                  variant={index === 0 ? "default" : "secondary"}
+                >
+                  <Link href={item.href}>
+                    <Database className="mr-2 h-4 w-4" />
+                    {item.label}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              ))}
+            </div>
+          ) : null}
+        </section>
+
+        {page?.blocks?.length ? (
+          <section className="border-t bg-muted/20">
+            <div className="container mx-auto max-w-3xl px-4 py-14">
+              <NotionBlocks blocks={page.blocks} />
+            </div>
+          </section>
+        ) : null}
+      </main>
+    </SiteShell>
   );
 }

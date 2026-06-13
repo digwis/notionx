@@ -184,7 +184,7 @@ export function publicMediaBlockForApi(block: NotionBlock): NotionBlock {
 
 export function gatedMediaBlockForApi(
   block: NotionBlock,
-  options?: { movieId?: string }
+  options?: { accessUrlForBlock?: (block: NotionBlock) => string | null }
 ): NotionBlock {
   const value = block[block.type];
   const source = normalizeNotionFileSource(value);
@@ -200,9 +200,7 @@ export function gatedMediaBlockForApi(
   const gatedValue: Record<string, unknown> = {
     ...(value as Record<string, unknown>),
     gated: true,
-    access_url: options?.movieId
-      ? `/api/movies/${encodePathPart(options.movieId)}/video/${encodePathPart(block.id)}`
-      : null,
+    access_url: options?.accessUrlForBlock?.(block) ?? null,
   };
 
   if (source.type === "external") {

@@ -74,6 +74,17 @@ export function getCheckboxProperty(properties: PropertyMap, key: string): boole
   return Boolean(property.checkbox);
 }
 
+export function getNumberProperty(
+  properties: PropertyMap,
+  key: string,
+  fallback = 0
+): number {
+  const property = getProperty(properties, key);
+  if (property?.type !== "number") return fallback;
+  const value = Number(property.number);
+  return Number.isFinite(value) ? value : fallback;
+}
+
 export function getRelationPageIds(properties: PropertyMap, key: string): string[] {
   const property = getProperty(properties, key);
   if (property?.type !== "relation" || !Array.isArray(property.relation)) {

@@ -9,7 +9,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as p from "@clack/prompts";
-import { gatherAnswers } from "./answers.js";
+import { gatherAnswers, type ExtendedAnswers } from "./answers.js";
 import { render } from "./render.js";
 import { provision } from "./provision/index.js";
 
@@ -32,25 +32,49 @@ async function main(): Promise<void> {
 
     // Post-render provisioning. We treat this as a separate
     // interactive stage: it talks to wrangler / ntn / Cloudflare /
-    // Notion, all of which can be slow or hang on auth. Skipped in
-    // non-interactive mode (--yes, CI) by passing interactive=false.
+    // Notion, all of which can be slow or hang on auth. In --yes /
+    // non-TTY mode we still try — every step is wrapped in its own
+    // try/catch and best-effort, so the worst case is a status card
+    // that says "Deploy skipped" and instructions to retry.
+    // Set NEXTION_PROVISION_DISABLED=1 to skip entirely.
     const projectDir = path.resolve(process.cwd(), answers.targetDir);
-    const interactive =
-      Boolean(process.stdin.isTTY) && !process.env.NEXTION_PROVISION_DISABLED;
-    if (interactive) {
-      const start = await p.confirm({
-        message: "Provision Cloudflare + Notion + secrets now? (you can skip and do it later)",
-        initialValue: true,
-      });
-      if (!p.isCancel(start) && start) {
-        await provision(answers, projectDir, { interactive: true });
-      } else {
-        p.log.info("Skipped provisioning. Run `pnpm dev` to start; see README for manual setup.");
+    const provisioningEnabled = !process.env.NEXTION_PROVISION_DISABLED;
+    if (provisioningEnabled) {
+      try {
+        // `interactive: true` is only safe when stdin is a real TTY.
+        // When the scaffolder is piped (e.g. `pnpm create … | tee log`,
+        // CI, or a non-interactive `node dist/index.js --yes` run from
+        // a script), @clack/prompts throws Node's
+        // `ERR_TTY_INIT_FAILED` ("TTY initialization failed: uv_tty_init
+        // returned EINVAL") the moment any prompt tries to read input.
+        // Detect that case and switch to silent mode so the rest of
+        // provisioning still runs.
+        const interactive = Boolean(process.stdin.isTTY);
+        await provision(answers, projectDir, { interactive });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        p.log.warn(`Provisioning error: ${message}`);
       }
     } else {
-      // Non-interactive: print a hint, don't try to provision.
       p.log.info(
-        "Non-interactive mode: skipping Cloudflare/Notion provisioning. See README for manual setup."
+        "Provisioning disabled (NEXTION_PROVISION_DISABLED=1). Run \`pnpm dev\` to start; see README for manual setup."
+      );
+    }
+
+    // Print the auto-generated admin password once, ONLY if we
+    // generated it (i.e. the user did not supply one). This is the
+    // only time the plaintext appears — it's not in the generated
+    // project files, only its hash in the D1 migration.
+    const generated = (answers as ExtendedAnswers)._generatedAdminPassword;
+    if (generated) {
+      console.log("");
+      p.log.warn(
+        [
+          "Auto-generated admin credentials (NOT stored anywhere on disk — save these now):",
+          `  Admin email   : ${answers.adminEmail}`,
+          `  Admin password: ${generated}`,
+          `  Login at      : ${answers.targetDir}/login`,
+        ].join("\n")
       );
     }
 
@@ -58,14 +82,7 @@ async function main(): Promise<void> {
     console.log("");
     console.log("Next steps:");
     console.log(`  cd ${answers.targetDir}`);
-    console.log("  pnpm install");
-    console.log("  cp .dev.vars.example .dev.vars");
-    console.log("  pnpm test");
     console.log("  pnpm dev");
-    console.log("");
-    console.log("To deploy to Cloudflare:");
-    console.log("  pnpm exec wrangler d1 migrations apply <db-name> --remote");
-    console.log("  pnpm exec vinext deploy");
   } catch (err) {
     if (err instanceof Error && err.message === "cancelled") {
       process.exit(0);

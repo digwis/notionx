@@ -63,22 +63,43 @@ describe("buildContentRevalidationPaths", () => {
     ]);
   });
 
-  it("expands movie paths across supported locales", () => {
+  it("expands page paths through a project-supplied callback", () => {
     const paths = buildContentRevalidationPaths({
-      model: sampleModel("movies", {
+      model: sampleModel("catalog", {
         routes: {
-          listPath: "/movies",
-          detailPath: "/movies/[id]",
+          listPath: "/catalog",
+          detailPath: "/catalog/[id]",
           detailParam: "id",
         },
       }),
       routeId: "inception",
+      expandPagePaths: (pagePaths) =>
+        pagePaths.flatMap((path) => [`/zh-CN${path}`, `/en-US${path}`]),
     });
     expect(paths.pagePaths).toEqual([
-      "/zh-CN/movies",
-      "/en-US/movies",
-      "/zh-CN/movies/inception",
-      "/en-US/movies/inception",
+      "/zh-CN/catalog",
+      "/en-US/catalog",
+      "/zh-CN/catalog/inception",
+      "/en-US/catalog/inception",
+    ]);
+  });
+
+  it("includes project-supplied extra page paths", () => {
+    const paths = buildContentRevalidationPaths({
+      model: sampleModel("catalog", {
+        routes: {
+          listPath: "/catalog",
+          detailPath: "/catalog/[id]",
+          detailParam: "id",
+        },
+      }),
+      routeId: "inception",
+      extraPagePaths: ["/catalog/alternate-inception"],
+    });
+    expect(paths.pagePaths).toEqual([
+      "/catalog",
+      "/catalog/inception",
+      "/catalog/alternate-inception",
     ]);
   });
 

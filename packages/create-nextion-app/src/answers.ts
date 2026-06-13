@@ -5,8 +5,9 @@
 // CI / non-TTY smoke tests where `@clack/prompts` would just hang.
 
 import * as p from "@clack/prompts";
-import * as crypto from "node:crypto";
-import type { Answers, AnswersContentField } from "./prompt.js";
+import type { Answers, AnswersContentField, UiPreset } from "./prompt.js";
+import { generateRandomPassword } from "./password.js";
+import { normalizeUiPreset } from "./ui-presets.js";
 
 interface CliOverrides {
   projectName?: string;
@@ -17,6 +18,7 @@ interface CliOverrides {
   contentTitle?: string;
   fields?: string;
   nextionSource?: string;
+  uiPreset?: UiPreset;
   adminEmail?: string;
   adminPassword?: string;
   /**
@@ -122,6 +124,10 @@ function parseArgs(argv: string[]): CliOverrides {
         case "--nextion-source":
           out.nextionSource = takeNext(next);
           break;
+        case "--ui":
+        case "--ui-preset":
+          out.uiPreset = normalizeUiPreset(takeNext(next));
+          break;
         case "--admin-email":
           out.adminEmail = takeNext(next);
           break;
@@ -169,17 +175,22 @@ Flags:
                                Other settings use sensible defaults
                                (locale=en, content source=blog, etc.).
   --target-dir <dir>           Output directory (default: ./<project-name>)
+  --default-locale <locale>    Fallback/current language (default: en).
+  --supported-locales <list>   Comma/space separated renderable locales.
+                               The default locale is always included.
   --nextion-source <spec>      Override the @notionx/core dep value
-                               (default: "^0.1.1" — the published
+                               (default: "^0.1.2" — the published
                                 npm version). For in-monorepo dev,
                                 pass "workspace:*" (requires the
                                 target dir to live inside a pnpm
                                 workspace that has @notionx/core
                                 listed), or "file:../path/to/core".
+  --ui <preset>                UI component preset: minimal, site, or app
+                               (default: site).
   --admin-email <addr>         Email granted the admin role (required).
-  --admin-password <pwd>       Password for the admin account (required,
-                               ≥8 chars, letters + digits). If omitted
-                               in --yes mode, a random one is generated
+  --admin-password <pwd>       Optional initial password for the admin
+                               account (≥8 chars, letters + digits).
+                               If omitted, a random one is generated
                                and printed at the end.
   --notion-parent-page <id>    32-char hex page id under which the
                                content database is created. Requires
@@ -192,23 +203,6 @@ Flags:
   -y, --yes                    Skip the confirmation prompt
   -h, --help                   Print this help
 `);
-}
-
-/** Generate a 14-char password with letters + digits, easy to copy. */
-function generateRandomPassword(): string {
-  // Avoid 0/O/1/l/I for readability; pick from a friendly alphabet.
-  const letters = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ";
-  const digits = "23456789";
-  const all = letters + digits;
-  const bytes = crypto.randomBytes(14);
-  let out = "";
-  // Guarantee at least one letter and one digit.
-  out += letters[bytes[0] % letters.length];
-  out += digits[bytes[1] % digits.length];
-  for (let i = 2; i < 14; i++) {
-    out += all[bytes[i] % all.length];
-  }
-  return out;
 }
 
 function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
@@ -230,6 +224,9 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
   const contentTitle =
     overrides.contentTitle ?? contentId.charAt(0).toUpperCase() + contentId.slice(1);
   const fields = buildFields(overrides.fields ?? DEFAULT_FIELDS);
+  const uiPreset = normalizeUiPreset(
+    overrides.uiPreset ?? process.env.CREATE_NEXTION_UI_PRESET ?? "site"
+  );
 
   // Admin email/password resolution for the non-interactive path:
   //   1. CLI flag                              (--admin-email / --admin-password)
@@ -267,7 +264,8 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
     supportedLocales: supportedLocales.length
       ? Array.from(new Set([defaultLocale, ...supportedLocales]))
       : [defaultLocale],
-    nextionSource: overrides.nextionSource ?? "^0.1.1",
+    nextionSource: overrides.nextionSource ?? "^0.1.2",
+    uiPreset,
     contentSource: {
       id: contentId,
       title: contentTitle,

@@ -67,3 +67,9 @@ dist/
 
 # moviebluebook: kept locally as a working reference, never pushed; consumers scaffold via `pnpm create vinext-app`
 apps/moviebluebook/
+
+# IDE / agent working state
+.agent-runs/
+.trae/
+.worktrees/
+packages/nextion-skill/.trae/

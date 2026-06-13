@@ -1,42 +1,50 @@
 import { describe, it, expect } from "vitest";
 import {
-  supportedLocales,
-  defaultLocale,
-  isAppLocale,
-  localizedMovieListPath,
-  localizedMovieDetailPath,
-  expandLocalizedMoviePaths,
+  defineI18nConfig,
+  expandLocalizedPaths,
+  isSupportedLocale,
+  localizedDetailPath,
+  localizedPath,
 } from "../../src/i18n/config";
 
+const config = defineI18nConfig({
+  supportedLocales: ["zh-CN", "en-US"] as const,
+  defaultLocale: "zh-CN",
+});
+
 describe("i18n config", () => {
-  it("declares English and Chinese as supported locales", () => {
-    expect(supportedLocales).toContain("zh-CN");
-    expect(supportedLocales).toContain("en-US");
+  it("declares supported locales", () => {
+    expect(config.supportedLocales).toContain("zh-CN");
+    expect(config.supportedLocales).toContain("en-US");
   });
 
   it("defaults to a supported locale", () => {
-    expect(supportedLocales).toContain(defaultLocale);
+    expect(config.supportedLocales).toContain(config.defaultLocale);
   });
 
-  it("identifies valid app locales", () => {
-    expect(isAppLocale("zh-CN")).toBe(true);
-    expect(isAppLocale("en-US")).toBe(true);
-    expect(isAppLocale("fr-FR")).toBe(false);
+  it("identifies supported locales", () => {
+    expect(isSupportedLocale(config, "zh-CN")).toBe(true);
+    expect(isSupportedLocale(config, "en-US")).toBe(true);
+    expect(isSupportedLocale(config, "fr-FR")).toBe(false);
   });
 });
 
-describe("localized movie path helpers", () => {
+describe("localized path helpers", () => {
   it("prefixes the locale for the list and detail paths", () => {
-    expect(localizedMovieListPath("zh-CN")).toBe("/zh-CN/movies");
-    expect(localizedMovieDetailPath("en-US", "inception")).toBe(
+    expect(localizedPath("zh-CN", "/docs")).toBe("/zh-CN/docs");
+    expect(localizedDetailPath("en-US", "/movies", "inception")).toBe(
       "/en-US/movies/inception"
     );
   });
 
-  it("duplicates movie routes per locale when expanding paths", () => {
+  it("duplicates selected routes per locale when expanding paths", () => {
     expect(
-      expandLocalizedMoviePaths(["/movies", "/movies/inception"], "zh-CN")
-    ).toEqual(["/zh-CN/movies", "/zh-CN/movies/inception"]);
-    expect(expandLocalizedMoviePaths(["/blog"])).toEqual(["/blog"]);
+      expandLocalizedPaths({
+        paths: ["/movies", "/movies/inception", "/blog"],
+        config,
+        locale: "zh-CN",
+        shouldLocalize: (path) => path.startsWith("/movies"),
+      })
+    ).toEqual(["/zh-CN/movies", "/zh-CN/movies/inception", "/blog"]);
   });
 });

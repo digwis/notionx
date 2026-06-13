@@ -1,0 +1,41 @@
+import Link from "next/link";
+import { siteConfig } from "@/lib/site/config";
+import { getSiteFooterGroups } from "@/lib/pages/source";
+
+export async function SiteFooter() {
+  const groups = await getSiteFooterGroups();
+
+  return (
+    <footer className="border-t bg-muted/30">
+      <div className="container mx-auto grid gap-8 px-4 py-10 md:grid-cols-[1.5fr_2fr]">
+        <div>
+          <Link href="/" className="font-semibold tracking-tight">
+            {siteConfig.name}
+          </Link>
+          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+            {siteConfig.description}
+          </p>
+        </div>
+
+        {groups.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2">
+            {groups.map((group) => (
+              <div key={group.label}>
+                <h2 className="text-sm font-medium">{group.label}</h2>
+                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                  {group.items.map((item) => (
+                    <li key={item.href}>
+                      <Link href={item.href} className="hover:text-foreground">
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </footer>
+  );
+}

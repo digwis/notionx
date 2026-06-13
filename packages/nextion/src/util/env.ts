@@ -27,10 +27,6 @@ export type AppEnv = {
   NOTION_TOKEN?: string;
   /** Notion data source ID used by dataSources.query */
   NOTION_DATA_SOURCE_ID?: string;
-  /** Notion data source ID for the public movie catalog */
-  NOTION_MOVIES_DATA_SOURCE_ID?: string;
-  /** Notion data source ID for localized movie copy */
-  NOTION_MOVIE_TRANSLATIONS_DATA_SOURCE_ID?: string;
   /** Optional Notion API base URL for tests or proxies */
   NOTION_API_BASE_URL?: string;
   /** Optional Notion edit URL for admin handoff screens */

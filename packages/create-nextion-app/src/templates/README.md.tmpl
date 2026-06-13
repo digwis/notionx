@@ -14,10 +14,12 @@ the provisioning prompt, this project is already wired with:
 - A `CONTENT_CACHE` KV namespace
 - A `{{projectNameLower}}-assets` R2 bucket
 - D1 migrations applied to the local Miniflare store
-- Optionally: a Turnstile widget (sitekey + secret), a Notion data source
-  with seeded sample pages, Resend email verification, Google OAuth
+- Optionally: a Turnstile widget (sitekey + secret), Notion data sources
+  for editable site pages and seeded sample posts, Resend email verification,
+  Google OAuth
 - Optional secrets pushed to the worker via `wrangler secret put`
-  (TURNSTILE_SECRET_KEY at minimum)
+  (`NOTION_TOKEN`, `NOTION_DATA_SOURCE_ID`, and
+  `NOTION_PAGES_DATA_SOURCE_ID` when Notion was auto-created)
 
 If provisioning was skipped or any step is ⚠️ in the scaffold summary, jump
 to [Manual setup](#manual-setup) below.
@@ -26,6 +28,45 @@ to [Manual setup](#manual-setup) below.
 pnpm install
 pnpm dev                              # boots vinext on http://localhost:3001
 ```
+
+## Admin login
+
+The scaffolder seeds the admin email you entered into D1. If you did
+not pass `--admin-password`, it generated an initial password and
+printed it once at the end of scaffolding.
+
+Sign in at `/login`, then change the password from `/admin/account`.
+
+## Languages
+
+`lib/site/config.ts` contains two locale settings:
+
+- `defaultLocale` is the current fallback language for pages, metadata, and
+  content lookups.
+- `locales` is the full set of languages the project is allowed to render.
+
+A single-language project can keep both values to the same locale. If you later
+add translations, keep the original `defaultLocale` and add new entries to
+`locales`.
+
+## Notion-backed pages
+
+The starter has two Notion concepts:
+
+- `Pages` controls site routes such as `/`, `/about`, `/privacy`, and the
+  editable shell around list pages.
+- `{{contentSourceTitle}}` controls the actual list/detail content items.
+
+In `Pages`, `Show Header` / `Show Footer` control whether the current page
+renders the global header and footer. `Show in Nav` / `Show in Footer` control
+whether that page appears as a link in the header or footer. `Nav Order` and
+`Footer Order` sort those links. For content list pages, set `Layout` to
+`content-list` and `Content Source` to `{{contentSourceId}}`.
+
+Future translations should use a separate translations database related back
+to `Pages`, mirroring the pattern used for richer content models: the base row
+keeps stable structure (`Key`, layout, nav/footer switches), while translation
+rows override locale-specific title, slug, nav label, SEO copy, and body blocks.
 
 ## Manual setup
 
@@ -68,6 +109,16 @@ pnpm exec wrangler r2 bucket create {{projectNameLower}}-assets
 #   with: Name, Slug, Description, Published, Date, Tags, Cover
 #   Article body content lives in the Notion page content blocks.
 #   Put its data source id into .dev.vars → NOTION_DATA_SOURCE_ID
+#   Create a Pages database under the same page with:
+#   Name, Key, Slug, Status, Layout, Description, SEO Title,
+#   SEO Description, Show Header, Show Footer, Show in Nav, Nav Label,
+#   Nav Order, Show in Footer, Footer Label, Footer Group, Footer Order,
+#   Content Source, Cover
+#   Put its data source id into .dev.vars → NOTION_PAGES_DATA_SOURCE_ID
+#   For production, also set all three values on the Worker:
+#   printf %s "$NOTION_TOKEN" | pnpm exec wrangler secret put NOTION_TOKEN
+#   printf %s "$NOTION_DATA_SOURCE_ID" | pnpm exec wrangler secret put NOTION_DATA_SOURCE_ID
+#   printf %s "$NOTION_PAGES_DATA_SOURCE_ID" | pnpm exec wrangler secret put NOTION_PAGES_DATA_SOURCE_ID
 #   (If the scaffolder already auto-created the database via `ntn`,
 #    see "Switching the Notion integration" below to use your own
 #    integration for ongoing API access.)
@@ -84,13 +135,15 @@ pnpm exec wrangler r2 bucket create {{projectNameLower}}-assets
 
 ## What's included
 
-- `app/page.tsx` — landing page wired to `siteConfig`
+- `app/page.tsx` — homepage rendered from the Notion-backed Pages model
+- `app/[slug]/page.tsx` — generic Notion-backed pages such as `/about` and `/privacy`
 - `app/api/health/route.ts` — `GET /api/health` from nextion
 - `app/api/auth/*` — Google OAuth, email verify, viewer endpoints from nextion
 - `app/login/page.tsx` — email/password login wired to `authConfig`
 - `lib/auth.config.ts` — `AuthConfig` consumed by `createAuth`
 - `lib/admin/nav.ts` — sidebar items for `/admin/*`
-- `lib/site/config.ts` — site-level config rendered on the landing page
+- `lib/site/config.ts` — site-level config and locale settings
+- `lib/pages/*` — Notion-backed Pages model, mapper, navigation, and footer helpers
 - `lib/content/models.ts` — one Notion-backed content source: `{{contentSourceId}}`
 - `worker/index.ts` — `createNextionWorker` + vinext fallthrough
 - `migrations/0001_init.sql` — nextion auth schema (users, app_settings, auth_rate_limits)
@@ -119,7 +172,7 @@ pnpm exec vinext deploy
 ## Wiring up the @notionx/core package
 
 The dependency is `"@notionx/core": "{{nextionSource}}"` — by default
-`^0.1.1` (the version published to npm). This works for any host
+`^0.1.2` (the version published to npm). This works for any host
 machine with no extra setup.
 
 To consume a local build of the package instead, switch the specifier
@@ -169,14 +222,27 @@ block right below `:root` — keep them in sync.
 
 ## UI components (shadcn/ui)
 
-The starter ships with these primitives in `components/ui/`, ready to
-import anywhere in the project:
+This project was generated with the `{{uiPreset}}` UI preset.
+
+The starter ships with these shadcn/ui-compatible components in
+`components/ui/`, ready to import anywhere in the project:
+
+{{uiComponentList}}
+
+Every preset includes these primitives:
 
 - `Button` — variants: default, secondary, outline, ghost, link, destructive
 - `Card` (+ `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`)
 - `Badge` — variants: default, secondary, destructive, outline
 - `Input`, `Label`, `Separator`, `Skeleton`
 - `ThemeToggle` + `ThemeProvider` (light / dark / system)
+
+`site` adds the components used by richer Notion page rendering:
+`Accordion`, `Alert`, `Table`, `AspectRatio`, `Tabs`, `Tooltip`,
+`DropdownMenu`, `Sheet`, and `Dialog`.
+
+`app` adds form and dashboard primitives such as `Select`, `Textarea`,
+`Checkbox`, `Switch`, `RadioGroup`, `Avatar`, `Popover`, and `Toaster`.
 
 All components are themeable via the design tokens defined in
 `app/globals.css` (`--background`, `--foreground`, `--primary`,
@@ -203,6 +269,36 @@ pnpm dlx shadcn@latest add https://21st.dev/r/sonner.json
 New files land in `components/ui/` and pick up the existing token
 variables automatically. After adding, import and use as usual.
 
+## Notion page builder blocks
+
+`components/notion-blocks.tsx` treats Notion as the editor and this app
+as the visual renderer. Native Notion blocks drive structure, while
+Tailwind CSS, React, and the local UI primitives control the public site.
+
+Supported page-builder blocks include paragraphs, headings, grouped lists,
+todos, callouts, toggles, tables, columns, images, video, audio, files,
+PDFs, embeds, bookmarks, child pages, synced blocks, and safe public-link
+buttons.
+
+For high-design sections that Notion cannot express cleanly, add a code
+block with language `vinext` and JSON config:
+
+```vinext
+{
+  "component": "hero",
+  "eyebrow": "Notion-powered publishing",
+  "title": "Build polished pages from Notion blocks",
+  "description": "Authors edit in Notion. The site renders with React, Tailwind, and shadcn-style components.",
+  "primaryAction": {
+    "label": "Start building",
+    "href": "/register"
+  }
+}
+```
+
+Initial custom components: `hero`, `cta`, `feature-grid`, `pricing`,
+`faq`, `content-list`, `testimonial-grid`, and `contact-form`.
+
 ## Switching the Notion integration
 
 If the scaffolder auto-created the content database using the `ntn`
@@ -224,5 +320,10 @@ going forward, do this once in the Notion UI:
    label disappears.
 
 After step 2, replace the `NOTION_TOKEN` line in `.dev.vars` and
-`wrangler.jsonc` with your own `secret_…` token. The data source
-id does not need to change.
+the Worker secret with your own `secret_…` token:
+
+```bash
+printf %s "$NOTION_TOKEN" | pnpm exec wrangler secret put NOTION_TOKEN
+```
+
+The data source id does not need to change.

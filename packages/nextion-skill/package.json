@@ -1,0 +1,64 @@
+{
+  "name": "@notionx/skill",
+  "version": "0.1.0",
+  "description": "One-command installer for the official nextion AI agent skill (Claude Code, Trae IDE, OpenAI Codex).",
+  "type": "module",
+  "bin": {
+    "nextion-skill": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "skill",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "pretest": "node scripts/sync-bundled-skill.mjs",
+    "prebuild": "node scripts/sync-bundled-skill.mjs",
+    "prepack": "pnpm build",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "nextion",
+    "vinext",
+    "cloudflare",
+    "workers",
+    "notion",
+    "ai",
+    "agent",
+    "skill",
+    "claude-code",
+    "trae",
+    "codex"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsup": "^8.3.5",
+    "tsx": "^4",
+    "typescript": "^5.5",
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/digwis/nextion.git",
+    "directory": "packages/nextion-skill"
+  },
+  "author": "zhaofilms",
+  "homepage": "https://github.com/digwis/nextion#readme",
+  "bugs": {
+    "url": "https://github.com/digwis/nextion/issues"
+  }
+}

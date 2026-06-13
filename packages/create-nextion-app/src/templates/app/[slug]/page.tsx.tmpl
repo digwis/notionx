@@ -1,0 +1,50 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { NotionBlocks } from "@/components/notion-blocks";
+import { SiteShell } from "@/components/site/site-shell";
+import { getSitePageBySlug } from "@/lib/pages/source";
+
+export const revalidate = 300;
+
+type Params = { slug: string };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<Params>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const page = await getSitePageBySlug(slug);
+  if (!page) return { title: "Not found" };
+  return {
+    title: page.seoTitle || page.title,
+    description: page.seoDescription || page.description,
+    openGraph: page.coverImage
+      ? { images: [{ url: page.coverImage }] }
+      : undefined,
+  };
+}
+
+export default async function SitePage({
+  params,
+}: {
+  params: Promise<Params>;
+}) {
+  const { slug } = await params;
+  const page = await getSitePageBySlug(slug);
+  if (!page || page.layout === "content-list") notFound();
+
+  return (
+    <SiteShell showHeader={page.showHeader} showFooter={page.showFooter}>
+      <main className="container mx-auto max-w-3xl px-4 py-16">
+        <header className="mb-10 space-y-4">
+          <h1 className="text-4xl font-bold tracking-tight">{page.title}</h1>
+          {page.description ? (
+            <p className="text-lg text-muted-foreground">{page.description}</p>
+          ) : null}
+        </header>
+        <NotionBlocks blocks={page.blocks} />
+      </main>
+    </SiteShell>
+  );
+}

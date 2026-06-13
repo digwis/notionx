@@ -4,6 +4,7 @@ const MIN_IMAGE_QUALITY = 40;
 
 const LIST_IMAGE_WIDTHS = [320, 480, 640] as const;
 const LIST_IMAGE_QUALITY = 70;
+const RELATIVE_URL_BASE = "http://localhost";
 
 export type PublicImageVariant = "list" | "detail";
 
@@ -17,7 +18,7 @@ function clampQuality(quality?: number) {
 
 function parseImageUrl(src: string) {
   try {
-    return new URL(src, "https://moviebluebook.uk");
+    return new URL(src, RELATIVE_URL_BASE);
   } catch {
     return null;
   }
@@ -55,7 +56,7 @@ function buildSizedImageUrl(src: string, width: number, quality: number) {
   url.searchParams.set("w", String(width));
   url.searchParams.set("q", String(quality));
 
-  return url.origin === "https://moviebluebook.uk"
+  return url.origin === RELATIVE_URL_BASE
     ? `${url.pathname}${url.search}${url.hash}`
     : url.toString();
 }
