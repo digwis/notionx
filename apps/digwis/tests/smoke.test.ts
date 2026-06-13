@@ -1,0 +1,83 @@
+// Sanity test for the generated project. Verifies that
+// `defineContentSource` registers the content source picked in the
+// scaffolder prompt under the expected id and that the
+// `@notionx/core` API surface is reachable from the generated
+// project.
+
+import { describe, it, expect } from "vitest";
+import { blogSource } from "../lib/content/models.ts";
+import { pageFields, pagesDataSourceEnv } from "../lib/pages/model.ts";
+import {
+  defineContentSource,
+  getRegisteredSource,
+  getRegisteredSources,
+  type ContentSource,
+} from "@notionx/core/content";
+
+describe("content source registration", () => {
+  it("uses the id chosen in the scaffolder prompt", () => {
+    expect(blogSource.id).toBe("blog");
+  });
+
+  it("is visible in nextion's registry", () => {
+    const ids = getRegisteredSources().map((s: ContentSource) => s.id);
+    expect(ids).toContain("blog");
+  });
+
+  it("returns the same instance from getRegisteredSource", () => {
+    expect(getRegisteredSource("blog")).toBe(blogSource);
+  });
+});
+
+describe("pages model", () => {
+  it("declares the Notion fields used for navigation and page rendering", () => {
+    expect(pagesDataSourceEnv).toBe("NOTION_PAGES_DATA_SOURCE_ID");
+    expect(pageFields.key).toBe("Key");
+    expect(pageFields.showInNav).toBe("Show in Nav");
+    expect(pageFields.footerOrder).toBe("Footer Order");
+    expect(pageFields.contentSource).toBe("Content Source");
+  });
+});
+
+describe("defineContentSource", () => {
+  it("is a re-registration-safe factory", () => {
+    const id = "smoke-blog";
+    const first = defineContentSource({
+      id,
+      kind: "article",
+      visibility: { public: true, admin: false },
+      source: {
+        type: "notion",
+        tokenEnv: "NOTION_TOKEN",
+        dataSourceEnv: "NOTION_DATA_SOURCE_ID",
+        fields: { title: "Title" },
+        query: { pageSize: 10 },
+      },
+      routes: {
+        listPath: "/smoke",
+        detailPath: "/smoke/[slug]",
+        detailParam: "slug",
+      },
+      ui: {
+        name: "Smoke",
+        pluralName: "Smokes",
+        navLabel: "Smoke",
+        listTitle: "Smoke",
+        listDescription: "Smoke",
+        emptyState: "empty",
+      },
+      capabilities: {
+        richBlocks: false,
+        coverImages: false,
+        gatedAssets: false,
+      },
+    });
+    expect(getRegisteredSource(id)).toBe(first);
+    const second = defineContentSource({
+      ...first,
+      ui: { ...first.ui, listTitle: "Updated" },
+    });
+    expect(getRegisteredSource(id)).toBe(second);
+    expect(getRegisteredSource(id)?.ui.listTitle).toBe("Updated");
+  });
+});

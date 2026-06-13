@@ -1,0 +1,32 @@
+/// <reference types="@cloudflare/workers-types" />
+
+// Bindings declared in `wrangler.jsonc`. Add more entries here as
+// you wire up new bindings (KV, R2, queues, durable objects, etc.).
+
+interface Env {
+  ASSETS: Fetcher;
+  IMAGES: ImagesBinding;
+  DB: D1Database;
+  CONTENT_CACHE: KVNamespace;
+  VINEXT_KV_CACHE: KVNamespace;
+  ASSETS_BUCKET: R2Bucket;
+  NOTION_TOKEN?: string;
+  NOTION_DATA_SOURCE_ID?: string;
+  NOTION_PAGES_DATA_SOURCE_ID?: string;
+  // Read by `lib/site/settings.ts`. The scaffolder writes the
+  // real id into wrangler.jsonc#vars. Leave the empty string
+  // here as a sentinel for "Notion not configured" — the loader
+  // will fall back to the static values in `lib/site/config.ts`.
+  NOTION_SITE_SETTINGS_DATA_SOURCE_ID?: string;
+  SITE_URL?: string;
+}
+
+interface ImagesBinding {
+  input(stream: ReadableStream): {
+    transform(options: Record<string, unknown>): {
+      output(options: { format: string; quality: number }): Promise<{
+        response(): Response;
+      }>;
+    };
+  };
+}

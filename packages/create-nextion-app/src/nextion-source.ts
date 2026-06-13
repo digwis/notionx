@@ -4,17 +4,26 @@
 // writes into the generated `package.json`'s
 // `@notionx/core` / `@notionx/create-nextion-app` entries.
 //
-// The default reads the live version from the npm registry so
-// freshly-installed scaffolds always match the latest published
-// package — the previous default `^0.1.2` was a hardcoded value
-// from very early in the project and silently broke pnpm install
-// the moment the real version outgrew 0.1.x.
+// Resolution order (highest priority first):
 //
-// The network call has a 5s timeout and falls back to a hardcoded
-// caret range if the registry is unreachable, so a scaffolder never
-// hangs because npm is down. The fallback is a *range* on purpose:
-// we still want the generated project to pick up patch and minor
-// updates without forcing the operator to re-scaffold.
+//   1. Explicit override (`--nextion-source <range>` or
+//      the interactive prompt).
+//   2. **Monorepo dev mode** — the user is running the scaffolder
+//      from inside the `nextion` monorepo (or from a workspace
+//      consumer such as `nextion/apps/<app>`). When we can see
+//      `packages/nextion/package.json` two directories up from the
+//      target dir, we emit `workspace:*` so the generated project
+//      resolves `@notionx/core` against the local checkout via
+//      pnpm workspace symlinks. This is the path scaffolder
+//      authors use to iterate on `core` without publish / install
+//      round-trips.
+//   3. Live npm registry — fetch `@notionx/core`'s `dist-tags.latest`
+//      and emit `^<version>`. The fetch has a 5s timeout.
+//   4. Hardcoded `FALLBACK_NEXTION_SOURCE` range — used when the
+//      registry is unreachable. Bump in lockstep with releases.
+
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 /**
  * Last-known-good fallback used when the npm registry lookup
@@ -24,24 +33,75 @@
  * note that any *in-flight* release cycle should accept a slightly
  * stale fallback over refusing to install.
  */
-const FALLBACK_NEXTION_SOURCE = "^0.5.2";
+const FALLBACK_NEXTION_SOURCE = "^1.0.0";
 
 const REGISTRY_TIMEOUT_MS = 5_000;
+
+/**
+ * Marker written into the generated `.nextion/scaffold.json` and
+ * `package.json` so downstream tools (the `update` command, the
+ * doctor, etc.) can tell that this project was generated in
+ * monorepo dev mode and should be upgraded by re-running the
+ * scaffolder rather than by pulling a new semver from npm.
+ */
+export const MONOREPO_PROTOCOL = "workspace:*";
+
+/**
+ * Returns true when the scaffold target lives inside the `nextion`
+ * monorepo — i.e. we can see the monorepo root two directories up
+ * from the target. Both the monorepo root and `apps/<name>` consumers
+ * qualify, as do any depth-2 or shallower workspace packages.
+ *
+ * We probe the resolved real path of `packages/nextion/package.json`
+ * (not the symlink) to avoid false negatives inside worktrees.
+ */
+export function isMonorepoDevMode(targetDir: string): boolean {
+  try {
+    // Walk up from the target directory looking for a sibling
+    // `packages/nextion/package.json` whose name is `@notionx/core`.
+    // We probe upward (not just two levels) so the detector works
+    // for both shallow (`nextion/apps/digwis`) and nested
+    // (`nextion/apps/scratch/digwis`) layouts, and for worktrees
+    // checked out anywhere under the monorepo root.
+    let cursor = resolve(targetDir);
+    for (let i = 0; i < 6; i++) {
+      const probe = resolve(cursor, "packages", "nextion", "package.json");
+      if (existsSync(probe)) {
+        const contents = readFileSync(probe, "utf8");
+        if (/"name"\s*:\s*"@notionx\/core"/.test(contents)) {
+          return true;
+        }
+      }
+      const parent = resolve(cursor, "..");
+      if (parent === cursor) break; // filesystem root
+      cursor = parent;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Resolved semver range the scaffolder should write into the
  * generated project.
  *
  * If the caller passed an explicit range (via `--nextion-source`
- * or the interactive prompt), that wins. Otherwise we hit the npm
- * registry for `@notionx/core`'s `dist-tags.latest` and prefix it
- * with `^` so the generated project picks up compatible updates.
+ * or the interactive prompt), that wins. Otherwise, if the
+ * target is inside the `nextion` monorepo, we emit `workspace:*`
+ * for the local-dev fast path. Otherwise we hit the npm registry
+ * for `@notionx/core`'s `dist-tags.latest` and prefix it with `^`
+ * so the generated project picks up compatible updates.
  */
 export async function resolveNextionSource(
-  override: string | undefined
+  override: string | undefined,
+  targetDir: string
 ): Promise<string> {
   if (override !== undefined && override !== "") {
     return override;
+  }
+  if (isMonorepoDevMode(targetDir)) {
+    return MONOREPO_PROTOCOL;
   }
   try {
     const version = await fetchLatestCoreVersion();

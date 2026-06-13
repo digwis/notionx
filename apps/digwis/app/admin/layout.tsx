@@ -1,0 +1,90 @@
+import type { ReactNode } from "react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { AdminShell } from "@notionx/core/admin";
+import {
+  clearSessionCookie,
+  clearUserSessionCookie,
+  getAuthViewer,
+} from "@notionx/core/auth";
+import { LogOut, UserCircle } from "lucide-react";
+import { adminNav } from "@/lib/admin/nav";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+async function logoutAction(): Promise<void> {
+  "use server";
+  await clearSessionCookie();
+  await clearUserSessionCookie();
+  redirect("/login");
+}
+
+export default async function AdminLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const authViewer = await getAuthViewer();
+  if (!authViewer) redirect("/login");
+
+  const viewer = {
+    email: authViewer.email,
+    name: authViewer.user?.name ?? null,
+    picture: authViewer.user?.picture ?? null,
+    isAdmin: authViewer.isAdmin,
+    role: authViewer.role,
+  };
+
+  return (
+    <AdminShell
+      nav={adminNav}
+      viewer={viewer}
+      pathname="/admin"
+      brandLabel="digwis Admin"
+      brandHref="/admin"
+      viewerRoles={authViewer.isAdmin ? ["admin", "user"] : ["user"]}
+      headerLinks={
+        <>
+          <Separator orientation="vertical" className="h-4" />
+          <Link
+            href="/blog"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            查看Blog
+          </Link>
+          {authViewer.isAdmin ? (
+            <>
+              <Separator orientation="vertical" className="h-4" />
+              <Link
+                href="/admin/content-models"
+                className="text-sm font-medium hover:underline"
+              >
+                内容模型
+              </Link>
+            </>
+          ) : null}
+        </>
+      }
+      headerActions={
+        <>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/admin/account">
+              <UserCircle className="mr-1 h-3 w-3" />
+              账户
+            </Link>
+          </Button>
+          <ThemeToggle />
+          <form action={logoutAction}>
+            <Button type="submit" variant="outline" size="sm">
+              <LogOut className="mr-1 h-3 w-3" />
+              登出
+            </Button>
+          </form>
+        </>
+      }
+    >
+      {children}
+    </AdminShell>
+  );
+}

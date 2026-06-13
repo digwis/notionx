@@ -144,6 +144,75 @@ describe("buildUpdateAnswers", () => {
       { key: "title", notionName: "Name" },
     ]);
   });
+
+  it("preserves workspace:* for legacy-vinext compatibility projects", () => {
+    const answers = buildUpdateAnswers({
+      projectDir: "/tmp/legacy",
+      metadata: {
+        projectKind: "nextion",
+        projectName: "moviebluebook",
+        scaffoldVersion: "pre-0.5.4",
+        defaultLocale: "en",
+        supportedLocales: ["en", "zh"],
+        // Some legacy projects never set the marker — they only
+        // have `workspace:*`. We should still lock them.
+        nextionSource: "workspace:*",
+        enableSiteSettings: true,
+        contentSource: {
+          id: "blog",
+          title: "Blog",
+          fields: [{ key: "title", notionName: "Name" }],
+        },
+        compatibility: "legacy-vinext",
+      },
+    });
+
+    expect(answers.nextionSource).toBe("workspace:*");
+  });
+
+  it("preserves workspace:* even when the marker is absent (existing monorepo users)", () => {
+    const answers = buildUpdateAnswers({
+      projectDir: "/tmp/legacy-no-marker",
+      metadata: {
+        projectKind: "nextion",
+        projectName: "moviebluebook",
+        scaffoldVersion: "0.5.3",
+        defaultLocale: "en",
+        supportedLocales: ["en"],
+        nextionSource: "workspace:*",
+        enableSiteSettings: true,
+        contentSource: {
+          id: "blog",
+          title: "Blog",
+          fields: [{ key: "title", notionName: "Name" }],
+        },
+      },
+    });
+
+    expect(answers.nextionSource).toBe("workspace:*");
+  });
+
+  it("leaves normal semver-based projects alone", () => {
+    const answers = buildUpdateAnswers({
+      projectDir: "/tmp/consumer",
+      metadata: {
+        projectKind: "nextion",
+        projectName: "consumer",
+        scaffoldVersion: "0.5.4",
+        defaultLocale: "en",
+        supportedLocales: ["en"],
+        nextionSource: "^1.0.0",
+        enableSiteSettings: true,
+        contentSource: {
+          id: "blog",
+          title: "Blog",
+          fields: [{ key: "title", notionName: "Name" }],
+        },
+      },
+    });
+
+    expect(answers.nextionSource).toBe("^1.0.0");
+  });
 });
 
 describe("resolveTemplatesDir", () => {
