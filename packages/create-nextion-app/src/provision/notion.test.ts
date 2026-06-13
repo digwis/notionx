@@ -333,7 +333,15 @@ describe("site-settings reuse", () => {
       })
     );
     runOrThrowNtnMock.mockResolvedValueOnce(
-      JSON.stringify({ properties: {} })
+      JSON.stringify({
+        properties: {
+          "Site Name": { title: {} },
+          Tagline: { rich_text: {} },
+          Description: { rich_text: {} },
+          "Default Locale": { select: {} },
+          "Social Image": { url: {} },
+        },
+      })
     );
 
     const result = await ensureSiteSettingsDatabase({
@@ -349,6 +357,110 @@ describe("site-settings reuse", () => {
     expect(runOrThrowNtnMock).not.toHaveBeenCalledWith(
       expect.arrayContaining(["v1/databases", "-d", expect.any(String)]),
       expect.anything()
+    );
+  });
+
+  it("falls back to a title match when no stable-key marker is present", async () => {
+    // First call: stable-key search returns nothing.
+    runOrThrowNtnMock.mockResolvedValueOnce(JSON.stringify({ results: [] }));
+    // Second call: title search returns a same-named data source.
+    runOrThrowNtnMock.mockResolvedValueOnce(
+      JSON.stringify({
+        results: [
+          {
+            object: "data_source",
+            id: "ds-legacy",
+            title: [{ plain_text: "digwis Site Settings" }],
+            description: [],
+            parent: { database_id: "db-legacy" },
+            data_sources: [{ id: "ds-legacy" }],
+            url: "https://www.notion.so/db-legacy",
+            last_edited_time: "2026-06-12T00:00:00.000Z",
+          },
+        ],
+      })
+    );
+    // Third call: ensureDataSourceProperties → getDataSourceSchema
+    // (all 5 existing properties present → no PATCH needed).
+    runOrThrowNtnMock.mockResolvedValueOnce(
+      JSON.stringify({
+        properties: {
+          "Site Name": { title: {} },
+          Tagline: { rich_text: {} },
+          Description: { rich_text: {} },
+          "Default Locale": { select: {} },
+          "Social Image": { url: {} },
+        },
+      })
+    );
+    // Fourth call: patchDatabaseDescription (marker missing on legacy row).
+    runOrThrowNtnMock.mockResolvedValueOnce(JSON.stringify({ id: "db-legacy" }));
+
+    const result = await ensureSiteSettingsDatabase({
+      apiToken: "token",
+      parentPageId: "page-1234-page-1234-page-1234page1234",
+      projectName: "digwis",
+      description: "desc",
+      defaultLocale: "en",
+    });
+
+    expect(result.reused).toBe(true);
+    expect(result.dataSourceId).toBe("ds-legacy");
+    expect(runOrThrowNtnMock).toHaveBeenCalledWith(
+      expect.arrayContaining(["api", "v1/databases/db-legacy", "-X", "PATCH"]),
+      expect.objectContaining({ env: { NOTION_API_TOKEN: "token" } })
+    );
+  });
+
+  it("creates a fresh data source and writes the stable-key marker when nothing matches", async () => {
+    // No stable-key match.
+    runOrThrowNtnMock.mockResolvedValueOnce(JSON.stringify({ results: [] }));
+    // No title match.
+    runOrThrowNtnMock.mockResolvedValueOnce(JSON.stringify({ results: [] }));
+    // createDatabaseWithProperties (databases endpoint).
+    runOrThrowNtnMock.mockResolvedValueOnce(
+      JSON.stringify({
+        id: "db-new",
+        data_sources: [{ id: "ds-new" }],
+        url: "https://www.notion.so/db-new",
+      })
+    );
+    // createDatabaseWithProperties PATCH (adds the 4 non-title
+    // properties to the new data source).
+    runOrThrowNtnMock.mockResolvedValueOnce(
+      JSON.stringify({ properties: {} })
+    );
+    // patchDatabaseDescription (description contains the stable key marker).
+    runOrThrowNtnMock.mockResolvedValueOnce(JSON.stringify({ id: "db-new" }));
+    // seed page insert (uses runNtn, not runOrThrowNtn).
+    runNtnMock.mockResolvedValueOnce({ code: 0, stdout: JSON.stringify({ id: "page-new", object: "page" }), stderr: "" });
+
+    const result = await ensureSiteSettingsDatabase({
+      apiToken: "token",
+      parentPageId: "page-1234-page-1234-page-1234page1234",
+      projectName: "digwis",
+      description: "desc",
+      defaultLocale: "en",
+    });
+
+    expect(result.reused).toBe(false);
+    expect(result.seeded).toBe(1);
+    expect(result.dataSourceId).toBe("ds-new");
+
+    // The description PATCH payload must include the scaffold marker.
+    const patchCall = runOrThrowNtnMock.mock.calls.find(
+      (call) =>
+        Array.isArray(call[0]) &&
+        (call[0] as string[]).includes("v1/databases/db-new") &&
+        (call[0] as string[]).includes("PATCH")
+    );
+    expect(patchCall).toBeDefined();
+    const bodyArg = (patchCall![0] as string[])[5];
+    const description = JSON.parse(bodyArg).description as Array<{
+      text: { content: string };
+    }>;
+    expect(description[0].text.content).toContain(
+      "[nextion-scaffold] key=site-settings"
     );
   });
 });

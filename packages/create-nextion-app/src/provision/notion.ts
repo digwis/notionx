@@ -1709,58 +1709,68 @@ export function buildSiteSettingsSeedPage(input: {
 export async function ensureSiteSettingsDatabase(
   input: SiteSettingsProvisionInput
 ): Promise<SiteSettingsProvisionResult> {
+  const stableKey = "site-settings";
+  const title = `${input.projectName} Site Settings`;
   const properties = buildSiteSettingsProperties();
-  const titleProp = Object.entries(properties).find(
-    ([, value]) => "title" in value
-  );
-  const dbTitlePropName = titleProp ? titleProp[0] : "Site Name";
 
-  const body = {
-    parent: { type: "page_id", page_id: input.parentPageId },
-    title: [
-      { type: "text", text: { content: `${input.projectName} Site Settings` } },
-    ],
-    properties: titleProp
-      ? { [titleProp[0]]: { title: {} } }
-      : { [dbTitlePropName]: { title: {} } },
-  };
+  // 1) Stable-key match.
+  const existingByStableKey = await findExistingDatabaseByStableKey({
+    apiToken: input.apiToken,
+    parentPageId: input.parentPageId,
+    stableKey,
+  });
 
-  const stdout = await runOrThrowNtn(
-    ["api", "v1/databases", "-d", JSON.stringify(body)],
-    { env: { NOTION_API_TOKEN: input.apiToken } }
-  );
+  // 2) Title fallback.
+  const existing =
+    existingByStableKey ??
+    (await findExistingDatabaseByTitle({
+      apiToken: input.apiToken,
+      parentPageId: input.parentPageId,
+      title,
+    }));
 
-  const db = JSON.parse(stdout) as {
-    id: string;
-    url?: string;
-    data_sources?: Array<{ id: string }>;
-  };
-  const dataSourceId = db.data_sources?.[0]?.id ?? db.id;
-  const databaseId = db.id;
-  const url = db.url ?? `https://www.notion.so/${databaseId.replace(/-/g, "")}`;
-
-  // Write the non-title schema to the default data source. Notion
-  // refuses to add a *second* title property, so we filter it out
-  // before the PATCH (same dance as the content source provisioner).
-  const nonTitleProps = Object.fromEntries(
-    Object.entries(properties).filter(([, v]) => !("title" in v))
-  );
-  if (Object.keys(nonTitleProps).length > 0) {
-    const patchBody = { properties: nonTitleProps };
-    await runOrThrowNtn(
-      [
-        "api",
-        `v1/data_sources/${dataSourceId}`,
-        "-X",
-        "PATCH",
-        "-d",
-        JSON.stringify(patchBody),
-      ],
-      { env: { NOTION_API_TOKEN: input.apiToken } }
-    );
+  if (existing) {
+    // Make sure the schema has every property the 0.5.4+ schema
+    // expects. Notion adds new properties with no destructive
+    // effect on existing rows.
+    await ensureDataSourceProperties({
+      apiToken: input.apiToken,
+      dataSourceId: existing.dataSourceId,
+      desired: properties,
+      title,
+    });
+    if (extractScaffoldKey(existing.description) !== stableKey) {
+      await patchDatabaseDescription({
+        apiToken: input.apiToken,
+        databaseId: existing.databaseId,
+        existingDescription: existing.description,
+        stableKey,
+      });
+    }
+    return {
+      dataSourceId: existing.dataSourceId,
+      databaseId: existing.databaseId,
+      url: existing.url,
+      reused: true,
+      seeded: 0,
+    };
   }
 
-  // Insert the seed row.
+  // 3) Cold start — create with the scaffold marker baked in.
+  const { databaseId, dataSourceId, url } = await createDatabaseWithProperties({
+    apiToken: input.apiToken,
+    parentPageId: input.parentPageId,
+    title,
+    properties,
+  });
+  await patchDatabaseDescription({
+    apiToken: input.apiToken,
+    databaseId,
+    existingDescription: "",
+    stableKey,
+  });
+
+  // 4) Seed the singleton row.
   const seed = buildSiteSettingsSeedPage({
     projectName: input.projectName,
     description: input.description,
@@ -1782,7 +1792,7 @@ export async function ensureSiteSettingsDatabase(
     dataSourceId,
     databaseId,
     url,
-    created: true,
+    reused: false,
     seeded: seedResult.code === 0 ? 1 : 0,
   };
 }
