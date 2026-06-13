@@ -308,3 +308,38 @@ describe("schema patch guardrails", () => {
     expect(diff.warnings[0]).toContain('property "Published" is rich_text');
   });
 });
+
+describe("site-settings builders", () => {
+  it("emits a schema that mirrors the runtime loader's field map", () => {
+    const properties = _internal.buildSiteSettingsProperties();
+
+    expect(properties["Site Name"]).toEqual({ title: {} });
+    expect(properties.Tagline).toEqual({ rich_text: {} });
+    expect(properties.Description).toEqual({ rich_text: {} });
+    expect(properties["Default Locale"]).toEqual({ select: {} });
+    expect(properties["Social Image"]).toEqual({ url: {} });
+  });
+
+  it("builds a seed row pre-populated with the project name", () => {
+    const seed = _internal.buildSiteSettingsSeedPage({
+      projectName: "digwis",
+      description: "A demo description.",
+      defaultLocale: "en",
+      databaseId: "db-id",
+    });
+    const properties = seed.properties as {
+      "Site Name": { title: Array<{ text: { content: string } }> };
+      Tagline: { rich_text: Array<{ text: { content: string } }> };
+      Description: { rich_text: Array<{ text: { content: string } }> };
+      "Default Locale": { select: { name: string } };
+    };
+
+    expect(properties["Site Name"].title[0].text.content).toBe("digwis");
+    expect(properties.Tagline.rich_text[0].text.content).toBe("digwis");
+    expect(properties.Description.rich_text[0].text.content).toBe(
+      "A demo description."
+    );
+    expect(properties["Default Locale"].select.name).toBe("en");
+    expect(seed.parent).toEqual({ type: "database_id", database_id: "db-id" });
+  });
+});

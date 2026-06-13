@@ -10,6 +10,7 @@ export interface ScaffoldMetadata {
   supportedLocales: string[];
   uiPreset: Answers["uiPreset"];
   nextionSource: string;
+  enableSiteSettings: boolean;
   contentSource: {
     id: string;
     title: string;
@@ -29,6 +30,7 @@ export function buildScaffoldMetadata(
     supportedLocales: [...answers.supportedLocales],
     uiPreset: answers.uiPreset,
     nextionSource: answers.nextionSource,
+    enableSiteSettings: answers.enableSiteSettings,
     contentSource: {
       id: answers.contentSource.id,
       title: answers.contentSource.title,

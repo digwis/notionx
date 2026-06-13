@@ -1,15 +1,29 @@
-// Site-level configuration consumed by the nextion worker. Runtime
-// navigation/footer links come from the Notion-backed Pages model;
-// `navigation.main` is kept as a small fallback when Notion is not
-// configured yet.
+// Static fallback for the Notion-backed site settings.
+//
+// `getSiteSettings()` (in `./settings.ts`) reads from a dedicated
+// Notion data source, but every consumer in the project still uses
+// the `siteConfig` shape below. We keep two copies on purpose:
+//
+//   1. Notion is the editor surface — operators tweak site name /
+//      tagline / description there without redeploying.
+//   2. The values below are the *last-resort fallback* if Notion
+//      is unreachable or the data source is empty.
+//
+// If you only want the static copy (no Notion), delete
+// `lib/site/settings.ts` and the `siteSettingsSource` entry in
+// `lib/content/models.ts`, then point the pages at `siteConfig`
+// directly again. The repo is intentionally structured so that
+// removing Notion is a 3-line change.
 
 import { contentSources } from "../content/models.ts";
 
-export const siteConfig = {
+export const fallbackSiteConfig = {
   name: "{{projectName}}",
   description:
     "A Notion-powered site built on @notionx/core, running on Cloudflare Workers with D1, R2, and Cloudflare Images.",
+  tagline: "{{projectName}}",
   defaultLocale: "{{defaultLocale}}",
+  socialImageUrl: null as string | null,
   locales: {{supportedLocalesJson}},
   navigation: {
     main: [
@@ -25,5 +39,16 @@ export const siteConfig = {
   sources: contentSources,
 };
 
-export type SiteConfig = typeof siteConfig;
+export type SiteConfig = typeof fallbackSiteConfig;
+
+/**
+ * `siteConfig` is preserved as an alias for `fallbackSiteConfig` so
+ * existing imports (`import { siteConfig } from "@/lib/site/config"`)
+ * keep working. New code should prefer `getSiteSettings()` from
+ * `./settings.ts` for runtime values, and `fallbackSiteConfig` only
+ * when an async read is impossible (e.g. inside `generateMetadata`
+ * for routes that need a synchronous title). See
+ * `app/layout.tsx` for the async pattern.
+ */
+export const siteConfig: SiteConfig = fallbackSiteConfig;
 export default siteConfig;

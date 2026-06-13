@@ -17,11 +17,7 @@
     "migrate:remote": "wrangler d1 migrations apply {{projectNameLower}}-db --remote"
   },
   "dependencies": {
-    "@notionx/core": "{{nextionSource}}",
-{{uiDependencies}}
-    "next": "16.2.7",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+{{dependenciesBlock}}
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.40.0",

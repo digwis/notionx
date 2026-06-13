@@ -29,7 +29,23 @@ export interface Answers {
   defaultLocale: string;
   supportedLocales: string[];
   contentSource: AnswersContentSource;
-  /** UI component preset copied into the generated project. */
+  /**
+   * UI preset selected at scaffold time. Controls which shadcn/ui
+   * primitives are vendored into the generated project, which Radix
+   * packages are wired into `package.json`, and which block-renderer
+   * modules the generated `components/notion/` tree imports.
+   *
+   * - `minimal` — lean blog set: Button, Card, Input, Label, Badge,
+   *   Separator, Skeleton. The smallest scaffold footprint.
+   * - `site` — Notion page builder set: everything in `minimal` plus
+   *   Accordion, Alert, Table, AspectRatio, Tabs, Tooltip,
+   *   DropdownMenu, Sheet, Dialog. Recommended for Notion-driven
+   *   public sites and landing pages.
+   * - `app` — full app/dashboard set: everything in `site` plus the
+   *   form/control primitives (Select, Textarea, Checkbox, Switch,
+   *   RadioGroup, Avatar, Sonner, Form, Popover, Command,
+   *   NavigationMenu). Heaviest preset.
+   */
   uiPreset: UiPreset;
   /**
    * Dependency specifier used for `@notionx/core` in the
@@ -60,6 +76,50 @@ export interface Answers {
   notionParentPage: string;
   /** Number of sample pages to insert into the new database (0 to skip). */
   notionSeedCount: number;
+  /**
+   * Create a separate Notion data source for site-level settings
+   * (name, tagline, description, default locale, social image) and
+   * wire `lib/site/settings.ts` to read from it. Set to `false` to
+   * keep site config hard-coded in `lib/site/config.ts`.
+   */
+  enableSiteSettings: boolean;
+}
+
+export const UI_PRESETS: ReadonlyArray<{
+  id: UiPreset;
+  label: string;
+  hint: string;
+  description: string;
+}> = [
+  {
+    id: "site",
+    label: "Site Builder (recommended)",
+    hint: "Notion page builder, marketing sites, docs",
+    description:
+      "Rich set of shadcn primitives for Notion-driven public sites, " +
+      "landing pages, and documentation. Recommended default for " +
+      "Notion page-building projects.",
+  },
+  {
+    id: "minimal",
+    label: "Minimal",
+    hint: "lean blog, simple content site, quick demo",
+    description:
+      "Smallest footprint. Just enough primitives for blog posts and " +
+      "simple content. Easy to extend with `pnpm dlx shadcn add …`.",
+  },
+  {
+    id: "app",
+    label: "App Dashboard",
+    hint: "admin, dashboards, forms, authenticated apps",
+    description:
+      "Largest preset. Adds form controls, command palette, popover, " +
+      "and navigation menu on top of the site set.",
+  },
+] as const;
+
+export function isUiPreset(value: unknown): value is UiPreset {
+  return value === "minimal" || value === "site" || value === "app";
 }
 
 const FIELD_KEY_RE = /^[a-z][a-zA-Z0-9]*$/;
@@ -114,6 +174,13 @@ export const DEFAULT_ANSWERS: Omit<
   uiPreset: "site",
   notionParentPage: "",
   notionSeedCount: 3,
+  // Site-level config lives in a separate Notion data source by
+  // default. The generated project reads site name / tagline /
+  // description / default locale / social image from there, with
+  // `lib/site/config.ts` as a static fallback. Set to `false` to
+  // skip the extra data source entirely (e.g. for projects that
+  // don't need operators to edit site copy from Notion).
+  enableSiteSettings: true,
   contentSource: {
     id: "blog",
     title: "Blog",
@@ -191,33 +258,8 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
     LANGUAGE_OPTIONS[String(languageMode) as keyof typeof LANGUAGE_OPTIONS] ??
     LANGUAGE_OPTIONS.en;
 
-  const uiPreset = await p.select({
-    message: "UI preset?",
-    initialValue: DEFAULT_ANSWERS.uiPreset,
-    options: [
-      {
-        value: "site",
-        label: "Site Builder",
-        hint: "recommended for Notion pages",
-      },
-      {
-        value: "minimal",
-        label: "Minimal",
-        hint: "lean blog and simple content",
-      },
-      {
-        value: "app",
-        label: "App Dashboard",
-        hint: "forms, admin, and richer app UI",
-      },
-    ],
-  });
-  if (p.isCancel(uiPreset)) {
-    p.cancel("Cancelled by user");
-    throw new Error("cancelled");
-  }
-
   // Summarise the canned defaults so the user knows what they're agreeing to.
+  // (UI preset is summarised after the user picks it below.)
   const fieldsList = DEFAULT_ANSWERS.contentSource.fields
     .map((f) => f.notionName)
     .join(", ");
@@ -228,7 +270,6 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
       `  language        : ${localeConfig.label}`,
       `  default locale  : ${localeConfig.defaultLocale} (fallback/current)`,
       `  supported locales: ${localeConfig.supportedLocales.join(", ")} (available)`,
-      `  UI preset      : ${String(uiPreset)}`,
       `  content source  : ${DEFAULT_ANSWERS.contentSource.id} (${DEFAULT_ANSWERS.contentSource.title})`,
       `  fields          : ${fieldsList}`,
     ].join("\n")
@@ -242,6 +283,29 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
     p.cancel("Cancelled by user");
     throw new Error("cancelled");
   }
+
+  // UI preset — controls which shadcn primitives get vendored into
+  // `components/ui/` and which Radix packages land in
+  // `package.json`. The `site` preset is the recommended default for
+  // Notion-driven public sites; `minimal` is the lean-blog escape
+  // hatch; `app` is the heaviest set (admin / forms / dashboards).
+  const uiPresetSelection = await p.select({
+    message: "UI preset?",
+    initialValue: DEFAULT_ANSWERS.uiPreset,
+    options: UI_PRESETS.map((preset) => ({
+      value: preset.id,
+      label: preset.label,
+      hint: preset.hint,
+    })),
+  });
+  if (p.isCancel(uiPresetSelection)) {
+    p.cancel("Cancelled by user");
+    throw new Error("cancelled");
+  }
+  const uiPreset: UiPreset = isUiPreset(uiPresetSelection)
+    ? uiPresetSelection
+    : DEFAULT_ANSWERS.uiPreset;
+  p.log.info(`UI preset: ${uiPreset}`);
 
   // Admin account — collected last so users see what they're agreeing
   // to before we ask for credentials. The password is generated here,
@@ -287,7 +351,6 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
     defaultLocale: localeConfig.defaultLocale,
     supportedLocales: [...localeConfig.supportedLocales],
     nextionSource: DEFAULT_ANSWERS.nextionSource,
-    uiPreset: String(uiPreset) as UiPreset,
     contentSource: {
       id: DEFAULT_ANSWERS.contentSource.id,
       title: DEFAULT_ANSWERS.contentSource.title,
@@ -297,6 +360,8 @@ export async function prompt(argv: string[] = process.argv): Promise<Answers> {
     adminPassword,
     notionParentPage: DEFAULT_ANSWERS.notionParentPage,
     notionSeedCount: DEFAULT_ANSWERS.notionSeedCount,
+    enableSiteSettings: DEFAULT_ANSWERS.enableSiteSettings,
+    uiPreset,
     _generatedAdminPassword: adminPassword,
   } as Answers & { _generatedAdminPassword: string };
 }

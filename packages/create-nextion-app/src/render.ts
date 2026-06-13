@@ -8,13 +8,10 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { buildScaffoldMetadata, SCAFFOLD_METADATA_FILE } from "./metadata.js";
-import type { Answers } from "./prompt.js";
+import { presetComponentNames, presetDependencyEntries } from "./presets.js";
+import type { Answers, UiPreset } from "./prompt.js";
 import { hashPasswordForScaffold } from "./provision/password-hash.js";
-import {
-  renderDependencyLines,
-  uiComponentsForPreset,
-  uiDependenciesForPreset,
-} from "./ui-presets.js";
+import { uiComponentsForPreset } from "./ui-presets.js";
 
 interface TokenMap {
   projectName: string;
@@ -44,9 +41,21 @@ interface TokenMap {
   adminEmail: string;
   adminName: string;
   adminPasswordHash: string;
-  uiPreset: string;
-  uiDependencies: string;
+  /** Selected UI preset — see `presets.ts` for the source of truth. */
+  uiPreset: UiPreset;
+  /**
+   * Rendered JSON fragment that lands inside the generated
+   * `package.json`'s `dependencies` block. Already comma-trailed
+   * and indented so it can sit between `{` and `}` without further
+   * post-processing.
+   */
+  dependenciesBlock: string;
+  /**
+   * Plain list of UI components vendored for this preset, used by
+   * the README's "What's included" section.
+   */
   uiComponentList: string;
+  /** Raw component name list — used by the per-preset file filter. */
   uiComponents: readonly string[];
 }
 
@@ -131,12 +140,90 @@ async function buildTokenMap(answers: Answers): Promise<TokenMap> {
     adminName: localPart(answers.adminEmail),
     adminPasswordHash,
     uiPreset: answers.uiPreset,
-    uiDependencies: renderDependencyLines(
-      uiDependenciesForPreset(answers.uiPreset)
-    ),
+    dependenciesBlock: buildDependenciesBlock(answers.uiPreset),
     uiComponentList: uiComponents.map((name) => `\`${name}\``).join(", "),
     uiComponents,
   };
+}
+
+/**
+ * Build the `dependencies` block that goes into the generated
+ * `package.json`. The block is a JSON-style object body (4-space
+ * indent, no trailing comma) so it can be dropped between `{` and
+ * `}` in the template.
+ *
+ * The base dependency set is the union of every package the
+ * rendered components need. It is augmented by the preset's
+ * declared extras (e.g. `@radix-ui/react-accordion` for the
+ * `site` preset), filtered against the base set so we never emit
+ * duplicate keys.
+ */
+function buildDependenciesBlock(uiPreset: UiPreset): string {
+  // The base dependency set — what every preset needs regardless
+  // of which components it vendors. Keep this list stable: it is
+  // the floor of every generated project.
+  const baseDependencies: ReadonlyArray<readonly [string, string]> = [
+    ["@notionx/core", "{{nextionSource}}"],
+    ["class-variance-authority", "^0.7.1"],
+    ["clsx", "^2.1.1"],
+    ["lucide-react", "^0.460.0"],
+    ["next", "16.2.7"],
+    ["next-themes", "^0.4.4"],
+    ["react", "^19.2.7"],
+    ["react-dom", "^19.2.7"],
+    ["tailwind-merge", "^2.5.5"],
+    ["tailwindcss-animate", "^1.0.7"],
+  ];
+
+  // The base Radix packages — `minimal` preset also needs these
+  // (it vendors `label`, `separator`, and `slot` via the existing
+  // `button.tsx`). We seed the dependency block with them so the
+  // `minimal` preset compiles even if no preset extras fire.
+  const baseRadixDependencies: ReadonlyArray<readonly [string, string]> = [
+    ["@radix-ui/react-label", "^2.1.0"],
+    ["@radix-ui/react-separator", "^1.1.0"],
+    ["@radix-ui/react-slot", "^1.2.0"],
+  ];
+
+  const presetExtras = presetDependencyEntries(
+    uiPreset,
+    new Set([
+      // Anything in the base blocks is already covered — drop it
+      // from the preset's contribution to avoid emitting the same
+      // key twice in the JSON object.
+      ...baseDependencies.map(([name]) => name),
+      ...baseRadixDependencies.map(([name]) => name),
+    ])
+  );
+
+  // Merge into a single dedup'd map. Preset extras win on conflict
+  // (e.g. the `app` preset may pin a newer `react-hook-form` than
+  // a future base set), so they go in last.
+  const merged = new Map<string, string>();
+  for (const [name, version] of baseDependencies) merged.set(name, version);
+  for (const [name, version] of baseRadixDependencies) {
+    merged.set(name, version);
+  }
+  for (const dep of presetExtras) merged.set(dep.name, dep.version);
+
+  // Render as a stable, alphabetised JSON object body. We keep
+  // the 4-space indent and the no-trailing-comma convention so the
+  // output is diff-friendly.
+  const lines: string[] = [];
+  const keys = [...merged.keys()].sort();
+  for (const name of keys) {
+    const version = merged.get(name)!;
+    // The `{{nextionSource}}` token is already a string, but we
+    // want to keep it unquoted in the output so the template
+    // interpolator can still replace it. (We only got here because
+    // the token wasn't substituted yet — `buildTokenMap` ran
+    // before this; the values array here is the *pre-substitution*
+    // shape. The template engine substitutes `{{nextionSource}}`
+    // post-merge, so a bare token placeholder must survive.)
+    const value = version === "{{nextionSource}}" ? `"{{nextionSource}}"` : JSON.stringify(version);
+    lines.push(`    "${name}": ${value}`);
+  }
+  return lines.join(",\n");
 }
 
 function renderTemplate(input: string, tokens: TokenMap): string {
@@ -265,10 +352,49 @@ async function copyDirWithRender(
       const renderedName = renderTemplate(entry.name, tokens);
       await copyDirWithRender(from, path.join(dest, renderedName), tokens);
     } else if (entry.isFile()) {
-      if (shouldSkipTemplate(from, tokens)) continue;
+      // Per-preset component filter: the `components/ui/` tree in
+      // the templates directory carries the *union* of every preset
+      // (so we only have to maintain one copy of each shadcn
+      // component). At copy time, drop files that the selected
+      // preset didn't opt into. The `presets.ts` config is the
+      // single source of truth for what's in scope.
+      if (isUiDirectory(src) && !shouldCopyUiComponent(entry.name, tokens.uiPreset)) {
+        continue;
+      }
       await writeFileWithRender(from, dest, tokens);
     }
   }
+}
+
+/**
+ * True when `dir` is the `components/ui/` directory of the
+ * templates tree. Used to gate the per-preset component filter
+ * (see `copyDirWithRender`).
+ */
+function isUiDirectory(dir: string): boolean {
+  const parts = dir.split(path.sep);
+  return (
+    parts.length >= 2 &&
+    parts[parts.length - 1] === "ui" &&
+    parts[parts.length - 2] === "components"
+  );
+}
+
+/**
+ * Decide whether a `components/ui/<file>.tsx.tmpl` should be
+ * copied for the given preset. The file list is the union across
+ * all presets, and the preset's `components` array declares which
+ * ones survive.
+ *
+ * Files that aren't `.tsx.tmpl` shadcn component copies (e.g. a
+ * future `index.ts` helper or a barrel) are always copied — only
+ * the named shadcn components participate in the filter.
+ */
+function shouldCopyUiComponent(fileName: string, uiPreset: UiPreset): boolean {
+  if (!fileName.endsWith(".tsx.tmpl")) return true;
+  const base = fileName.slice(0, -".tsx.tmpl".length);
+  const allowed = new Set(presetComponentNames(uiPreset));
+  return allowed.has(base);
 }
 
 async function writeFileWithRender(

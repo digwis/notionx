@@ -36,6 +36,7 @@ describe("runProvisionRepair", () => {
         supportedLocales: ["en"],
         uiPreset: "site",
         nextionSource: "^0.1.2",
+        enableSiteSettings: true,
         contentSource: {
           id: "blog",
           title: "Blog",
@@ -50,6 +51,7 @@ describe("runProvisionRepair", () => {
       supportedLocales: ["en"],
       nextionSource: "^0.1.2",
       uiPreset: "site",
+      enableSiteSettings: true,
       contentSource: {
         id: "blog",
         title: "Blog",

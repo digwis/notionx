@@ -65,6 +65,7 @@ describe("runUpdate", () => {
         supportedLocales: ["en"],
         uiPreset: "site",
         nextionSource: "^0.1.2",
+        enableSiteSettings: true,
         contentSource: {
           id: "blog",
           title: "Blog",
@@ -129,6 +130,7 @@ describe("buildUpdateAnswers", () => {
         supportedLocales: ["en", "zh-CN"],
         uiPreset: "site",
         nextionSource: "^0.1.2",
+        enableSiteSettings: true,
         contentSource: {
           id: "blog",
           title: "Blog",
@@ -191,6 +193,7 @@ describe("buildUpdatePlan", () => {
           supportedLocales: ["en"],
           uiPreset: "site",
           nextionSource: "^0.1.2",
+          enableSiteSettings: true,
           contentSource: {
             id: "blog",
             title: "Blog",
@@ -217,6 +220,7 @@ describe("buildUpdatePlan", () => {
         supportedLocales: ["en"],
         uiPreset: "site",
         nextionSource: "^0.1.2",
+        enableSiteSettings: true,
         contentSource: {
           id: "blog",
           title: "Blog",

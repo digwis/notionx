@@ -1521,4 +1521,187 @@ export const _internal = {
   extractScaffoldKey,
   mergeDescriptionWithScaffoldMarker,
   missingPropertiesForPatch,
+  buildSiteSettingsProperties,
+  buildSiteSettingsSeedPage,
 };
+
+// ---------------------------------------------------------------------------
+// Site settings (singleton row)
+//
+// The generated project reads site-level config (name, tagline, description,
+// default locale, social image) from a dedicated Notion data source. The
+// scaffolder creates that data source here, with a fixed schema the runtime
+// loader knows how to read, and seeds a single row pre-populated with the
+// project name + a placeholder description. Operators can edit the row in
+// Notion after scaffolding; changes show up within 5 minutes (KV cache TTL)
+// or immediately via the admin revalidate endpoint.
+// ---------------------------------------------------------------------------
+
+/** Field names the runtime loader reads in `lib/site/settings.ts`. */
+export const SITE_SETTINGS_FIELDS = [
+  "Site Name", // title
+  "Tagline", // rich_text
+  "Description", // rich_text
+  "Default Locale", // select
+  "Social Image", // url
+] as const;
+
+export interface SiteSettingsProvisionInput {
+  apiToken: string;
+  parentPageId: string;
+  projectName: string;
+  /** Initial description seeded into the row. */
+  description: string;
+  /** Initial default locale seeded into the row (e.g. "en"). */
+  defaultLocale: string;
+}
+
+export type SiteSettingsProvisionResult = NotionProvisionResult;
+
+/**
+ * Build the Notion `properties` object for the site-settings data source.
+ *
+ * Mirrors `siteSettingsSource.fields` in the generated
+ * `lib/content/models.ts`:
+ *   - `Site Name` → title (Notion's only title column)
+ *   - `Tagline`   → rich_text
+ *   - `Description` → rich_text
+ *   - `Default Locale` → select
+ *   - `Social Image` → url
+ *
+ * Keep the `SITE_SETTINGS_FIELDS` array in sync with this map. The
+ * scaffolder's seed row and the runtime loader both depend on it.
+ */
+export function buildSiteSettingsProperties(): NotionPropertyMap {
+  const props: NotionPropertyMap = {
+    "Site Name": { title: {} },
+    Tagline: { rich_text: {} },
+    Description: { rich_text: {} },
+    "Default Locale": { select: {} },
+    "Social Image": { url: {} },
+  };
+  return props;
+}
+
+/**
+ * Build the single seed page for the site-settings data source.
+ *
+ * The page carries the project name and a placeholder description so
+ * the home page renders something useful before the operator customizes
+ * it in Notion. The runtime loader falls back to
+ * `fallbackSiteConfig` if the row is missing, so an unedited seed
+ * page is fine — but a populated one means the very first request
+ * after scaffolding already shows the right site name everywhere.
+ */
+export function buildSiteSettingsSeedPage(input: {
+  projectName: string;
+  description: string;
+  defaultLocale: string;
+  databaseId: string;
+}) {
+  return {
+    parent: { type: "database_id", database_id: input.databaseId },
+    properties: {
+      "Site Name": {
+        title: [{ text: { content: input.projectName } }],
+      },
+      Tagline: {
+        rich_text: [{ text: { content: input.projectName } }],
+      },
+      Description: {
+        rich_text: [{ text: { content: input.description } }],
+      },
+      "Default Locale": {
+        select: { name: input.defaultLocale },
+      },
+    },
+  };
+}
+
+/**
+ * Create the site-settings data source under the given parent page and
+ * insert the seed row. Same Notion API dance as
+ * `ensureNotionDatabase`, minus the multi-page seeding — the singleton
+ * row is created up front so the home page works before the operator
+ * has opened Notion.
+ */
+export async function ensureSiteSettingsDatabase(
+  input: SiteSettingsProvisionInput
+): Promise<SiteSettingsProvisionResult> {
+  const properties = buildSiteSettingsProperties();
+  const titleProp = Object.entries(properties).find(
+    ([, value]) => "title" in value
+  );
+  const dbTitlePropName = titleProp ? titleProp[0] : "Site Name";
+
+  const body = {
+    parent: { type: "page_id", page_id: input.parentPageId },
+    title: [
+      { type: "text", text: { content: `${input.projectName} Site Settings` } },
+    ],
+    properties: titleProp
+      ? { [titleProp[0]]: { title: {} } }
+      : { [dbTitlePropName]: { title: {} } },
+  };
+
+  const stdout = await runOrThrowNtn(
+    ["api", "v1/databases", "-d", JSON.stringify(body)],
+    { env: { NOTION_API_TOKEN: input.apiToken } }
+  );
+
+  const db = JSON.parse(stdout) as {
+    id: string;
+    url?: string;
+    data_sources?: Array<{ id: string }>;
+  };
+  const dataSourceId = db.data_sources?.[0]?.id ?? db.id;
+  const databaseId = db.id;
+  const url = db.url ?? `https://www.notion.so/${databaseId.replace(/-/g, "")}`;
+
+  // Write the non-title schema to the default data source. Notion
+  // refuses to add a *second* title property, so we filter it out
+  // before the PATCH (same dance as the content source provisioner).
+  const nonTitleProps = Object.fromEntries(
+    Object.entries(properties).filter(([, v]) => !("title" in v))
+  );
+  if (Object.keys(nonTitleProps).length > 0) {
+    const patchBody = { properties: nonTitleProps };
+    await runOrThrowNtn(
+      [
+        "api",
+        `v1/data_sources/${dataSourceId}`,
+        "-X",
+        "PATCH",
+        "-d",
+        JSON.stringify(patchBody),
+      ],
+      { env: { NOTION_API_TOKEN: input.apiToken } }
+    );
+  }
+
+  // Insert the seed row.
+  const seed = buildSiteSettingsSeedPage({
+    projectName: input.projectName,
+    description: input.description,
+    defaultLocale: input.defaultLocale,
+    databaseId,
+  });
+  const seedResult = await runNtn(
+    ["api", "v1/pages", "-d", JSON.stringify(seed)],
+    { env: { NOTION_API_TOKEN: input.apiToken } }
+  );
+  if (seedResult.code !== 0) {
+    const detail = (seedResult.stderr || seedResult.stdout).trim().slice(0, 500);
+    console.warn(
+      `[notion site-settings seed] failed (code ${seedResult.code}): ${detail}`
+    );
+  }
+
+  return {
+    dataSourceId,
+    databaseId,
+    url,
+    created: true,
+    seeded: seedResult.code === 0 ? 1 : 0,
+  };
+}

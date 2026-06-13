@@ -4,7 +4,7 @@
   "description": "One-command installer for the official nextion AI agent skill (Claude Code, Trae IDE, OpenAI Codex).",
   "type": "module",
   "bin": {
-    "nextion-skill": "dist/cli.js"
+    "nextion-skill": "./dist/cli.js"
   },
   "files": [
     "dist",

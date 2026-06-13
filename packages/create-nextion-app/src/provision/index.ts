@@ -34,6 +34,7 @@ import {
   verifyNotionToken,
   ensureNotionDatabase,
   ensurePagesDatabase,
+  ensureSiteSettingsDatabase,
 } from "./notion.js";
 import { promptNotion } from "./prompts.js";
 import {
@@ -72,6 +73,14 @@ export interface ProvisionResult {
     seeded?: number;
     pagesSeeded?: number;
   };
+  siteSettings: {
+    ok: boolean;
+    dataSourceId?: string;
+    url?: string;
+    message?: string;
+    skipped?: boolean;
+    seeded?: number;
+  };
   resend: { ok: boolean; enabled: boolean; message?: string };
   google: { ok: boolean; enabled: boolean; message?: string };
   migrationsApplied: boolean;
@@ -87,6 +96,7 @@ export interface ProvisionResult {
   // status card.
   _turnstileSecret?: string;
   _notionToken?: string;
+  _siteSettingsDataSourceId?: string;
 }
 
 export async function provision(
@@ -102,6 +112,7 @@ export async function provision(
     r2: { ok: false },
     turnstile: { ok: false },
     notion: { ok: false },
+    siteSettings: { ok: false, skipped: true },
     resend: { ok: false, enabled: false },
     google: { ok: false, enabled: false },
     migrationsApplied: false,
@@ -324,6 +335,32 @@ export async function provision(
           `Notion: content data source ${content.dataSourceId.slice(0, 8)}… seeded ${content.seeded}; Pages ${pages.dataSourceId.slice(0, 8)}… seeded ${pages.seeded}.`
         );
         result._notionToken = resolvedToken;
+
+        // Site settings: separate data source for site-level config
+        // (name, tagline, description, default locale, social image).
+        // Created alongside the main content source — same parent
+        // page, same Notion token, separate `NOTION_SITE_SETTINGS_…`
+        // env var. Disable with `--no-site-settings`.
+        if (answers.enableSiteSettings) {
+          const settings = await ensureSiteSettingsDatabase({
+            apiToken: notionInputs.apiToken,
+            parentPageId: notionInputs.parentPageId,
+            projectName: answers.projectName,
+            description:
+              "A Notion-powered site built on @notionx/core, running on Cloudflare Workers with D1, R2, and Cloudflare Images.",
+            defaultLocale: answers.defaultLocale,
+          });
+          result.siteSettings = {
+            ok: true,
+            dataSourceId: settings.dataSourceId,
+            url: settings.url,
+            seeded: settings.seeded,
+          };
+          result._siteSettingsDataSourceId = settings.dataSourceId;
+          p.log.success(
+            `Notion site settings: database created (${settings.dataSourceId.slice(0, 8)}…), seeded ${settings.seeded} page.`
+          );
+        }
       } else {
         result.notion = {
           ok: false,
@@ -398,6 +435,7 @@ export async function provision(
       notionToken: result._notionToken,
       notionDataSourceId: result.notion.dataSourceId,
       notionPagesDataSourceId: result.notion.pagesDataSourceId,
+      notionSiteSettingsDataSourceId: result._siteSettingsDataSourceId,
     };
     try {
       await patchWranglerJsonc(projectDir, wireInputs);
@@ -793,6 +831,21 @@ function finalize(
       : result.notion.skipped
         ? "skipped (set NOTION_API_TOKEN or run `ntn login` to auto-create)"
         : (result.notion.message ?? "failed")
+  );
+  row(
+    "Site Settings",
+    result.siteSettings.ok
+      ? "ok"
+      : result.siteSettings.skipped
+        ? "warn"
+        : "fail",
+    result.siteSettings.ok
+      ? `data source ${result.siteSettings.dataSourceId?.slice(0, 8)}…, seeded ${result.siteSettings.seeded ?? 0} page (editable in Notion; see README "Site settings")`
+      : result.siteSettings.skipped
+        ? result.notion.ok
+          ? "skipped (--no-site-settings)"
+          : "skipped (requires Notion to be wired up)"
+        : (result.siteSettings.message ?? "failed")
   );
   row("Resend", result.resend.enabled ? "ok" : "warn", result.resend.enabled ? "enabled" : "skipped (configure manually — see README)");
   row("Google", result.google.enabled ? "ok" : "warn", result.google.enabled ? "enabled" : "skipped (configure manually — see README)");

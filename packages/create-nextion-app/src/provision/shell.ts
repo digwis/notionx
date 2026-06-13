@@ -96,99 +96,35 @@ export async function runOrThrow(
   return r.stdout;
 }
 
-/**
- * `runOrThrow` variant for `ntn` — same throw-on-error semantics,
- * but routes through the PTY-aware wrapper (see `runNtn`).
- */
-export async function runOrThrowNtn(
-  args: string[],
-  opts: RunOptions & { pty?: boolean } = {}
-): Promise<string> {
-  const r = await runNtn(args, opts);
-  if (r.code !== 0) {
-    let errOut = r.stderr;
-    if (opts.redact) {
-      for (const s of opts.redact) {
-        errOut = errOut.split(s).join("<redacted>");
-      }
-    }
-    throw new Error(
-      `ntn ${args.join(" ")} failed (code ${r.code}): ${errOut.trim()}`
-    );
-  }
-  return r.stdout;
-}
+// ---------------------------------------------------------------------------
+// `ntn` CLI shortcuts
+// ---------------------------------------------------------------------------
+//
+// `provision/notion.ts` only ever shells out to the `ntn` CLI, so these
+// thin wrappers exist purely to keep its call sites readable. They also
+// stage the *exact* API-token plumbing: every Notion API call MUST go
+// through these helpers, not raw `run("ntn", …)`, so that the env name
+// (`NOTION_API_TOKEN`) stays in one place. The scaffolder reads the token
+// from `.dev.vars`, from `process.env`, or from `ntn login`'s sidecar —
+// all three are handled before these helpers run.
+//
+// If a future provision step needs to call `ntn` for something other than
+// the Notion API (e.g. `ntn workspace list`), add a named helper here
+// instead of calling `run`/`runOrThrow` directly so the indirection is
+// obvious at the call site.
 
-/**
- * Run the `ntn` CLI.
- *
- * The prebuilt `ntn` binary (v0.16.0) calls libuv's `uv_tty_init`
- * early in its startup. When we spawn it from Node with piped stdio
- * (the default), libuv sees a non-TTY fd and on some macOS versions
- * returns `EINVAL`, which `ntn` then surfaces as
- * "TTY initialization failed: uv_tty_init returned EINVAL". In
- * practice the HTTP calls `ntn api` makes are unaffected — the only
- * symptom is that the *whole process* dies before the request goes
- * out, so the user sees the TTY error and not the actual API error.
- *
- * The fix: on macOS / Linux, prefer to wrap the call in `unbuffer`
- * (ships with the `expect` Homebrew formula and most Linux distro
- * `expect` packages) which allocates a pseudo-TTY and gives `ntn` a
- * real terminal to attach to. `unbuffer` is best-effort: if it isn't
- * on PATH we fall back to a plain spawn, which works on every host
- * where `ntn` doesn't actually need a TTY (the common case).
- *
- * Output semantics: `unbuffer` mirrors the child's stdout / stderr
- * 1:1 (it does not merge them, unlike `script`), so JSON responses
- * stay parseable.
- */
+/** Run `ntn <args>` and return raw exit info; do not throw on non-zero. */
 export async function runNtn(
   args: string[],
-  opts: RunOptions & { pty?: boolean } = {}
+  opts: RunOptions = {}
 ): Promise<RunResult> {
-  // Callers that explicitly want to bypass the wrapper (e.g. the
-  // cheap `ntn --version` probe) can opt out.
-  if (opts.pty === false) {
-    return run("ntn", args, opts);
-  }
-  // Detect `unbuffer` once per process. We use a tiny in-process
-  // cache so we don't shell out to `which` on every API call.
-  if (runNtn._unbufferPath === undefined) {
-    runNtn._unbufferPath = await detectUnbuffer();
-  }
-  if (runNtn._unbufferPath) {
-    // Note: do NOT pass `-p` here. `-p` switches `unbuffer` from
-    // pty-mode to pipe-mode, which (a) re-introduces the libuv
-    // EINVAL we are working around, and (b) drops the inner exit
-    // code (unbuffer always returns 0 in pipe mode). The default
-    // pty mode gives `ntn` the TTY it needs *and* propagates the
-    // real exit code.
-    return run(runNtn._unbufferPath, ["ntn", ...args], opts);
-  }
   return run("ntn", args, opts);
 }
 
-runNtn._unbufferPath = undefined as string | null | undefined;
-
-async function detectUnbuffer(): Promise<string | null> {
-  // macOS Homebrew puts it on /opt/homebrew/bin or /usr/local/bin
-  // (Apple Silicon vs Intel). Linux distros install it under
-  // /usr/bin. We `which` via a cheap `command -v`-style probe.
-  const probes = [
-    "/opt/homebrew/bin/unbuffer",
-    "/usr/local/bin/unbuffer",
-    "/usr/bin/unbuffer",
-  ];
-  for (const p of probes) {
-    if (await pathExists(p)) return p;
-  }
-  // Fall back to `which` — works on PATH lookups.
-  const r = await run("which", ["unbuffer"]);
-  if (r.code === 0 && r.stdout.trim()) return r.stdout.trim();
-  return null;
-}
-
-async function pathExists(p: string): Promise<boolean> {
-  const { existsSync } = await import("node:fs");
-  return existsSync(p);
+/** Run `ntn <args>` and throw on non-zero, returning stdout on success. */
+export async function runOrThrowNtn(
+  args: string[],
+  opts: RunOptions = {}
+): Promise<string> {
+  return runOrThrow("ntn", args, opts);
 }

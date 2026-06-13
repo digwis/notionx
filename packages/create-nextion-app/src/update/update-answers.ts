@@ -9,6 +9,7 @@ export function buildUpdateAnswers(context: ProjectContext): Answers {
     supportedLocales: [...context.metadata.supportedLocales],
     nextionSource: context.metadata.nextionSource,
     uiPreset: context.metadata.uiPreset,
+    enableSiteSettings: context.metadata.enableSiteSettings ?? true,
     contentSource: {
       id: context.metadata.contentSource.id,
       title: context.metadata.contentSource.title,

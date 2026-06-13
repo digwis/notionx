@@ -1,7 +1,19 @@
-// First content source registered with nextion. Edit the
-// `fields` map to match the Notion property names in the data source
-// pointed to by `NOTION_DATA_SOURCE_ID`. Add more sources by calling
-// `defineContentSource` again and appending to the exported array.
+// Notion-backed content sources registered with the nextion
+// registry. Edit the `fields` map on `{{contentSourceVarName}}`
+// to match the Notion property names in the data source pointed
+// to by `NOTION_DATA_SOURCE_ID`. Add more sources by calling
+// `defineContentSource` again and appending to `contentSources`.
+//
+// `siteSettingsSource` is a *singleton* directory used by
+// `lib/site/settings.ts` to read site-level metadata (name,
+// tagline, description, default locale, social image). It lives
+// in its own `NOTION_SITE_SETTINGS_DATA_SOURCE_ID` so it can be
+// shared across content sources and edited without redeploying.
+// It's intentionally NOT in `contentSources` because it has no
+// public list/detail pages — only the home page and SEO
+// metadata consume it. Operators can still see it in
+// `/admin/content-models` (it's in the package registry), and
+// can revalidate its KV cache from there.
 
 import {
   defineContentSource,
@@ -43,6 +55,55 @@ export const {{contentSourceVarName}}: ContentSource = defineContentSource({
   capabilities: {
     richBlocks: {{contentSourceRichBlocks}},
     coverImages: {{contentSourceCoverImages}},
+    gatedAssets: false,
+  },
+});
+
+// Site-level settings. Singleton directory. The `routes` are
+// internal-only and never rendered; we declare them so
+// `defineContentSource` is happy and admin pages show the
+// source. To rename the fields, mirror the change in
+// `createSiteSettingsProperties` inside
+// `packages/create-nextion-app/src/provision/notion.ts` so the
+// scaffolder creates the matching Notion schema.
+export const siteSettingsSource: ContentSource = defineContentSource({
+  id: "site-settings",
+  kind: "directory",
+  visibility: {
+    public: false,
+    admin: true,
+  },
+  source: {
+    type: "notion",
+    tokenEnv: "NOTION_TOKEN",
+    dataSourceEnv: "NOTION_SITE_SETTINGS_DATA_SOURCE_ID",
+    fields: {
+      title: "Site Name",
+      description: "Description",
+      cover: "Social Image",
+    },
+    query: {
+      pageSize: 1,
+    },
+  },
+  routes: {
+    listPath: "/__internal/site-settings",
+    detailPath: "/__internal/site-settings/[slug]",
+    detailParam: "slug",
+    publicApiPath: "/api/__internal/site-settings",
+  },
+  ui: {
+    name: "Site Settings",
+    pluralName: "Site Settings",
+    navLabel: "Site Settings",
+    listTitle: "Site Settings",
+    listDescription:
+      "Singleton row in Notion that powers the site name, tagline, description, default locale, and social image.",
+    emptyState: "No site settings row found — re-run provisioning.",
+  },
+  capabilities: {
+    richBlocks: false,
+    coverImages: true,
     gatedAssets: false,
   },
 });

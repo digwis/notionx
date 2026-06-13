@@ -14,6 +14,9 @@
     "release:check:core": "pnpm --filter @notionx/core typecheck && pnpm --filter @notionx/core lint",
     "release:check:create": "pnpm --filter @notionx/create-nextion-app test",
     "release:check:skill": "pnpm --filter @notionx/skill typecheck && pnpm --filter @notionx/skill lint",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:status": "changeset status",
     "prepare": "husky"
   },
   "devDependencies": {
