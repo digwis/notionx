@@ -6,6 +6,7 @@ on:
     paths:
       - "packages/nextion/**"
       - "packages/create-nextion-app/**"
+      - "packages/nextion-skill/**"
       - ".changeset/**"
       - ".github/workflows/release.yml"
 
@@ -37,33 +38,40 @@ jobs:
       - name: Build nextion
         run: pnpm --filter @notionx/core build
       - name: Build create-nextion-app
-        run: pnpm --filter create-nextion-app build
+        run: pnpm --filter @notionx/create-nextion-app build
+      - name: Build nextion-skill
+        run: pnpm --filter @notionx/skill build
 
-      # One-shot: version + publish inside the same workflow run so
-      # solo / fast-iteration developers never have to merge a
-      # "Version Packages" PR. changesets-action consumes the
-      # `.changeset/*.md` files, bumps `package.json` versions in
-      # place, runs the publish script, and writes a single
-      # `chore(release): version packages` commit on the current
-      # branch. We push that commit back to main at the end of the
-      # job so the version bump lands in the repo history.
-      - name: Version + publish packages (changesets)
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          version: pnpm changeset version
-          publish: pnpm -r publish --no-git-checks --tag latest
-          commit: "chore(release): version packages"
-          title: "chore(release): version packages"
-          setupGitUser: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Detect pending changesets
+        id: pending_changesets
+        run: |
+          if find .changeset -maxdepth 1 -name "*.md" ! -name "README.md" | grep -q .; then
+            echo "has_changesets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changesets=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Push version commit back to main
+      - name: Version packages
+        if: steps.pending_changesets.outputs.has_changesets == 'true'
+        run: pnpm changeset version
+
+      - name: Commit version changes
+        if: steps.pending_changesets.outputs.has_changesets == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git push origin HEAD:main
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "chore(release): version packages"
+
+      - name: Push version commit back to main
+        if: steps.pending_changesets.outputs.has_changesets == 'true'
+        run: git push origin HEAD:main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish packages
+        if: steps.pending_changesets.outputs.has_changesets == 'true'
+        run: pnpm -r publish --no-git-checks --tag latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

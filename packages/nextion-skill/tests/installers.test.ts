@@ -2,7 +2,7 @@
  * Tests for each platform installer.
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtemp, rm, readFile, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { existsSync } from "node:fs";
@@ -10,9 +10,6 @@ import { existsSync } from "node:fs";
 import { installClaude } from "../src/targets/claude.js";
 import { installTrae } from "../src/targets/trae.js";
 import { installCodex } from "../src/targets/codex.js";
-import { installCursor } from "../src/targets/cursor.js";
-import { installWindsurf } from "../src/targets/windsurf.js";
-import { installCopilot } from "../src/targets/copilot.js";
 import type { SkillBundle } from "../src/types.js";
 
 function fakeBundle(): SkillBundle {
@@ -22,14 +19,12 @@ function fakeBundle(): SkillBundle {
     references: {
       architecture: "# Arch",
       "content-source": "# CS",
+      "domain-module": "# Domain",
     },
     rules: {
       claude: "",
-      trae: "",
       codex: "# Codex rule\n\nnextion conventions go here.",
-      cursor: "---\ndescription: cursor rule\n---\n# Cursor",
-      windsurf: "# Windsurf rule",
-      copilot: "# Copilot instructions",
+      trae: "",
     },
     version: "0.0.0-test",
   };
@@ -57,6 +52,7 @@ describe("installClaude", () => {
     expect(existsSync(join(baseDir, "INSTALL.md"))).toBe(true);
     expect(existsSync(join(baseDir, "references", "architecture.md"))).toBe(true);
     expect(existsSync(join(baseDir, "references", "content-source.md"))).toBe(true);
+    expect(existsSync(join(baseDir, "references", "domain-module.md"))).toBe(true);
     const skill = await readFile(join(baseDir, "SKILL.md"), "utf8");
     expect(skill).toBe("---\nname: test\n---\n# Test skill");
   });
@@ -104,57 +100,6 @@ describe("installTrae", () => {
     const baseDir = resolve(cwd, ".trae", "skills", "nextion");
     expect(existsSync(join(baseDir, "SKILL.md"))).toBe(true);
     expect(existsSync(join(baseDir, "references", "architecture.md"))).toBe(true);
-  });
-});
-
-describe("installCursor", () => {
-  it("writes a single .mdc file", async () => {
-    const result = await installCursor(fakeBundle(), { scope: "project", cwd });
-    expect(result.target).toBe("cursor");
-    const file = resolve(cwd, ".cursor", "rules", "nextion.mdc");
-    expect(existsSync(file)).toBe(true);
-    const content = await readFile(file, "utf8");
-    expect(content).toContain("Cursor");
-  });
-
-  it("respects --force on existing files", async () => {
-    const file = resolve(cwd, ".cursor", "rules", "nextion.mdc");
-    await mkdir(resolve(cwd, ".cursor", "rules"), { recursive: true });
-    await writeFile(file, "OLD", "utf8");
-
-    const noForce = await installCursor(fakeBundle(), { scope: "project", cwd });
-    expect(noForce.filesWritten).toHaveLength(0);
-    expect(await readFile(file, "utf8")).toBe("OLD");
-
-    const withForce = await installCursor(fakeBundle(), {
-      scope: "project",
-      cwd,
-      force: true,
-    });
-    expect(withForce.filesWritten.length).toBe(1);
-    expect(await readFile(file, "utf8")).toContain("Cursor");
-  });
-});
-
-describe("installWindsurf", () => {
-  it("writes nextion.md in .windsurfrules/", async () => {
-    const result = await installWindsurf(fakeBundle(), { scope: "project", cwd });
-    expect(result.target).toBe("windsurf");
-    const file = resolve(cwd, ".windsurfrules", "nextion.md");
-    expect(existsSync(file)).toBe(true);
-    const content = await readFile(file, "utf8");
-    expect(content).toContain("Windsurf");
-  });
-});
-
-describe("installCopilot", () => {
-  it("writes copilot-instructions.md in .github/", async () => {
-    const result = await installCopilot(fakeBundle(), { scope: "project", cwd });
-    expect(result.target).toBe("copilot");
-    const file = resolve(cwd, ".github", "copilot-instructions.md");
-    expect(existsSync(file)).toBe(true);
-    const content = await readFile(file, "utf8");
-    expect(content).toContain("Copilot");
   });
 });
 
