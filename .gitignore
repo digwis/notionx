@@ -73,3 +73,6 @@ apps/moviebluebook/
 .trae/
 .worktrees/
 packages/nextion-skill/.trae/
+
+# CI-only npm auth file written by .github/workflows/release.yml
+.npmrc
