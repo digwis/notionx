@@ -5,7 +5,8 @@
 // the `siteConfig` shape below. We keep two copies on purpose:
 //
 //   1. Notion is the editor surface — operators tweak site name /
-//      tagline / description there without redeploying.
+//      tagline / description / SEO / navigation / theme / footer
+//      there without redeploying.
 //   2. The values below are the *last-resort fallback* if Notion
 //      is unreachable or the data source is empty.
 //
@@ -24,7 +25,13 @@ export const fallbackSiteConfig = {
   tagline: "{{projectName}}",
   defaultLocale: "{{defaultLocale}}",
   socialImageUrl: null as string | null,
+  ogImageUrl: null as string | null,
   locales: {{supportedLocalesJson}},
+  seo: {
+    title: "{{projectName}}",
+    description:
+      "A Notion-powered site built on @notionx/core, running on Cloudflare Workers with D1, R2, and Cloudflare Images.",
+  },
   navigation: {
     main: [
       {
@@ -33,7 +40,38 @@ export const fallbackSiteConfig = {
         modelId: "{{contentSourceId}}",
       },
     ],
+    cta: null as { label: string; href: string } | null,
     adminHref: "/login",
+  },
+  theme: {
+    primary: "slate" as
+      | "slate"
+      | "gray"
+      | "zinc"
+      | "red"
+      | "orange"
+      | "amber"
+      | "green"
+      | "blue",
+    accent: "blue" as
+      | "slate"
+      | "gray"
+      | "zinc"
+      | "red"
+      | "orange"
+      | "amber"
+      | "green"
+      | "blue",
+    font: "inter" as "inter" | "geist" | "system",
+  },
+  footer: {
+    columns: [] as Array<{
+      label: string;
+      items: Array<{ label: string; href: string }>;
+    }>,
+    social: [] as Array<{ label: string; href: string }>,
+    tagline: "",
+    copyright: `© ${new Date().getFullYear()} {{projectName}}`,
   },
   primarySourceId: "{{contentSourceId}}",
   sources: contentSources,
