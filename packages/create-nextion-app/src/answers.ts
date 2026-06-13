@@ -9,6 +9,7 @@ import type { Answers, AnswersContentField, UiPreset } from "./prompt.js";
 import { isUiPreset } from "./prompt.js";
 import { generateRandomPassword } from "./password.js";
 import { normalizeUiPreset } from "./ui-presets.js";
+import { resolveNextionSource } from "./nextion-source.js";
 
 interface CliOverrides {
   projectName?: string;
@@ -318,7 +319,7 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
     supportedLocales: supportedLocales.length
       ? Array.from(new Set([defaultLocale, ...supportedLocales]))
       : [defaultLocale],
-    nextionSource: overrides.nextionSource ?? "^0.1.2",
+    nextionSource: overrides.nextionSource ?? "^0.5.2",
     uiPreset,
     contentSource: {
       id: contentId,
@@ -354,11 +355,20 @@ export async function gatherAnswers(
 ): Promise<Answers & ExtendedAnswers> {
   const cli = parseArgs(argv);
 
+  // Resolve the `nextionSource` semver *before* handing the overrides
+  // off to `applyDefaults`. The default reads the live version from
+  // the npm registry (so freshly-installed scaffolds always match the
+  // latest published package without the user passing
+  // `--nextion-source`). The network call has a 5s timeout and falls
+  // back to a hardcoded caret range if the registry is unreachable
+  // — we never want a scaffolder to hang because npm is down.
+  const nextionSource = await resolveNextionSource(cli.nextionSource);
+
   // If `--yes` was passed, or the caller supplied at least a project
   // name (everything else has sensible defaults), build answers
   // without ever invoking the prompt.
   if (cli.yes || cli.projectName) {
-    return applyDefaults(cli, argv);
+    return applyDefaults({ ...cli, nextionSource }, argv);
   }
 
   // Otherwise run the interactive prompt. If the env says we're a
@@ -372,7 +382,7 @@ export async function gatherAnswers(
   }
   // Re-export the prompt function lazily to keep this module small.
   const { prompt } = await import("./prompt.js");
-  return prompt(argv);
+  return prompt(argv, { nextionSource });
 }
 
 export { applyDefaults, parseArgs, parseLocales, buildFields, toCamelCase };

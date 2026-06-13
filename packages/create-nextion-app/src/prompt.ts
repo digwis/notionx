@@ -164,7 +164,7 @@ export const DEFAULT_ANSWERS: Omit<
 > = {
   defaultLocale: "en",
   supportedLocales: ["en"],
-  nextionSource: "^0.1.2",
+  nextionSource: "^0.5.2",
   // Admin defaults are placeholders only — `gatherAnswers()` and the
   // interactive prompt both overwrite them. The strings here are
   // chosen so any logic that accidentally reads them sees clearly
@@ -205,7 +205,10 @@ export const DEFAULT_ANSWERS: Omit<
  * The flow is intentionally minimal: project name → confirm-and-go.
  * All other settings use the canned defaults in `DEFAULT_ANSWERS`.
  */
-export async function prompt(argv: string[] = process.argv): Promise<Answers> {
+export async function prompt(
+  argv: string[] = process.argv,
+  resolved: { nextionSource?: string } = {}
+): Promise<Answers> {
   p.intro("@notionx/create-nextion-app — scaffold a new vinext project");
 
   const targetFromArg = argv[2];

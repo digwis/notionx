@@ -1659,15 +1659,21 @@ export function buildSiteSettingsProperties(): NotionPropertyMap {
  * `fallbackSiteConfig` if the row is missing, so an unedited seed
  * page is fine — but a populated one means the very first request
  * after scaffolding already shows the right site name everywhere.
+ *
+ * `parent` uses `data_source_id` (Notion's 2025-09-03 schema).
+ * Passing the legacy `database_id` here silently fails with
+ * `validation_error` and the seed step reports "0 page" — which
+ * is exactly the bug we hit when the Notion API started requiring
+ * data sources for page parents.
  */
 export function buildSiteSettingsSeedPage(input: {
   projectName: string;
   description: string;
   defaultLocale: string;
-  databaseId: string;
+  dataSourceId: string;
 }) {
   return {
-    parent: { type: "database_id", database_id: input.databaseId },
+    parent: { type: "data_source_id", data_source_id: input.dataSourceId },
     properties: {
       "Site Name": {
         title: [{ text: { content: input.projectName } }],
@@ -1751,7 +1757,7 @@ export async function ensureSiteSettingsDatabase(
     projectName: input.projectName,
     description: input.description,
     defaultLocale: input.defaultLocale,
-    databaseId,
+    dataSourceId,
   });
   const seedResult = await runNtn(
     ["api", "v1/pages", "-d", JSON.stringify(seed)],

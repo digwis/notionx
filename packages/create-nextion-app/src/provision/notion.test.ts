@@ -325,7 +325,7 @@ describe("site-settings builders", () => {
       projectName: "digwis",
       description: "A demo description.",
       defaultLocale: "en",
-      databaseId: "db-id",
+      dataSourceId: "ds-id",
     });
     const properties = seed.properties as {
       "Site Name": { title: Array<{ text: { content: string } }> };
@@ -340,6 +340,11 @@ describe("site-settings builders", () => {
       "A demo description."
     );
     expect(properties["Default Locale"].select.name).toBe("en");
-    expect(seed.parent).toEqual({ type: "database_id", database_id: "db-id" });
+    // Notion's 2025-09-03 schema requires `data_source_id` here —
+    // the legacy `database_id` form silently returns 400.
+    expect(seed.parent).toEqual({
+      type: "data_source_id",
+      data_source_id: "ds-id",
+    });
   });
 });
