@@ -23,7 +23,6 @@ describe("scaffold metadata", () => {
     expect(metadata.projectName).toBe("demo");
     expect(metadata.contentSource.id).toBe("blog");
     expect(metadata.contentSource.fields).toEqual(baseAnswers.contentSource.fields);
-    expect(metadata.uiPreset).toBe("site");
     expect(metadata.projectKind).toBe("nextion");
   });
 
@@ -35,7 +34,6 @@ describe("scaffold metadata", () => {
         scaffoldVersion: "0.4.10",
         defaultLocale: "en",
         supportedLocales: ["en"],
-        uiPreset: "site",
         nextionSource: "^0.1.2",
         contentSource: {
           id: "blog",
@@ -74,7 +72,6 @@ describe("scaffold metadata", () => {
           scaffoldVersion: "0.4.10",
           defaultLocale: "en",
           supportedLocales: ["en"],
-          uiPreset: "site",
           nextionSource: "^0.1.2",
           contentSource: {
             id: "blog",

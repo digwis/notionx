@@ -34,7 +34,6 @@ describe("runProvisionRepair", () => {
         scaffoldVersion: "0.4.10",
         defaultLocale: "en",
         supportedLocales: ["en"],
-        uiPreset: "site",
         nextionSource: "^0.1.2",
         enableSiteSettings: true,
         contentSource: {
@@ -50,7 +49,6 @@ describe("runProvisionRepair", () => {
       defaultLocale: "en",
       supportedLocales: ["en"],
       nextionSource: "^0.1.2",
-      uiPreset: "site",
       enableSiteSettings: true,
       contentSource: {
         id: "blog",

@@ -8,7 +8,6 @@ export interface ScaffoldMetadata {
   scaffoldVersion: string;
   defaultLocale: string;
   supportedLocales: string[];
-  uiPreset: Answers["uiPreset"];
   nextionSource: string;
   enableSiteSettings: boolean;
   contentSource: {
@@ -28,7 +27,6 @@ export function buildScaffoldMetadata(
     scaffoldVersion,
     defaultLocale: answers.defaultLocale,
     supportedLocales: [...answers.supportedLocales],
-    uiPreset: answers.uiPreset,
     nextionSource: answers.nextionSource,
     enableSiteSettings: answers.enableSiteSettings,
     contentSource: {
@@ -50,7 +48,6 @@ export function parseScaffoldMetadata(raw: string): ScaffoldMetadata {
     typeof parsed.scaffoldVersion !== "string" ||
     typeof parsed.defaultLocale !== "string" ||
     !Array.isArray(parsed.supportedLocales) ||
-    typeof parsed.uiPreset !== "string" ||
     typeof parsed.nextionSource !== "string" ||
     !parsed.contentSource ||
     typeof parsed.contentSource.id !== "string" ||

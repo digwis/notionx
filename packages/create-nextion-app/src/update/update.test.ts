@@ -63,7 +63,6 @@ describe("runUpdate", () => {
         scaffoldVersion: "0.4.10",
         defaultLocale: "en",
         supportedLocales: ["en"],
-        uiPreset: "site",
         nextionSource: "^0.1.2",
         enableSiteSettings: true,
         contentSource: {
@@ -128,7 +127,6 @@ describe("buildUpdateAnswers", () => {
         scaffoldVersion: "0.4.10",
         defaultLocale: "en",
         supportedLocales: ["en", "zh-CN"],
-        uiPreset: "site",
         nextionSource: "^0.1.2",
         enableSiteSettings: true,
         contentSource: {
@@ -191,7 +189,6 @@ describe("buildUpdatePlan", () => {
           scaffoldVersion: "0.4.10",
           defaultLocale: "en",
           supportedLocales: ["en"],
-          uiPreset: "site",
           nextionSource: "^0.1.2",
           enableSiteSettings: true,
           contentSource: {
@@ -218,7 +215,6 @@ describe("buildUpdatePlan", () => {
         scaffoldVersion: "0.4.10",
         defaultLocale: "en",
         supportedLocales: ["en"],
-        uiPreset: "site",
         nextionSource: "^0.1.2",
         enableSiteSettings: true,
         contentSource: {
