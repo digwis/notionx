@@ -262,3 +262,51 @@ describe("request-scoped env access (AsyncLocalStorage pattern)", () => {
   });
 });
 
+describe("scaffolded project ships the scaffolder CLI as a devDependency", () => {
+  it("renders @notionx/create-nextion-app in devDependencies with a real semver", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-devdep-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "devdep-app",
+        targetDir: outDir,
+        uiPreset: "site",
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const packageJson = JSON.parse(
+      await fs.readFile(path.join(outDir, "package.json"), "utf8")
+    ) as {
+      devDependencies?: Record<string, string>;
+      dependencies?: Record<string, string>;
+    };
+
+    // The scaffolder CLI ships as a devDependency so that
+    // `pnpm exec nextion update` and `pnpm exec nextion provision repair`
+    // work inside the rendered project without having to reach for
+    // `pnpm dlx` (which requires the user to know the package name).
+    expect(packageJson.devDependencies).toHaveProperty(
+      "@notionx/create-nextion-app"
+    );
+
+    // The version must be a real semver, not the unsubstituted
+    // `{{nextionSource}}` token (which would be the case if the
+    // template's token map was incomplete).
+    const version = packageJson.devDependencies!["@notionx/create-nextion-app"];
+    expect(version).not.toContain("{{");
+    expect(version).not.toContain("}}");
+    expect(version).toMatch(/^\^?\d+\.\d+\.\d+/);
+
+    // Version must align with the @notionx/core runtime dep so the
+    // scaffolder CLI is guaranteed to be >= the runtime it scaffolds.
+    const coreDep = packageJson.dependencies!["@notionx/core"];
+    expect(coreDep).toBe(version);
+  });
+});
+

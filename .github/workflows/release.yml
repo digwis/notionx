@@ -115,7 +115,15 @@ jobs:
           git add -A
           if ! git diff --cached --quiet; then
             git commit -m "chore(release): version packages"
-            git push origin HEAD:main
+            # `--no-verify` is required because the husky pre-push
+            # hook runs `pnpm release:status` (the changeset check).
+            # That check is meant to catch *human* pushes that bump
+            # code without a changeset; the auto-generated version
+            # bump commit IS the result of the changesets just being
+            # consumed one step earlier, so requiring a changeset
+            # here would be a circular dependency and would silently
+            # block every release.
+            git push --no-verify origin HEAD:main
           else
             echo "No version bump to commit — nothing to push."
           fi
