@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeBootstrap } from "@/components/site/theme-bootstrap";
 import { getSiteSettings, getStaticSiteSettings } from "@/lib/site/settings";
 import { fallbackSiteConfig } from "@/lib/site/config";
 
@@ -40,6 +41,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-background font-sans antialiased">
+        <ThemeBootstrap />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

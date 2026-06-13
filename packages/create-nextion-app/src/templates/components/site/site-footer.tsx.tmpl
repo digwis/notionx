@@ -2,9 +2,43 @@ import Link from "next/link";
 import { siteConfig } from "@/lib/site/config";
 import { getSiteFooterGroups } from "@/lib/pages/source";
 
-export async function SiteFooter() {
-  const groups = await getSiteFooterGroups();
+type FooterColumn = {
+  label: string;
+  items: Array<{ label: string; href: string }>;
+};
+type SocialLink = { label: string; href: string };
 
+export async function SiteFooter() {
+  const groups = (await getSiteFooterGroups()) as FooterColumn[];
+  const social = siteConfig.footer.social as SocialLink[];
+  const tagline = siteConfig.footer.tagline || siteConfig.description;
+  const copyright = siteConfig.footer.copyright;
+
+  // No columns → single-line copyright layout.
+  if (groups.length === 0) {
+    return (
+      <footer className="border-t bg-muted/30">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-muted-foreground md:flex-row">
+          <span>{copyright}</span>
+          {social.length ? (
+            <div className="flex gap-4">
+              {social.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="hover:text-foreground"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </footer>
+    );
+  }
+
+  // With columns → multi-column grid + tagline + social row.
   return (
     <footer className="border-t bg-muted/30">
       <div className="container mx-auto grid gap-8 px-4 py-10 md:grid-cols-[1.5fr_2fr]">
@@ -12,30 +46,47 @@ export async function SiteFooter() {
           <Link href="/" className="font-semibold tracking-tight">
             {siteConfig.name}
           </Link>
-          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-            {siteConfig.description}
-          </p>
+          {tagline ? (
+            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+              {tagline}
+            </p>
+          ) : null}
         </div>
-
-        {groups.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2">
-            {groups.map((group) => (
-              <div key={group.label}>
-                <h2 className="text-sm font-medium">{group.label}</h2>
-                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                  {group.items.map((item) => (
-                    <li key={item.href}>
-                      <Link href={item.href} className="hover:text-foreground">
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        ) : null}
+        <div className="grid gap-6 sm:grid-cols-2">
+          {groups.map((group) => (
+            <div key={group.label}>
+              <h2 className="text-sm font-medium">{group.label}</h2>
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                {group.items.map((item) => (
+                  <li key={item.href}>
+                    <Link href={item.href} className="hover:text-foreground">
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
+      {social.length ? (
+        <div className="border-t">
+          <div className="container mx-auto flex flex-col items-center justify-between gap-2 px-4 py-4 text-sm text-muted-foreground md:flex-row">
+            <span>{copyright}</span>
+            <div className="flex gap-4">
+              {social.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="hover:text-foreground"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </footer>
   );
 }
