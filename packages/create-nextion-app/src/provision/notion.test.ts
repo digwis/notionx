@@ -10,7 +10,7 @@ vi.mock("./shell.js", () => ({
   runOrThrowNtn: runOrThrowNtnMock,
 }));
 
-import { _internal, ensureNotionDatabase } from "./notion.js";
+import { _internal, ensureNotionDatabase, ensureSiteSettingsDatabase } from "./notion.js";
 
 describe("stable scaffold markers", () => {
   it("builds the expected scaffold marker for a stable key", () => {
@@ -306,6 +306,50 @@ describe("schema patch guardrails", () => {
 
     expect(diff.properties).toEqual({ Date: { date: {} } });
     expect(diff.warnings[0]).toContain('property "Published" is rich_text');
+  });
+});
+
+describe("site-settings reuse", () => {
+  beforeEach(() => {
+    runNtnMock.mockReset();
+    runOrThrowNtnMock.mockReset();
+  });
+
+  it("reuses a data source whose description carries the site-settings stable key", async () => {
+    runOrThrowNtnMock.mockResolvedValueOnce(
+      JSON.stringify({
+        results: [
+          {
+            object: "data_source",
+            id: "ds-stable",
+            title: [{ plain_text: "digwis Site Settings" }],
+            description: [{ plain_text: "[nextion-scaffold] key=site-settings" }],
+            parent: { database_id: "db-stable" },
+            data_sources: [{ id: "ds-stable" }],
+            url: "https://www.notion.so/db-stable",
+            last_edited_time: "2026-06-12T00:00:00.000Z",
+          },
+        ],
+      })
+    );
+    runOrThrowNtnMock.mockResolvedValueOnce(
+      JSON.stringify({ properties: {} })
+    );
+
+    const result = await ensureSiteSettingsDatabase({
+      apiToken: "token",
+      parentPageId: "page-1234-page-1234-page-1234page1234",
+      projectName: "digwis",
+      description: "desc",
+      defaultLocale: "en",
+    });
+
+    expect(result.reused).toBe(true);
+    expect(result.dataSourceId).toBe("ds-stable");
+    expect(runOrThrowNtnMock).not.toHaveBeenCalledWith(
+      expect.arrayContaining(["v1/databases", "-d", expect.any(String)]),
+      expect.anything()
+    );
   });
 });
 

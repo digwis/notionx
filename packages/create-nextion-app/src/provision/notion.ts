@@ -1623,7 +1623,15 @@ export interface SiteSettingsProvisionInput {
   defaultLocale: string;
 }
 
-export type SiteSettingsProvisionResult = NotionProvisionResult;
+export interface SiteSettingsProvisionResult {
+  dataSourceId: string;
+  databaseId: string;
+  url: string;
+  /** True when an existing data source was reused; false when this run created a new one. */
+  reused: boolean;
+  /** Number of seed pages inserted (0 if seeding was skipped or the data source was reused). */
+  seeded: number;
+}
 
 /**
  * Build the Notion `properties` object for the site-settings data source.
