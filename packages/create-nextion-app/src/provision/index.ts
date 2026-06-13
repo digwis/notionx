@@ -80,6 +80,8 @@ export interface ProvisionResult {
     message?: string;
     skipped?: boolean;
     seeded?: number;
+    /** True when an existing data source was reused; false/undefined when this run created a new one. */
+    reused?: boolean;
   };
   resend: { ok: boolean; enabled: boolean; message?: string };
   google: { ok: boolean; enabled: boolean; message?: string };
@@ -355,10 +357,11 @@ export async function provision(
             dataSourceId: settings.dataSourceId,
             url: settings.url,
             seeded: settings.seeded,
+            reused: settings.reused,
           };
           result._siteSettingsDataSourceId = settings.dataSourceId;
           p.log.success(
-            `Notion site settings: database created (${settings.dataSourceId.slice(0, 8)}…), seeded ${settings.seeded} page.`
+            `Notion site settings: ${settings.reused ? "reused" : "created"} (${settings.dataSourceId.slice(0, 8)}…), seeded ${settings.seeded} page.`
           );
         }
       } else {
@@ -840,7 +843,7 @@ function finalize(
         ? "warn"
         : "fail",
     result.siteSettings.ok
-      ? `data source ${result.siteSettings.dataSourceId?.slice(0, 8)}…, seeded ${result.siteSettings.seeded ?? 0} page (editable in Notion; see README "Site settings")`
+      ? `${result.siteSettings.reused ? "♻️" : "🆕"} data source ${result.siteSettings.dataSourceId?.slice(0, 8)}…${result.siteSettings.reused ? " (reused existing)" : " (created new)"}, seeded ${result.siteSettings.seeded ?? 0} page (editable in Notion; see README "Site settings")`
       : result.siteSettings.skipped
         ? result.notion.ok
           ? "skipped (--no-site-settings)"
