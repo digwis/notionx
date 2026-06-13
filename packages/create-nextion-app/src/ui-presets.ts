@@ -1,40 +1,22 @@
-import type { UiPreset } from "./prompt.js";
+import type { UiPreset } from "./presets.js";
 
-export const UI_PRESETS = ["minimal", "site", "app"] as const;
-
-const MINIMAL_COMPONENTS = [
-  "badge",
-  "button",
-  "card",
-  "input",
-  "label",
-  "separator",
-  "skeleton",
-] as const;
-
-const SITE_COMPONENTS = [
-  ...MINIMAL_COMPONENTS,
+const SITE_PRESET_COMPONENTS = [
   "accordion",
   "alert",
   "aspect-ratio",
+  "badge",
+  "button",
+  "card",
   "dialog",
   "dropdown-menu",
+  "input",
+  "label",
+  "separator",
   "sheet",
+  "skeleton",
   "table",
   "tabs",
   "tooltip",
-] as const;
-
-const APP_COMPONENTS = [
-  ...SITE_COMPONENTS,
-  "avatar",
-  "checkbox",
-  "popover",
-  "radio-group",
-  "select",
-  "sonner",
-  "switch",
-  "textarea",
 ] as const;
 
 const BASE_DEPENDENCIES: Record<string, string> = {
@@ -50,45 +32,38 @@ const BASE_DEPENDENCIES: Record<string, string> = {
 const COMPONENT_DEPENDENCIES: Record<string, Record<string, string>> = {
   accordion: { "@radix-ui/react-accordion": "^1.2.1" },
   "aspect-ratio": { "@radix-ui/react-aspect-ratio": "^1.1.0" },
-  avatar: { "@radix-ui/react-avatar": "^1.1.1" },
-  checkbox: { "@radix-ui/react-checkbox": "^1.1.2" },
   dialog: { "@radix-ui/react-dialog": "^1.1.2" },
   "dropdown-menu": { "@radix-ui/react-dropdown-menu": "^2.1.2" },
   label: { "@radix-ui/react-label": "^2.1.0" },
-  popover: { "@radix-ui/react-popover": "^1.1.2" },
-  "radio-group": { "@radix-ui/react-radio-group": "^1.2.1" },
-  select: { "@radix-ui/react-select": "^2.1.2" },
   separator: { "@radix-ui/react-separator": "^1.1.0" },
   sheet: { "@radix-ui/react-dialog": "^1.1.2" },
-  sonner: { sonner: "^1.7.1" },
-  switch: { "@radix-ui/react-switch": "^1.1.1" },
   tabs: { "@radix-ui/react-tabs": "^1.1.1" },
   tooltip: { "@radix-ui/react-tooltip": "^1.1.4" },
 };
 
 export function normalizeUiPreset(value: string | undefined): UiPreset {
-  if (value === "minimal" || value === "site" || value === "app") {
-    return value;
+  if (value === "site" || value === undefined) {
+    return "site";
   }
   throw new Error(
-    `Invalid UI preset: ${value ?? ""}. Expected minimal, site, or app.`
+    `Invalid UI preset: ${value}. The 0.5.4 scaffolder only ships the "site" preset.`
   );
 }
 
-export function uiComponentsForPreset(preset: UiPreset): readonly string[] {
-  if (preset === "minimal") return MINIMAL_COMPONENTS;
-  if (preset === "app") return APP_COMPONENTS;
-  return SITE_COMPONENTS;
+export function uiComponentsForPreset(_preset: UiPreset): readonly string[] {
+  return SITE_PRESET_COMPONENTS;
 }
 
 export function uiDependenciesForPreset(
-  preset: UiPreset
+  _preset: UiPreset
 ): Record<string, string> {
   const deps: Record<string, string> = { ...BASE_DEPENDENCIES };
-  for (const component of uiComponentsForPreset(preset)) {
+  for (const component of SITE_PRESET_COMPONENTS) {
     Object.assign(deps, COMPONENT_DEPENDENCIES[component]);
   }
-  return Object.fromEntries(Object.entries(deps).sort(([a], [b]) => a.localeCompare(b)));
+  return Object.fromEntries(
+    Object.entries(deps).sort(([a], [b]) => a.localeCompare(b))
+  );
 }
 
 export function renderDependencyLines(
@@ -96,7 +71,9 @@ export function renderDependencyLines(
   indent = "    "
 ): string {
   return Object.entries(deps)
-    .map(([name, version]) => `${indent}${JSON.stringify(name)}: ${JSON.stringify(version)},`)
+    .map(
+      ([name, version]) =>
+        `${indent}${JSON.stringify(name)}: ${JSON.stringify(version)},`
+    )
     .join("\n");
 }
-

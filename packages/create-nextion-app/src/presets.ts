@@ -1,7 +1,7 @@
 // packages/create-nextion-app/src/presets.ts
 //
-// Preset definitions for the `create-nextion-app` scaffolder. A preset
-// is a small bundle of three things:
+// UI preset definitions for the `create-nextion-app` scaffolder. A
+// preset is a small bundle of three things:
 //
 //   1. The list of shadcn/ui component files to copy into
 //      `components/ui/` of the generated project.
@@ -12,10 +12,13 @@
 //      the toast primitive, `cmdk` for the command palette, `zod`
 //      + `react-hook-form` for the `form` primitive).
 //
-// The renderer modules in `templates/components/notion/renderers/`
-// can also branch on the preset token (`{{uiPreset}}`) to wire
-// different `import` paths, but most preset behaviour is expressed
-// in the file-copy and dependency lists below.
+// Since 0.5.4 the scaffolder ships a single preset (`site`) — the
+// Notion page-builder set. The CLI no longer asks which preset to
+// bundle. Earlier 0.5.x versions offered `minimal` and `app`
+// alternatives; those were collapsed because every shipped scaffold
+// (blog, page, etc.) needs the page-builder components, and offering
+// a thinner set on a public-site scaffolder produced projects that
+// couldn't render the generated `components/notion/` tree.
 //
 // The component filenames must match the source `*.tmpl` files in
 // `templates/components/ui/` exactly. The renderer does not
@@ -23,7 +26,7 @@
 // one component file. Tests under `presets.test.ts` pin the file
 // set so the gap shows up in CI instead of in a user's project.
 
-import type { UiPreset } from "./prompt.js";
+export type UiPreset = "site";
 
 /** A single shadcn/ui component that ships with a preset. */
 export interface PresetUiComponent {
@@ -31,7 +34,7 @@ export interface PresetUiComponent {
   name: string;
   /**
    * Optional human note. Currently unused at runtime; reserved for
-   * future `--ui <preset> --list-components` reporting.
+   * future reporting (e.g. a `--list-components` flag).
    */
   note?: string;
 }
@@ -49,8 +52,7 @@ export interface PresetDependency {
 export interface UiPresetDefinition {
   id: UiPreset;
   /**
-   * Stable, user-visible name printed in the README. Keep the
-   * wording parallel to `prompt.ts`'s `UI_PRESETS` table.
+   * Stable, user-visible name printed in the README.
    */
   displayName: string;
   /**
@@ -64,121 +66,54 @@ export interface UiPresetDefinition {
 }
 
 /**
- * Minimal preset: the lean blog set that the scaffolder shipped
- * with before presets existed. Kept as the escape hatch for users
- * who want a tiny `components/ui/` directory and don't need
- * anything Notion-page-builder-shaped.
- */
-const MINIMAL_PRESET: UiPresetDefinition = {
-  id: "minimal",
-  displayName: "Minimal",
-  summary:
-    "Lean blog set. Just enough primitives for blog posts and simple " +
-    "content. Easy to extend with `pnpm dlx shadcn add …`.",
-  components: [
-    { name: "badge" },
-    { name: "button" },
-    { name: "card" },
-    { name: "input" },
-    { name: "label" },
-    { name: "separator" },
-    { name: "skeleton" },
-  ],
-  dependencies: [
-    // The existing minimal scaffold already vendors these — listed
-    // here so the dependency-injection pass is the single source of
-    // truth. The renderer will not duplicate an entry that's
-    // already in the base `package.json.tmpl` dependency block.
-    { name: "@radix-ui/react-label", version: "^2.1.0", kind: "dependency" },
-    { name: "@radix-ui/react-separator", version: "^1.1.0", kind: "dependency" },
-    { name: "@radix-ui/react-slot", version: "^1.2.0", kind: "dependency" },
-  ],
-};
-
-/**
- * Site preset: Notion page builder set. Adds the components the
+ * Site preset: Notion page builder set. The shadcn primitives the
  * Notion block renderer leans on for richer blocks — Accordion
  * (toggles), Alert (callouts), Table, AspectRatio (media), Tabs,
- * Tooltip, DropdownMenu, Sheet (mobile nav), Dialog. This is the
- * recommended default for Notion-driven public sites.
+ * Tooltip, DropdownMenu, Sheet (mobile nav), Dialog, plus the
+ * minimal blog set (Badge, Button, Card, Input, Label, Separator,
+ * Skeleton). This is the only preset the scaffolder ships in 0.5.4+
+ * because every shipped scaffold (blog, page, etc.) needs it.
  */
-const SITE_PRESET: UiPresetDefinition = {
+export const SITE_PRESET: UiPresetDefinition = {
   id: "site",
   displayName: "Site Builder",
   summary:
     "Notion page builder, marketing sites, docs. Recommended default " +
     "for Notion-driven public sites and landing pages.",
   components: [
-    ...MINIMAL_PRESET.components,
     { name: "accordion" },
     { name: "alert" },
     { name: "aspect-ratio" },
+    { name: "badge" },
+    { name: "button" },
+    { name: "card" },
     { name: "dialog" },
     { name: "dropdown-menu" },
+    { name: "input" },
+    { name: "label" },
+    { name: "separator" },
     { name: "sheet" },
+    { name: "skeleton" },
     { name: "table" },
     { name: "tabs" },
     { name: "tooltip" },
   ],
   dependencies: [
-    ...MINIMAL_PRESET.dependencies,
     { name: "@radix-ui/react-accordion", version: "^1.2.2", kind: "dependency" },
     { name: "@radix-ui/react-alert-dialog", version: "^1.1.4", kind: "dependency" },
     { name: "@radix-ui/react-aspect-ratio", version: "^1.1.1", kind: "dependency" },
     { name: "@radix-ui/react-dialog", version: "^1.1.4", kind: "dependency" },
     { name: "@radix-ui/react-dropdown-menu", version: "^2.1.4", kind: "dependency" },
+    { name: "@radix-ui/react-label", version: "^2.1.0", kind: "dependency" },
+    { name: "@radix-ui/react-separator", version: "^1.1.0", kind: "dependency" },
     { name: "@radix-ui/react-slot", version: "^1.2.0", kind: "dependency" },
     { name: "@radix-ui/react-tabs", version: "^1.1.2", kind: "dependency" },
     { name: "@radix-ui/react-tooltip", version: "^1.1.6", kind: "dependency" },
   ],
 };
 
-/**
- * App preset: everything in `site`, plus the form/control primitives
- * needed for dashboards and authenticated app surfaces. Heaviest
- * preset — pick this when the generated project will host an admin
- * UI or a multi-page authenticated app.
- */
-const APP_PRESET: UiPresetDefinition = {
-  id: "app",
-  displayName: "App Dashboard",
-  summary:
-    "Full app/dashboard set. Adds form controls, command palette, " +
-    "popover, and navigation menu on top of the site set.",
-  components: [
-    ...SITE_PRESET.components,
-    { name: "avatar" },
-    { name: "checkbox" },
-    { name: "command" },
-    { name: "form" },
-    { name: "navigation-menu" },
-    { name: "popover" },
-    { name: "radio-group" },
-    { name: "select" },
-    { name: "sonner" },
-    { name: "switch" },
-    { name: "textarea" },
-  ],
-  dependencies: [
-    ...SITE_PRESET.dependencies,
-    { name: "@radix-ui/react-avatar", version: "^1.1.2", kind: "dependency" },
-    { name: "@radix-ui/react-checkbox", version: "^1.1.3", kind: "dependency" },
-    { name: "@radix-ui/react-label", version: "^2.1.1", kind: "dependency" },
-    { name: "@radix-ui/react-popover", version: "^1.1.4", kind: "dependency" },
-    { name: "@radix-ui/react-radio-group", version: "^1.2.2", kind: "dependency" },
-    { name: "@radix-ui/react-select", version: "^2.1.4", kind: "dependency" },
-    { name: "@radix-ui/react-switch", version: "^1.1.2", kind: "dependency" },
-    { name: "cmdk", version: "^1.0.4", kind: "dependency" },
-    { name: "react-hook-form", version: "^7.54.0", kind: "dependency" },
-    { name: "sonner", version: "^1.7.1", kind: "dependency" },
-    { name: "zod", version: "^3.24.1", kind: "dependency" },
-  ],
-};
-
 export const UI_PRESET_DEFINITIONS: Readonly<Record<UiPreset, UiPresetDefinition>> = {
-  minimal: MINIMAL_PRESET,
   site: SITE_PRESET,
-  app: APP_PRESET,
 };
 
 /** Get the preset definition for a preset id. */
@@ -199,9 +134,12 @@ export function presetDependencyEntries(
   excludeNames: ReadonlySet<string> = new Set()
 ): PresetDependency[] {
   const def = getPresetDefinition(id);
-  // Deduplicate on package name (the `app` preset includes the
-  // `site` deps which in turn include the `minimal` ones), and
-  // respect the exclusion list passed in by the caller.
+  // Deduplicate on package name and respect the exclusion list
+  // passed in by the caller. With a single preset the dedup pass
+  // is mostly defensive — but `SITE_PRESET.dependencies` does list
+  // `@radix-ui/react-slot` once and the base dep block in the
+  // template also declares it, so the exclude-set is what keeps
+  // the generated `package.json` from emitting the same key twice.
   const seen = new Set<string>();
   const out: PresetDependency[] = [];
   for (const dep of def.dependencies) {
