@@ -7,6 +7,7 @@ import { createNextionWorker } from "@notionx/core/worker";
 import { authConfig } from "../lib/auth.config";
 import { adminNav } from "../lib/admin/nav";
 import { siteConfig } from "../lib/site/config";
+import { runWithRequestEnv } from "../lib/site/request-env";
 import { {{contentSourceVarName}} } from "../lib/content/models";
 
 const nextion = createNextionWorker({
@@ -28,8 +29,15 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
-    const nextionResponse = await nextion.fetch(request, env, ctx);
-    if (nextionResponse) return nextionResponse;
-    return handler.fetch(request, env, ctx);
+    // Make `env` reachable from any async code path (RSC server
+    // components, server actions, Notion content loaders, etc.) via
+    // `getRequestEnv()`. See `lib/site/request-env.ts` for the
+    // rationale — we cannot use `cloudflare:workers.getRequestContext`
+    // because that module does not export it.
+    return runWithRequestEnv(env, async () => {
+      const nextionResponse = await nextion.fetch(request, env, ctx);
+      if (nextionResponse) return nextionResponse;
+      return handler.fetch(request, env, ctx);
+    });
   },
 };

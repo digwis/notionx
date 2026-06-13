@@ -26,7 +26,7 @@
 // synchronously — useful for places that can't `await` (e.g.
 // a `generateMetadata` shortcut that builds an error page).
 
-import { getRequestContext } from "cloudflare:workers";
+import { getRequestEnv } from "./request-env";
 import {
   hasNotionModelConfig,
   listGenericNotionContent,
@@ -37,18 +37,14 @@ import { fallbackSiteConfig, type SiteConfig } from "./config";
 const CACHE_KEY = "site-settings:v1";
 const CACHE_TTL_SECONDS = 5 * 60;
 
-/** Read the KV binding from the current request, if any. */
+/**
+ * Read the `CONTENT_CACHE` KV binding from the current request, if
+ * any. Returns `null` when called outside a request scope (build
+ * scripts, tests, one-off scripts) — callers must handle that and
+ * skip caching rather than throwing.
+ */
 function readKv(): KVNamespace | null {
-  try {
-    const ctx = getRequestContext() as
-      | { env?: { CONTENT_CACHE?: KVNamespace } }
-      | undefined;
-    return ctx?.env?.CONTENT_CACHE ?? null;
-  } catch {
-    // Outside a request context (e.g. in a build/test script) we
-    // simply skip caching.
-    return null;
-  }
+  return getRequestEnv()?.CONTENT_CACHE ?? null;
 }
 
 type RawSiteSettings = {

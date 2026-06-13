@@ -170,3 +170,95 @@ describe("template token substitution", () => {
   });
 });
 
+describe("request-scoped env access (AsyncLocalStorage pattern)", () => {
+  it("renders lib/site/request-env.ts with the AsyncLocalStorage helpers", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-als-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "als-app",
+        targetDir: outDir,
+        uiPreset: "site",
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const requestEnv = await fs.readFile(
+      path.join(outDir, "lib/site/request-env.ts"),
+      "utf8"
+    );
+
+    // The shim must use Node's AsyncLocalStorage (the only way we
+    // can thread Cloudflare's per-request `env` to deeply-nested
+    // helpers without a real `getRequestContext` from workerd).
+    expect(requestEnv).toMatch(/from\s+["']node:async_hooks["']/);
+    expect(requestEnv).toMatch(/AsyncLocalStorage/);
+    expect(requestEnv).toMatch(/export\s+function\s+runWithRequestEnv/);
+    expect(requestEnv).toMatch(/export\s+function\s+getRequestEnv/);
+  });
+
+  it("lib/site/settings.ts no longer imports getRequestContext from cloudflare:workers", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-settings-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "settings-app",
+        targetDir: outDir,
+        uiPreset: "site",
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const settings = await fs.readFile(
+      path.join(outDir, "lib/site/settings.ts"),
+      "utf8"
+    );
+
+    // The previous import triggered a workerd SyntaxError at boot
+    // ("The requested module 'cloudflare:workers' does not provide
+    // an export named 'getRequestContext'"), which crashed deploy.
+    // The fix replaces it with `getRequestEnv()` from the local
+    // AsyncLocalStorage shim.
+    expect(settings).not.toMatch(
+      /import\s+\{\s*getRequestContext\s*\}\s+from\s+["']cloudflare:workers["']/
+    );
+    expect(settings).toMatch(/from\s+["']\.\/request-env["']/);
+    expect(settings).toMatch(/getRequestEnv\(\)/);
+  });
+
+  it("worker/index.ts wraps the fetch handler in runWithRequestEnv()", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-worker-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "worker-app",
+        targetDir: outDir,
+        uiPreset: "site",
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const worker = await fs.readFile(path.join(outDir, "worker/index.ts"), "utf8");
+
+    // The worker must call runWithRequestEnv(env, ...) so that
+    // AsyncLocalStorage is populated for the request lifetime.
+    expect(worker).toMatch(/import\s+\{\s*runWithRequestEnv\s*\}\s+from/);
+    expect(worker).toMatch(/runWithRequestEnv\(\s*env\s*,/);
+  });
+});
+
