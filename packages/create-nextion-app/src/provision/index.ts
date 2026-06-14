@@ -802,24 +802,13 @@ async function setProvisionedWorkerSecrets({
 
   await putSecret("TURNSTILE_SECRET_KEY", wireInputs.turnstileSecret, false);
   await putSecret("NOTION_TOKEN", wireInputs.notionToken, requireNotionSecrets);
-  await putSecret(
-    "NOTION_DATA_SOURCE_ID",
-    wireInputs.notionDataSourceId,
-    requireNotionSecrets
-  );
-  await putSecret(
-    "NOTION_PAGES_DATA_SOURCE_ID",
-    wireInputs.notionPagesDataSourceId,
-    requireNotionSecrets
-  );
-  await putSecret(
-    "NOTION_BLOCKS_DATA_SOURCE_ID",
-    wireInputs.notionBlocksDataSourceId,
-    requireNotionSecrets
-  );
 
   return changed;
 }
+
+export const _internal = {
+  setProvisionedWorkerSecrets,
+};
 
 function finalize(
   result: ProvisionResult,
