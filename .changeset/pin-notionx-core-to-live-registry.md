@@ -1,3 +1,4 @@
+---
 "@notionx/create-nextion-app": patch
 ---
 
