@@ -7,7 +7,7 @@
 import * as p from "@clack/prompts";
 import type { Answers, AnswersContentField } from "./prompt.js";
 import { generateRandomPassword } from "./password.js";
-import { resolveNextionSource } from "./nextion-source.js";
+import { FALLBACK_NEXTION_SOURCE, resolveNextionSource } from "./nextion-source.js";
 
 interface CliOverrides {
   projectName?: string;
@@ -275,7 +275,7 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
     supportedLocales: supportedLocales.length
       ? Array.from(new Set([defaultLocale, ...supportedLocales]))
       : [defaultLocale],
-    nextionSource: overrides.nextionSource ?? "^0.5.2",
+    nextionSource: overrides.nextionSource ?? FALLBACK_NEXTION_SOURCE,
     contentSource: {
       id: contentId,
       title: contentTitle,
@@ -314,10 +314,22 @@ export async function gatherAnswers(
   // off to `applyDefaults`. The default reads the live version from
   // the npm registry (so freshly-installed scaffolds always match the
   // latest published package without the user passing
-  // `--nextion-source`). The network call has a 5s timeout and falls
-  // back to a hardcoded caret range if the registry is unreachable
-  // — we never want a scaffolder to hang because npm is down.
-  const nextionSource = await resolveNextionSource(cli.nextionSource);
+  // `--nextion-source`). When the target lives inside the `nextion`
+  // monorepo (e.g. `nextion/apps/<name>`), we short-circuit to
+  // `workspace:*` so the generated project links against the local
+  // `packages/nextion` checkout via pnpm workspace symlinks — this
+  // is the scaffolder author's fast path for iterating on `core`.
+  // The network call has a 5s timeout and falls back to a hardcoded
+  // caret range if the registry is unreachable — we never want a
+  // scaffolder to hang because npm is down.
+  const positionalTargetDir =
+    argv[2] && !argv[2].startsWith("-") ? argv[2] : undefined;
+  const probeTargetDir =
+    cli.targetDir ?? positionalTargetDir ?? `./${cli.projectName ?? "nextion-app"}`;
+  const nextionSource = await resolveNextionSource(
+    cli.nextionSource,
+    probeTargetDir
+  );
 
   // If `--yes` was passed, or the caller supplied at least a project
   // name (everything else has sensible defaults), build answers

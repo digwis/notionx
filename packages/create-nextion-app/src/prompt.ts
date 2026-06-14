@@ -7,6 +7,7 @@
 
 import * as p from "@clack/prompts";
 import { generateRandomPassword } from "./password.js";
+import { FALLBACK_NEXTION_SOURCE } from "./nextion-source.js";
 
 export interface AnswersContentField {
   /** Field name in camelCase used in the generated TS model, e.g. "title". */
@@ -107,7 +108,7 @@ export const DEFAULT_ANSWERS: Omit<
 > = {
   defaultLocale: "en",
   supportedLocales: ["en"],
-  nextionSource: "^0.5.2",
+  nextionSource: FALLBACK_NEXTION_SOURCE,
   // Admin defaults are placeholders only — `gatherAnswers()` and the
   // interactive prompt both overwrite them. The strings here are
   // chosen so any logic that accidentally reads them sees clearly
@@ -271,7 +272,13 @@ export async function prompt(
     targetDir,
     defaultLocale: localeConfig.defaultLocale,
     supportedLocales: [...localeConfig.supportedLocales],
-    nextionSource: DEFAULT_ANSWERS.nextionSource,
+    // Caller-supplied `nextionSource` (resolved from the npm
+    // registry / monorepo probe by `gatherAnswers()`) wins over
+    // the canned default. Without this, a successful registry
+    // resolution is silently discarded and the generated
+    // `package.json` ends up pinned to `DEFAULT_ANSWERS.nextionSource`
+    // even when npm already publishes a newer `@notionx/core`.
+    nextionSource: resolved.nextionSource ?? DEFAULT_ANSWERS.nextionSource,
     contentSource: {
       id: DEFAULT_ANSWERS.contentSource.id,
       title: DEFAULT_ANSWERS.contentSource.title,

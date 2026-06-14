@@ -9,6 +9,18 @@ export interface UpdateSummary {
   unchanged: UpdatePlanEntry[];
   skipped: UpdatePlanEntry[];
   needsInstall: boolean;
+  /**
+   * `true` when the project's `.nextion/scaffold.json` opted into
+   * the `legacy-vinext` compatibility marker (or already pins
+   * `nextionSource: "workspace:*"`). The CLI should mention this
+   * in its summary so the operator knows the run kept the
+   * workspace symlink instead of resolving a real semver.
+   *
+   * Optional on the public summary type so callers building ad-hoc
+   * fixtures (tests, harnesses) don't have to set it. Internally
+   * `runUpdate` always populates the field.
+   */
+  compatibilityPreserved?: boolean;
 }
 
 export async function runUpdate(context: ProjectContext): Promise<UpdateSummary> {
@@ -19,6 +31,9 @@ export async function runUpdate(context: ProjectContext): Promise<UpdateSummary>
     unchanged: [],
     skipped: [],
     needsInstall: false,
+    compatibilityPreserved:
+      context.metadata.compatibility === "legacy-vinext" ||
+      context.metadata.nextionSource === "workspace:*",
   };
 
   for (const entry of plan) {

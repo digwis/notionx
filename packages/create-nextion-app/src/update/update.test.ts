@@ -144,6 +144,75 @@ describe("buildUpdateAnswers", () => {
       { key: "title", notionName: "Name" },
     ]);
   });
+
+  it("preserves workspace:* for legacy-vinext compatibility projects", () => {
+    const answers = buildUpdateAnswers({
+      projectDir: "/tmp/legacy",
+      metadata: {
+        projectKind: "nextion",
+        projectName: "moviebluebook",
+        scaffoldVersion: "pre-0.5.4",
+        defaultLocale: "en",
+        supportedLocales: ["en", "zh"],
+        // Some legacy projects never set the marker — they only
+        // have `workspace:*`. We should still lock them.
+        nextionSource: "workspace:*",
+        enableSiteSettings: true,
+        contentSource: {
+          id: "blog",
+          title: "Blog",
+          fields: [{ key: "title", notionName: "Name" }],
+        },
+        compatibility: "legacy-vinext",
+      },
+    });
+
+    expect(answers.nextionSource).toBe("workspace:*");
+  });
+
+  it("preserves workspace:* even when the marker is absent (existing monorepo users)", () => {
+    const answers = buildUpdateAnswers({
+      projectDir: "/tmp/legacy-no-marker",
+      metadata: {
+        projectKind: "nextion",
+        projectName: "moviebluebook",
+        scaffoldVersion: "0.5.3",
+        defaultLocale: "en",
+        supportedLocales: ["en"],
+        nextionSource: "workspace:*",
+        enableSiteSettings: true,
+        contentSource: {
+          id: "blog",
+          title: "Blog",
+          fields: [{ key: "title", notionName: "Name" }],
+        },
+      },
+    });
+
+    expect(answers.nextionSource).toBe("workspace:*");
+  });
+
+  it("leaves normal semver-based projects alone", () => {
+    const answers = buildUpdateAnswers({
+      projectDir: "/tmp/consumer",
+      metadata: {
+        projectKind: "nextion",
+        projectName: "consumer",
+        scaffoldVersion: "0.5.4",
+        defaultLocale: "en",
+        supportedLocales: ["en"],
+        nextionSource: "^1.0.0",
+        enableSiteSettings: true,
+        contentSource: {
+          id: "blog",
+          title: "Blog",
+          fields: [{ key: "title", notionName: "Name" }],
+        },
+      },
+    });
+
+    expect(answers.nextionSource).toBe("^1.0.0");
+  });
 });
 
 describe("resolveTemplatesDir", () => {
@@ -166,6 +235,68 @@ describe("formatUpdateSummary", () => {
     expect(output).toContain("updated:");
     expect(output).toContain("  - package.json");
     expect(output).toContain("  - run `pnpm install`");
+  });
+
+  it("announces preserved legacy compatibility", () => {
+    const output = formatUpdateSummary({
+      updated: [],
+      missing: [],
+      unchanged: [],
+      skipped: [],
+      needsInstall: false,
+      compatibilityPreserved: true,
+    });
+
+    expect(output).toContain("compatibility:");
+    expect(output.join("\n")).toContain("`nextionSource` left as `workspace:*`");
+    expect(output).not.toContain("run `pnpm install`");
+  });
+
+  it("runUpdate surfaces compatibility preservation through the formatter (legacy-vinext end-to-end)", async () => {
+    // End-to-end: buildUpdatePlan returns no diffs (everything unchanged),
+    // but the metadata carries compatibility: "legacy-vinext", so the
+    // summary the user sees must still call out the preserved symlink.
+    buildUpdatePlanMock.mockResolvedValueOnce([]);
+
+    const projectDir = await mkdtemp(
+      path.join(os.tmpdir(), "nextion-update-legacy-")
+    );
+    const summary = await runUpdate({
+      projectDir,
+      metadata: {
+        projectKind: "nextion",
+        projectName: "moviebluebook",
+        scaffoldVersion: "pre-0.5.4",
+        defaultLocale: "en",
+        supportedLocales: ["en", "zh"],
+        nextionSource: "workspace:*",
+        enableSiteSettings: true,
+        compatibility: "legacy-vinext",
+        contentSource: {
+          id: "blog",
+          title: "Blog",
+          fields: [{ key: "title", notionName: "Name" }],
+        },
+      },
+    });
+
+    expect(summary.compatibilityPreserved).toBe(true);
+    const lines = formatUpdateSummary(summary);
+    expect(lines).toContain("compatibility:");
+    expect(lines.join("\n")).toContain("`nextionSource` left as `workspace:*`");
+  });
+
+  it("omits compatibility line when not preserved", () => {
+    const output = formatUpdateSummary({
+      updated: [],
+      missing: [],
+      unchanged: [],
+      skipped: [],
+      needsInstall: false,
+      compatibilityPreserved: false,
+    });
+
+    expect(output.join("\n")).not.toMatch(/^compatibility:/m);
   });
 });
 

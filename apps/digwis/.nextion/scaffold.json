@@ -1,0 +1,45 @@
+{
+  "projectKind": "nextion",
+  "projectName": "digwis",
+  "scaffoldVersion": "0.5.4",
+  "defaultLocale": "en",
+  "supportedLocales": [
+    "en"
+  ],
+  "nextionSource": "workspace:*",
+  "enableSiteSettings": true,
+  "contentSource": {
+    "id": "blog",
+    "title": "Blog",
+    "fields": [
+      {
+        "key": "title",
+        "notionName": "Name"
+      },
+      {
+        "key": "slug",
+        "notionName": "Slug"
+      },
+      {
+        "key": "description",
+        "notionName": "Description"
+      },
+      {
+        "key": "published",
+        "notionName": "Published"
+      },
+      {
+        "key": "date",
+        "notionName": "Date"
+      },
+      {
+        "key": "tags",
+        "notionName": "Tags"
+      },
+      {
+        "key": "cover",
+        "notionName": "Cover"
+      }
+    ]
+  }
+}

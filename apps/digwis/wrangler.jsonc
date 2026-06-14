@@ -1,0 +1,43 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "digwis",
+  "compatibility_date": "2026-06-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./worker/index.ts",
+  "assets": {
+    "directory": "dist/client",
+    "not_found_handling": "none",
+    "binding": "ASSETS"
+  },
+  "images": {
+    "binding": "IMAGES"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "digwis-db",
+      "database_id": "36ebf9d0-be75-4719-941f-e05c315e1de1",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CONTENT_CACHE",
+      "id": "d44f1bee9d494cc9b911a51cef289d6b"
+    },
+    {
+      "binding": "VINEXT_KV_CACHE",
+      "id": "5c86867b609e46c588c17df80dbfdef6"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ASSETS_BUCKET",
+      "bucket_name": "digwis-assets"
+    }
+  ],
+  "vars": {
+    "SITE_URL": "https://digwis.example.com",
+    "NOTION_SITE_SETTINGS_DATA_SOURCE_ID": "0cd4f689-42e0-404e-979b-6816a4a53299"
+  }
+}
