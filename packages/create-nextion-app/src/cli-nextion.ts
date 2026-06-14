@@ -22,6 +22,12 @@ export function formatUpdateSummary(summary: UpdateSummary): string[] {
   pushGroup("unchanged", summary.unchanged);
   pushGroup("skipped", summary.skipped);
 
+  if (summary.compatibilityPreserved) {
+    lines.push("compatibility:");
+    lines.push("  - legacy mode preserved: `nextionSource` left as `workspace:*`");
+    lines.push("    (this project predates the scaffolder; the symlink is intentional)");
+  }
+
   if (summary.needsInstall) {
     lines.push("follow-up:");
     lines.push("  - run `pnpm install`");

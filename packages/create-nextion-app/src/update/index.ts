@@ -15,8 +15,12 @@ export interface UpdateSummary {
    * `nextionSource: "workspace:*"`). The CLI should mention this
    * in its summary so the operator knows the run kept the
    * workspace symlink instead of resolving a real semver.
+   *
+   * Optional on the public summary type so callers building ad-hoc
+   * fixtures (tests, harnesses) don't have to set it. Internally
+   * `runUpdate` always populates the field.
    */
-  compatibilityPreserved: boolean;
+  compatibilityPreserved?: boolean;
 }
 
 export async function runUpdate(context: ProjectContext): Promise<UpdateSummary> {
