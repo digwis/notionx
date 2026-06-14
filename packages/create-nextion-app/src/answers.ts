@@ -7,7 +7,7 @@
 import * as p from "@clack/prompts";
 import type { Answers, AnswersContentField } from "./prompt.js";
 import { generateRandomPassword } from "./password.js";
-import { resolveNextionSource } from "./nextion-source.js";
+import { FALLBACK_NEXTION_SOURCE, resolveNextionSource } from "./nextion-source.js";
 
 interface CliOverrides {
   projectName?: string;
@@ -275,7 +275,7 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
     supportedLocales: supportedLocales.length
       ? Array.from(new Set([defaultLocale, ...supportedLocales]))
       : [defaultLocale],
-    nextionSource: overrides.nextionSource ?? "^0.5.2",
+    nextionSource: overrides.nextionSource ?? FALLBACK_NEXTION_SOURCE,
     contentSource: {
       id: contentId,
       title: contentTitle,

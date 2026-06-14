@@ -32,8 +32,13 @@ import { resolve } from "node:path";
  * Bump this in lockstep with the latest published release — but
  * note that any *in-flight* release cycle should accept a slightly
  * stale fallback over refusing to install.
+ *
+ * Exported so the prompt / answers modules can reference the same
+ * source of truth instead of duplicating the literal — duplicate
+ * strings drifted out of sync in 0.5.x and produced un-installable
+ * scaffolds (`ERR_PNPM_NO_MATCHING_VERSION` for `@notionx/core@^0.5.2`).
  */
-const FALLBACK_NEXTION_SOURCE = "^1.0.0";
+export const FALLBACK_NEXTION_SOURCE = "^1.0.0";
 
 const REGISTRY_TIMEOUT_MS = 5_000;
 
