@@ -1,0 +1,68 @@
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import type { StructuredFeatureGridBlock } from "@/lib/pages/source";
+
+function gridClassName(columns: StructuredFeatureGridBlock["columns"]) {
+  if (columns === 2) return "grid gap-6 md:grid-cols-2";
+  if (columns === 4) return "grid gap-6 md:grid-cols-2 xl:grid-cols-4";
+  return "grid gap-6 md:grid-cols-3";
+}
+
+export function FeatureGridBlock({
+  block,
+}: {
+  block: StructuredFeatureGridBlock;
+}) {
+  return (
+    <section className="border-t bg-background">
+      <div className="container mx-auto max-w-6xl px-4 py-14">
+        <div className="mx-auto max-w-3xl text-center">
+          <Badge variant="secondary">Feature Grid</Badge>
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
+            {block.headline}
+          </h2>
+          {block.body ? (
+            <p className="mt-4 text-lg text-muted-foreground">{block.body}</p>
+          ) : null}
+        </div>
+        <div className={["mt-10", gridClassName(block.columns)].join(" ")}>
+          {block.items.map((item) => {
+            const card = (
+              <Card className="h-full">
+                <CardHeader>
+                  <Badge variant="outline" className="w-fit">
+                    {item.icon}
+                  </Badge>
+                  <CardTitle className="text-xl">{item.title}</CardTitle>
+                  <CardDescription>{item.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {item.href ? (
+                    <span className="text-sm font-medium text-primary">
+                      Explore more
+                    </span>
+                  ) : null}
+                </CardContent>
+              </Card>
+            );
+
+            return item.href ? (
+              <Link key={item.title} href={item.href} className="block">
+                {card}
+              </Link>
+            ) : (
+              <div key={item.title}>{card}</div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}

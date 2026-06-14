@@ -23,6 +23,8 @@ export interface WireInputs {
   notionDataSourceId?: string;
   /** Optional pages data source id (NOTION_PAGES_DATA_SOURCE_ID). */
   notionPagesDataSourceId?: string;
+  /** Optional blocks data source id (NOTION_BLOCKS_DATA_SOURCE_ID). */
+  notionBlocksDataSourceId?: string;
   /** Optional site-settings data source id (NOTION_SITE_SETTINGS_DATA_SOURCE_ID). */
   notionSiteSettingsDataSourceId?: string;
   /** Optional Resend values. */
@@ -48,6 +50,12 @@ export async function patchWranglerJsonc(
     patched = patched.replace(
       /REPLACE_WITH_NOTION_SITE_SETTINGS_DATA_SOURCE_ID/g,
       inputs.notionSiteSettingsDataSourceId
+    );
+  }
+  if (inputs.notionBlocksDataSourceId) {
+    patched = patched.replace(
+      /REPLACE_WITH_NOTION_BLOCKS_DATA_SOURCE_ID/g,
+      inputs.notionBlocksDataSourceId
     );
   }
   await fs.writeFile(file, patched, "utf8");
@@ -87,6 +95,7 @@ export async function writeDevVars(
     NOTION_TOKEN: inputs.notionToken ?? "",
     NOTION_DATA_SOURCE_ID: inputs.notionDataSourceId ?? "",
     NOTION_PAGES_DATA_SOURCE_ID: inputs.notionPagesDataSourceId ?? "",
+    NOTION_BLOCKS_DATA_SOURCE_ID: inputs.notionBlocksDataSourceId ?? "",
     NOTION_SITE_SETTINGS_DATA_SOURCE_ID:
       inputs.notionSiteSettingsDataSourceId ?? "",
     RESEND_API_KEY: inputs.resendApiKey ?? "",

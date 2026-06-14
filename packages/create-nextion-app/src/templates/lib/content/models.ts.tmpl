@@ -108,5 +108,73 @@ export const siteSettingsSource: ContentSource = defineContentSource({
   },
 });
 
+export const blocksSource: ContentSource = defineContentSource({
+  id: "blocks",
+  kind: "directory",
+  visibility: {
+    public: false,
+    admin: true,
+  },
+  source: {
+    type: "notion",
+    tokenEnv: "NOTION_TOKEN",
+    dataSourceEnv: "NOTION_BLOCKS_DATA_SOURCE_ID",
+    fields: {
+      title: "Name",
+      slug: "Slug",
+      type: "Type",
+      description: "Description",
+      pageKeys: "Page Keys",
+      order: "Order",
+      cover: "Cover",
+      published: "Status",
+      eyebrow: "Eyebrow",
+      headline: "Headline",
+      subheadline: "Subheadline",
+      primaryCtaLabel: "Primary CTA Label",
+      primaryCtaHref: "Primary CTA Href",
+      secondaryCtaLabel: "Secondary CTA Label",
+      secondaryCtaHref: "Secondary CTA Href",
+      alignment: "Alignment",
+      theme: "Theme",
+      columns: "Columns",
+      items: "Items",
+      body: "Body",
+      quote: "Quote",
+      quoteAttribution: "Quote Attribution",
+      mediaUrl: "Media Url",
+      layout: "Layout",
+    },
+    query: {
+      pageSize: 50,
+    },
+  },
+  routes: {
+    listPath: "/__internal/blocks",
+    detailPath: "/__internal/blocks/[slug]",
+    detailParam: "slug",
+    publicApiPath: "/api/__internal/blocks",
+  },
+  ui: {
+    name: "Block",
+    pluralName: "Blocks",
+    navLabel: "Blocks",
+    listTitle: "Reusable Blocks",
+    listDescription:
+      "Reusable structured page sections stored in Notion and referenced from the Pages model.",
+    emptyState: "No reusable blocks found — re-run provisioning.",
+  },
+  capabilities: {
+    richBlocks: true,
+    coverImages: true,
+    gatedAssets: false,
+  },
+});
+
 export const contentSources = [{{contentSourceVarName}}] as const;
+export const managedContentSources = [
+  {{contentSourceVarName}},
+  blocksSource,
+  siteSettingsSource,
+] as const;
 export type ContentSourceId = (typeof contentSources)[number]["id"];

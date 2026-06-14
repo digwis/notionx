@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { NotionBlocks } from "@/components/notion-blocks";
+import { PageBlocks } from "@/components/page-blocks";
 import { SiteShell } from "@/components/site/site-shell";
 import { getSitePageBySlug } from "@/lib/pages/source";
 
@@ -43,7 +44,11 @@ export default async function SitePage({
             <p className="text-lg text-muted-foreground">{page.description}</p>
           ) : null}
         </header>
-        <NotionBlocks blocks={page.blocks} />
+        {page.structuredBlocks.length ? (
+          <PageBlocks blocks={page.structuredBlocks} />
+        ) : (
+          <NotionBlocks blocks={page.blocks} />
+        )}
       </main>
     </SiteShell>
   );

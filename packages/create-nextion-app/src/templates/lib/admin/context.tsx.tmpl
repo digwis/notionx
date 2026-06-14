@@ -12,7 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { contentSources, {{contentSourceVarName}} } from "@/lib/content/models";
+import {
+  contentSources,
+  managedContentSources,
+  {{contentSourceVarName}},
+} from "@/lib/content/models";
 import { siteConfig } from "@/lib/site/config";
 import { changePasswordAction } from "./actions";
 import {
@@ -196,7 +200,7 @@ export function buildAdminPageContext(): AdminPageContext {
       workerEnv: { TURNSTILE_SECRET_KEY: workerEnv.TURNSTILE_SECRET_KEY },
       getUserById,
       getContentModelAdminSummaries: () =>
-        getContentModelAdminSummaries(contentSources),
+        getContentModelAdminSummaries(managedContentSources),
     },
     extra: {
       siteName: siteConfig.name,

@@ -23,6 +23,7 @@ export const defaultSitePageFields: SitePageFields = {
   footerGroup: "Footer Group",
   footerOrder: "Footer Order",
   contentSource: "Content Source",
+  blocks: "Blocks",
   cover: "Cover",
 };
 

@@ -4,6 +4,7 @@ import { ArrowRight, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NotionBlocks } from "@/components/notion-blocks";
+import { PageBlocks } from "@/components/page-blocks";
 import { SiteShell } from "@/components/site/site-shell";
 import { siteConfig } from "@/lib/site/config";
 import { getSiteNavigation, getSitePageByKey } from "@/lib/pages/source";
@@ -66,7 +67,9 @@ export default async function Home() {
           ) : null}
         </section>
 
-        {page?.blocks?.length ? (
+        {page?.structuredBlocks?.length ? (
+          <PageBlocks blocks={page.structuredBlocks} />
+        ) : page?.blocks?.length ? (
           <section className="border-t bg-muted/20">
             <div className="container mx-auto max-w-3xl px-4 py-14">
               <NotionBlocks blocks={page.blocks} />

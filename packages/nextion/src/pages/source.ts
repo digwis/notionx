@@ -15,6 +15,7 @@ import type { NotionBlock, NotionPageLike } from "../notion/types";
 import { defineSitePageModel } from "./model";
 import type {
   SitePage,
+  SitePageBlockRef,
   SitePageFields,
   SitePageFooterGroup,
   SitePageModel,
@@ -58,6 +59,43 @@ function normalizeLayout(value: string): SitePageLayout {
   if (normalized === "legal") return "legal";
   if (normalized === "content-list") return "content-list";
   return "default";
+}
+
+function parseStructuredBlockRefs(raw: string): SitePageBlockRef[] {
+  if (!raw.trim()) return [];
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map((item, index): SitePageBlockRef | null => {
+        if (typeof item === "string") {
+          const slug = normalizePageSlug(item);
+          return slug ? { slug, order: index } : null;
+        }
+        if (!isRecord(item) || typeof item.slug !== "string") return null;
+
+        const slug = normalizePageSlug(item.slug);
+        if (!slug) return null;
+
+        return {
+          slug,
+          variant:
+            typeof item.variant === "string" && item.variant.trim()
+              ? item.variant.trim()
+              : undefined,
+          order:
+            typeof item.order === "number" && Number.isFinite(item.order)
+              ? item.order
+              : index,
+        };
+      })
+      .filter((item): item is SitePageBlockRef => Boolean(item))
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  } catch {
+    return [];
+  }
 }
 
 export function mapNotionPageToSitePage(
@@ -112,6 +150,9 @@ export function mapNotionPageToSitePage(
     contentSource: getRichTextProperty(properties, fields.contentSource),
     coverImage: coverImageUrlForPage(page, fields.cover),
     editUrl: notionPageEditUrl(page.id, options?.editBaseUrl),
+    structuredBlocks: parseStructuredBlockRefs(
+      getRichTextProperty(properties, fields.blocks)
+    ),
     blocks,
   };
 }

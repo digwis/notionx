@@ -1,0 +1,73 @@
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import type { StructuredHeroBlock } from "@/lib/pages/source";
+
+function sectionClassName(theme: StructuredHeroBlock["theme"]) {
+  if (theme === "inverse") return "border-b bg-primary text-primary-foreground";
+  if (theme === "default") return "border-b bg-background";
+  return "border-b bg-muted/20";
+}
+
+export function HeroBlock({ block }: { block: StructuredHeroBlock }) {
+  const isCentered = block.alignment === "center";
+
+  return (
+    <section className={sectionClassName(block.theme)}>
+      <div
+        className={[
+          "container mx-auto max-w-5xl px-4 py-16 md:py-24",
+          isCentered ? "text-center" : "text-left",
+        ].join(" ")}
+      >
+        {block.eyebrow ? (
+          <Badge variant={block.theme === "inverse" ? "secondary" : "outline"}>
+            {block.eyebrow}
+          </Badge>
+        ) : null}
+        <h2 className="mt-5 text-4xl font-semibold tracking-tight md:text-6xl">
+          {block.headline}
+        </h2>
+        {block.subheadline ? (
+          <p
+            className={[
+              "mt-5 max-w-2xl text-lg text-muted-foreground",
+              isCentered ? "mx-auto" : "",
+              block.theme === "inverse" ? "text-primary-foreground/80" : "",
+            ].join(" ")}
+          >
+            {block.subheadline}
+          </p>
+        ) : null}
+        {block.description ? (
+          <p
+            className={[
+              "mt-4 max-w-2xl text-sm",
+              isCentered ? "mx-auto" : "",
+              block.theme === "inverse" ? "text-primary-foreground/70" : "text-muted-foreground",
+            ].join(" ")}
+          >
+            {block.description}
+          </p>
+        ) : null}
+        <div
+          className={[
+            "mt-8 flex flex-wrap gap-3",
+            isCentered ? "justify-center" : "justify-start",
+          ].join(" ")}
+        >
+          {block.primaryCta ? (
+            <Button asChild size="lg">
+              <Link href={block.primaryCta.href}>{block.primaryCta.label}</Link>
+            </Button>
+          ) : null}
+          {block.secondaryCta ? (
+            <Button asChild size="lg" variant="secondary">
+              <Link href={block.secondaryCta.href}>{block.secondaryCta.label}</Link>
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}

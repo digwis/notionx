@@ -1,9 +1,14 @@
-import type { NotionBlock } from "@notionx/core/notion";
+import {
+  getGenericNotionContentBySlug,
+  type GenericContentDetail,
+  type NotionBlock,
+} from "@notionx/core/notion";
 import {
   createSitePagesApi,
-  type SitePage,
+  type SitePage as BaseSitePage,
+  type SitePageBlockRef,
 } from "@notionx/core/pages";
-import { contentSources } from "@/lib/content/models";
+import { blocksSource, contentSources } from "@/lib/content/models";
 import { pageFields, pagesDataSourceEnv } from "./model";
 
 const pagesModel = {
@@ -30,7 +35,160 @@ const fallbackBlocks = (text: string): NotionBlock[] => [
   },
 ];
 
-const fallbackPages: SitePage[] = [
+type BlockPropertyValue = string | string[] | number | boolean;
+
+type BlockCta = {
+  label: string;
+  href: string;
+};
+
+type FeatureGridItem = {
+  title: string;
+  description: string;
+  icon: string;
+  href?: string;
+};
+
+export type StructuredHeroBlock = {
+  type: "hero";
+  slug: string;
+  title: string;
+  description: string;
+  eyebrow: string;
+  headline: string;
+  subheadline: string;
+  primaryCta: BlockCta | null;
+  secondaryCta: BlockCta | null;
+  alignment: "left" | "center";
+  theme: "default" | "muted" | "inverse";
+  coverImage: string | null;
+  editUrl: string | null;
+};
+
+export type StructuredFeatureGridBlock = {
+  type: "feature-grid";
+  slug: string;
+  title: string;
+  description: string;
+  headline: string;
+  body: string;
+  columns: 2 | 3 | 4;
+  items: FeatureGridItem[];
+  coverImage: string | null;
+  editUrl: string | null;
+};
+
+export type StructuredStoryBlock = {
+  type: "story";
+  slug: string;
+  title: string;
+  description: string;
+  headline: string;
+  body: string;
+  quote: string;
+  quoteAttribution: string;
+  mediaUrl: string | null;
+  layout: "text-left" | "media-left" | "media-right";
+  coverImage: string | null;
+  editUrl: string | null;
+};
+
+export type LegacyStructuredPageBlock = {
+  type: "legacy";
+  slug: string;
+  title: string;
+  description: string;
+  variant: string;
+  coverImage: string | null;
+  editUrl: string | null;
+  blocks: NotionBlock[];
+};
+
+export type StructuredPageBlock =
+  | StructuredHeroBlock
+  | StructuredFeatureGridBlock
+  | StructuredStoryBlock
+  | LegacyStructuredPageBlock;
+
+export type SitePage = Omit<BaseSitePage, "structuredBlocks"> & {
+  structuredBlocks: StructuredPageBlock[];
+};
+
+const fallbackStructuredBlocks: Record<
+  string,
+  Exclude<StructuredPageBlock, LegacyStructuredPageBlock>
+> = {
+  "home-hero": {
+    type: "hero",
+    slug: "home-hero",
+    title: "{{projectName}} Hero",
+    description:
+      "Editable hero module seeded into the reusable blocks source for the homepage.",
+    eyebrow: "Notion + Cloudflare",
+    headline: "Start with a homepage you can keep editing",
+    subheadline:
+      "Keep the layout stable in code while the hero copy, positioning, and primary call to action evolve in Notion.",
+    primaryCta: { label: "Explore the blog", href: "/{{contentSourceId}}" },
+    secondaryCta: { label: "Read the story", href: "/about" },
+    alignment: "center",
+    theme: "muted",
+    coverImage: null,
+    editUrl: null,
+  },
+  "home-feature-grid": {
+    type: "feature-grid",
+    slug: "home-feature-grid",
+    title: "Homepage Feature Grid",
+    description:
+      "Reusable mid-page section for capabilities, benefits, or service pillars.",
+    headline: "Show the system working together",
+    body:
+      "Use this grid to explain how editing, infrastructure, and publishing fit together without overwhelming the homepage.",
+    columns: 3,
+    items: [
+      {
+        title: "Editorial workflows",
+        description:
+          "Use Notion as the editor for pages, posts, and reusable sections.",
+        icon: "pen-square",
+        href: "/about",
+      },
+      {
+        title: "Cloudflare runtime",
+        description:
+          "Ship on Workers with storage and caching primitives ready to grow.",
+        icon: "cloud",
+      },
+      {
+        title: "{{contentSourceListTitle}} updates",
+        description:
+          "Publish new entries and surface them through the generated routes automatically.",
+        icon: "newspaper",
+        href: "{{contentSourceListPath}}",
+      },
+    ],
+    coverImage: null,
+    editUrl: null,
+  },
+  "about-story": {
+    type: "story",
+    slug: "about-story",
+    title: "About Story",
+    description: "Story-led reusable section for About-style pages.",
+    headline: "Explain why this project exists",
+    body:
+      "Use this reusable story block to introduce the team, the editorial mission, or the thinking behind the site in a stable layout.",
+    quote:
+      "Content should stay editable without turning the app into a page builder.",
+    quoteAttribution: "Starter philosophy",
+    mediaUrl: "https://picsum.photos/seed/about-story/960/720",
+    layout: "media-right",
+    coverImage: null,
+    editUrl: null,
+  },
+};
+
+const fallbackPages: BaseSitePage[] = [
   {
     pageId: "fallback-home",
     key: "home",
@@ -56,6 +214,10 @@ const fallbackPages: SitePage[] = [
     contentSource: "",
     coverImage: null,
     editUrl: null,
+    structuredBlocks: [
+      { slug: "home-hero", variant: "hero", order: 10 },
+      { slug: "home-feature-grid", variant: "feature-grid", order: 20 },
+    ],
     blocks: fallbackBlocks("Configure Notion Pages to edit this homepage from Notion."),
   },
   {
@@ -81,6 +243,7 @@ const fallbackPages: SitePage[] = [
     contentSource: "{{contentSourceId}}",
     coverImage: null,
     editUrl: null,
+    structuredBlocks: [],
     blocks: fallbackBlocks("Latest posts from the default Notion content source."),
   },
 ];
@@ -90,14 +253,222 @@ const pagesApi = createSitePagesApi({
   fallbackPages,
 });
 
-export const listSitePages = pagesApi.listSitePages;
-export const getSitePageByKey = pagesApi.getSitePageByKey;
-export const getSitePageBySlug = pagesApi.getSitePageBySlug;
+function fallbackPageBlock(ref: SitePageBlockRef): StructuredPageBlock | null {
+  const fallback = fallbackStructuredBlocks[ref.slug];
+  if (!fallback) return null;
+  return fallback;
+}
+
+function fallbackToLegacyNotionBlocks(
+  detail: GenericContentDetail,
+  ref: SitePageBlockRef
+): LegacyStructuredPageBlock | null {
+  if (!detail.blocks.length) return null;
+  return {
+    type: "legacy",
+    slug: detail.slug,
+    title: detail.title,
+    description: detail.description,
+    variant: ref.variant ?? "story",
+    coverImage: detail.coverImage,
+    editUrl: detail.editUrl,
+    blocks: detail.blocks,
+  };
+}
+
+function readString(value: BlockPropertyValue | undefined) {
+  if (Array.isArray(value)) return String(value[0] ?? "").trim();
+  if (typeof value === "string") return value.trim();
+  return "";
+}
+
+function readNumber(value: BlockPropertyValue | undefined) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function normalizeAlignment(value: string): StructuredHeroBlock["alignment"] {
+  return value === "left" ? "left" : "center";
+}
+
+function normalizeTheme(value: string): StructuredHeroBlock["theme"] {
+  if (value === "default" || value === "inverse") return value;
+  return "muted";
+}
+
+function normalizeColumns(value: number | null): StructuredFeatureGridBlock["columns"] {
+  if (value === 2 || value === 4) return value;
+  return 3;
+}
+
+function normalizeLayout(value: string): StructuredStoryBlock["layout"] {
+  if (value === "text-left" || value === "media-left") return value;
+  return "media-right";
+}
+
+function readCta(
+  labelValue: BlockPropertyValue | undefined,
+  hrefValue: BlockPropertyValue | undefined
+): BlockCta | null {
+  const label = readString(labelValue);
+  const href = readString(hrefValue);
+  return label && href ? { label, href } : null;
+}
+
+function parseFeatureGridItems(
+  value: BlockPropertyValue | undefined
+): FeatureGridItem[] {
+  const raw = readString(value);
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item): FeatureGridItem | null => {
+        if (!item || typeof item !== "object") return null;
+        const typed = item as {
+          title?: unknown;
+          description?: unknown;
+          icon?: unknown;
+          href?: unknown;
+        };
+        const title = typeof typed.title === "string" ? typed.title.trim() : "";
+        const description =
+          typeof typed.description === "string" ? typed.description.trim() : "";
+        if (!title || !description) return null;
+        return {
+          title,
+          description,
+          icon: typeof typed.icon === "string" ? typed.icon.trim() : "sparkles",
+          href: typeof typed.href === "string" ? typed.href.trim() : undefined,
+        };
+      })
+      .filter((item): item is FeatureGridItem => Boolean(item));
+  } catch {
+    return [];
+  }
+}
+
+function resolveBlockType(detail: GenericContentDetail, ref: SitePageBlockRef) {
+  const fromRecord = readString(detail.properties.type);
+  return fromRecord || ref.variant || "";
+}
+
+async function resolveStructuredBlock(
+  ref: SitePageBlockRef
+): Promise<StructuredPageBlock | null> {
+  const detail = await getGenericNotionContentBySlug(blocksSource, ref.slug);
+  if (!detail) return fallbackPageBlock(ref);
+
+  return mapGenericBlockToStructuredBlock(detail, ref);
+}
+
+function mapGenericBlockToStructuredBlock(
+  detail: GenericContentDetail,
+  ref: SitePageBlockRef
+): StructuredPageBlock | null {
+  const type = resolveBlockType(detail, ref);
+
+  if (type === "hero") {
+    const headline = readString(detail.properties.headline);
+    if (!headline) return fallbackToLegacyNotionBlocks(detail, ref);
+    return {
+      type: "hero",
+      slug: detail.slug,
+      title: detail.title,
+      description: detail.description,
+      eyebrow: readString(detail.properties.eyebrow),
+      headline,
+      subheadline: readString(detail.properties.subheadline),
+      primaryCta: readCta(
+        detail.properties.primaryCtaLabel,
+        detail.properties.primaryCtaHref
+      ),
+      secondaryCta: readCta(
+        detail.properties.secondaryCtaLabel,
+        detail.properties.secondaryCtaHref
+      ),
+      alignment: normalizeAlignment(readString(detail.properties.alignment)),
+      theme: normalizeTheme(readString(detail.properties.theme)),
+      coverImage: detail.coverImage,
+      editUrl: detail.editUrl,
+    };
+  }
+
+  if (type === "feature-grid") {
+    const headline = readString(detail.properties.headline);
+    const items = parseFeatureGridItems(detail.properties.items);
+    if (!headline || !items.length) return fallbackToLegacyNotionBlocks(detail, ref);
+    return {
+      type: "feature-grid",
+      slug: detail.slug,
+      title: detail.title,
+      description: detail.description,
+      headline,
+      body: readString(detail.properties.body),
+      columns: normalizeColumns(readNumber(detail.properties.columns)),
+      items,
+      coverImage: detail.coverImage,
+      editUrl: detail.editUrl,
+    };
+  }
+
+  if (type === "story") {
+    const headline = readString(detail.properties.headline);
+    const body = readString(detail.properties.body);
+    if (!headline || !body) return fallbackToLegacyNotionBlocks(detail, ref);
+    return {
+      type: "story",
+      slug: detail.slug,
+      title: detail.title,
+      description: detail.description,
+      headline,
+      body,
+      quote: readString(detail.properties.quote),
+      quoteAttribution: readString(detail.properties.quoteAttribution),
+      mediaUrl: readString(detail.properties.mediaUrl) || null,
+      layout: normalizeLayout(readString(detail.properties.layout)),
+      coverImage: detail.coverImage,
+      editUrl: detail.editUrl,
+    };
+  }
+
+  return fallbackToLegacyNotionBlocks(detail, ref);
+}
+
+export async function getPageBlocks(page: BaseSitePage | null) {
+  if (!page) return [];
+  const resolved = await Promise.all(
+    (page.structuredBlocks ?? []).map((ref) => resolveStructuredBlock(ref))
+  );
+  return resolved.filter((block): block is StructuredPageBlock => Boolean(block));
+}
+
+async function withStructuredBlocks(page: BaseSitePage | null): Promise<SitePage | null> {
+  if (!page) return null;
+  return {
+    ...page,
+    structuredBlocks: await getPageBlocks(page),
+  };
+}
+
+export async function listSitePages() {
+  const pages = await pagesApi.listSitePages();
+  const resolved = await Promise.all(pages.map((page) => withStructuredBlocks(page)));
+  return resolved.filter((page): page is SitePage => Boolean(page));
+}
+
+export async function getSitePageByKey(key: string) {
+  return withStructuredBlocks(await pagesApi.getSitePageByKey(key));
+}
+
+export async function getSitePageBySlug(slug: string) {
+  return withStructuredBlocks(await pagesApi.getSitePageBySlug(slug));
+}
 export const getSitePageForContentSource = pagesApi.getSitePageForContentSource;
 export const getSiteNavigation = pagesApi.getSiteNavigation;
 export const getSiteFooterGroups = pagesApi.getSiteFooterGroups;
-
-export type { SitePage, SitePageFooterGroup, SitePageNavItem } from "@notionx/core/pages";
+export type { SitePageFooterGroup, SitePageNavItem } from "@notionx/core/pages";
 
 export function findContentSource(id: string) {
   return contentSources.find((source) => source.id === id) ?? null;

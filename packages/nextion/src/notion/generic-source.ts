@@ -4,8 +4,11 @@ import { createNotionClient } from "./client";
 import { getNotionConfigForModel, hasNotionModelConfig } from "./config";
 import { coverImageUrlForPage } from "./media";
 import {
+  getCheckboxProperty,
   getDateProperty,
+  getNumberProperty,
   getRichTextProperty,
+  getSelectProperty,
   getTagsProperty,
   isValidPublicSlug,
   notionPageEditUrl,
@@ -40,7 +43,7 @@ export type GenericContentListItem = {
   coverImage: string | null;
   published: boolean;
   editUrl: string | null;
-  properties: Record<string, string | string[]>;
+  properties: Record<string, string | string[] | number | boolean>;
 };
 
 export type GenericContentDetail = GenericContentListItem & {
@@ -113,12 +116,34 @@ function coverImageUrlForModel(page: NotionPageLike, fields: NotionFieldMap) {
 }
 
 function mapExtraProperties(properties: PropertyMap, fields: NotionFieldMap) {
-  const result: Record<string, string | string[]> = {};
+  const result: Record<string, string | string[] | number | boolean> = {};
   for (const [key, value] of Object.entries(fields)) {
     const field = firstFieldName(value);
     if (!field) continue;
-    const tags = getTagsProperty(properties, field);
-    result[key] = tags.length > 0 ? tags : getRichTextProperty(properties, field);
+    const property = properties[field] as Record<string, unknown> | undefined;
+    if (!property?.type) {
+      result[key] = getRichTextProperty(properties, field);
+      continue;
+    }
+
+    if (property.type === "multi_select") {
+      result[key] = getTagsProperty(properties, field);
+      continue;
+    }
+    if (property.type === "select" || property.type === "status") {
+      result[key] = getSelectProperty(properties, field);
+      continue;
+    }
+    if (property.type === "number") {
+      result[key] = getNumberProperty(properties, field);
+      continue;
+    }
+    if (property.type === "checkbox") {
+      result[key] = getCheckboxProperty(properties, field);
+      continue;
+    }
+
+    result[key] = getRichTextProperty(properties, field);
   }
   return result;
 }

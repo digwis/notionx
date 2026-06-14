@@ -34,6 +34,7 @@ import {
   verifyNotionToken,
   ensureNotionDatabase,
   ensurePagesDatabase,
+  ensureBlocksDatabase,
   ensureSiteSettingsDatabase,
 } from "./notion.js";
 import { promptNotion } from "./prompts.js";
@@ -68,10 +69,12 @@ export interface ProvisionResult {
     ok: boolean;
     dataSourceId?: string;
     pagesDataSourceId?: string;
+    blocksDataSourceId?: string;
     message?: string;
     skipped?: boolean;
     seeded?: number;
     pagesSeeded?: number;
+    blocksSeeded?: number;
   };
   siteSettings: {
     ok: boolean;
@@ -99,6 +102,7 @@ export interface ProvisionResult {
   _turnstileSecret?: string;
   _notionToken?: string;
   _siteSettingsDataSourceId?: string;
+  _blocksDataSourceId?: string;
 }
 
 export async function provision(
@@ -317,7 +321,7 @@ export async function provision(
         );
       }
       if (notionInputs) {
-        const { content, pages } = await provisionNotionContentAndPages({
+        const { content, pages, blocks } = await provisionNotionContentAndPages({
           answers,
           apiToken: notionInputs.apiToken,
           parentPageId: notionInputs.parentPageId,
@@ -327,16 +331,19 @@ export async function provision(
           ok: true,
           dataSourceId: content.dataSourceId,
           pagesDataSourceId: pages.dataSourceId,
+          blocksDataSourceId: blocks.dataSourceId,
           seeded: content.seeded,
           pagesSeeded: pages.seeded,
+          blocksSeeded: blocks.seeded,
           ...(autoToken
             ? { message: `token from ${describeNtnSource(autoToken.source)}` }
             : {}),
         };
         p.log.success(
-          `Notion: content data source ${content.dataSourceId.slice(0, 8)}… seeded ${content.seeded}; Pages ${pages.dataSourceId.slice(0, 8)}… seeded ${pages.seeded}.`
+          `Notion: content ${content.dataSourceId.slice(0, 8)}… seeded ${content.seeded}; Pages ${pages.dataSourceId.slice(0, 8)}… seeded ${pages.seeded}; Blocks ${blocks.dataSourceId.slice(0, 8)}… seeded ${blocks.seeded}.`
         );
         result._notionToken = resolvedToken;
+        result._blocksDataSourceId = blocks.dataSourceId;
 
         // Site settings: separate data source for site-level config
         // (name, tagline, description, default locale, social image).
@@ -382,7 +389,7 @@ export async function provision(
         answers.notionSeedCount
       );
       if (notion) {
-        const { content, pages } = await provisionNotionContentAndPages({
+        const { content, pages, blocks } = await provisionNotionContentAndPages({
           answers,
           apiToken: notion.apiToken,
           parentPageId: notion.parentPageId,
@@ -392,13 +399,16 @@ export async function provision(
           ok: true,
           dataSourceId: content.dataSourceId,
           pagesDataSourceId: pages.dataSourceId,
+          blocksDataSourceId: blocks.dataSourceId,
           seeded: content.seeded,
           pagesSeeded: pages.seeded,
+          blocksSeeded: blocks.seeded,
         };
         p.log.success(
-          `Notion: content data source ${content.dataSourceId.slice(0, 8)}… seeded ${content.seeded}; Pages ${pages.dataSourceId.slice(0, 8)}… seeded ${pages.seeded}.`
+          `Notion: content ${content.dataSourceId.slice(0, 8)}… seeded ${content.seeded}; Pages ${pages.dataSourceId.slice(0, 8)}… seeded ${pages.seeded}; Blocks ${blocks.dataSourceId.slice(0, 8)}… seeded ${blocks.seeded}.`
         );
         result._notionToken = notion.apiToken;
+        result._blocksDataSourceId = blocks.dataSourceId;
       } else {
         result.notion = {
           ok: false,
@@ -429,7 +439,7 @@ export async function provision(
   // ---- 7. Wire everything into wrangler.jsonc + .dev.vars ----
   let wireInputs: WireInputs | null = null;
   if (result.d1.ok && result.kv.ok && result.vinextKv.ok) {
-    wireInputs = {
+    const currentWireInputs: WireInputs = {
       d1DatabaseId: result.d1.id!,
       kvNamespaceId: result.kv.id!,
       vinextKvNamespaceId: result.vinextKv.id!,
@@ -439,10 +449,12 @@ export async function provision(
       notionDataSourceId: result.notion.dataSourceId,
       notionPagesDataSourceId: result.notion.pagesDataSourceId,
       notionSiteSettingsDataSourceId: result._siteSettingsDataSourceId,
+      notionBlocksDataSourceId: result._blocksDataSourceId,
     };
+    wireInputs = currentWireInputs;
     try {
-      await patchWranglerJsonc(projectDir, wireInputs);
-      await writeDevVars(projectDir, wireInputs);
+      await patchWranglerJsonc(projectDir, currentWireInputs);
+      await writeDevVars(projectDir, currentWireInputs);
       p.log.success(`Wired: wrangler.jsonc + .dev.vars updated.`);
       if (result.d1.ok && result.d1.id) {
         try {
@@ -742,7 +754,17 @@ async function provisionNotionContentAndPages({
     locale: answers.defaultLocale,
   });
 
-  return { content, pages };
+  const blocks = await ensureBlocksDatabase({
+    apiToken,
+    parentPageId,
+    projectName: answers.projectName,
+    contentSourceId: answers.contentSource.id,
+    contentSourceTitle: answers.contentSource.title,
+    contentSourceListPath: `/${answers.contentSource.id}`,
+    locale: answers.defaultLocale,
+  });
+
+  return { content, pages, blocks };
 }
 
 async function setProvisionedWorkerSecrets({
@@ -790,6 +812,11 @@ async function setProvisionedWorkerSecrets({
     wireInputs.notionPagesDataSourceId,
     requireNotionSecrets
   );
+  await putSecret(
+    "NOTION_BLOCKS_DATA_SOURCE_ID",
+    wireInputs.notionBlocksDataSourceId,
+    requireNotionSecrets
+  );
 
   return changed;
 }
@@ -830,7 +857,7 @@ function finalize(
     "Notion",
     result.notion.ok ? "ok" : result.notion.skipped ? "warn" : "fail",
     result.notion.ok
-      ? `content ${result.notion.dataSourceId?.slice(0, 8)}… (${result.notion.seeded ?? 0} posts), pages ${result.notion.pagesDataSourceId?.slice(0, 8)}… (${result.notion.pagesSeeded ?? 0} pages)${result.notion.message ? " (" + result.notion.message + ")" : ""}`
+      ? `content ${result.notion.dataSourceId?.slice(0, 8)}… (${result.notion.seeded ?? 0} posts), pages ${result.notion.pagesDataSourceId?.slice(0, 8)}… (${result.notion.pagesSeeded ?? 0} pages), blocks ${result.notion.blocksDataSourceId?.slice(0, 8)}… (${result.notion.blocksSeeded ?? 0} blocks)${result.notion.message ? " (" + result.notion.message + ")" : ""}`
       : result.notion.skipped
         ? "skipped (set NOTION_API_TOKEN or run `ntn login` to auto-create)"
         : (result.notion.message ?? "failed")

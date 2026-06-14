@@ -6,12 +6,12 @@ import handler from "vinext/server/app-router-entry";
 import { createNextionWorker } from "@notionx/core/worker";
 import { authConfig } from "../lib/auth.config";
 import { adminNav } from "../lib/admin/nav";
+import { managedContentSources } from "../lib/content/models";
 import { siteConfig } from "../lib/site/config";
 import { runWithRequestEnv } from "../lib/site/request-env";
-import { {{contentSourceVarName}} } from "../lib/content/models";
 
 const nextion = createNextionWorker({
-  sources: [{{contentSourceVarName}}],
+  sources: [...managedContentSources],
   adminNav,
   authConfig,
   siteConfig: {

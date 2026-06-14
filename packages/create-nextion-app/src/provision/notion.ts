@@ -105,6 +105,7 @@ interface SampleSitePage {
   footerGroup: string;
   footerOrder: number;
   contentSource?: string;
+  blocks?: SamplePageBlockRef[];
   coverSeed: string;
   body: Array<{
     heading: string;
@@ -112,6 +113,65 @@ interface SampleSitePage {
     bullets?: string[];
   }>;
 }
+
+interface SamplePageBlockRef {
+  slug: string;
+  variant?: "hero" | "feature-grid" | "story";
+  order?: number;
+}
+
+interface SampleSiteBlockBase {
+  title: string;
+  slug: string;
+  type: "hero" | "feature-grid" | "story";
+  description: string;
+  pageKeys: string[];
+  order: number;
+  coverSeed: string;
+}
+
+interface SampleHeroBlock extends SampleSiteBlockBase {
+  type: "hero";
+  eyebrow: string;
+  headline: string;
+  subheadline: string;
+  primaryCtaLabel: string;
+  primaryCtaHref: string;
+  secondaryCtaLabel?: string;
+  secondaryCtaHref?: string;
+  alignment: "left" | "center";
+  theme: "default" | "muted" | "inverse";
+}
+
+interface SampleFeatureGridItem {
+  title: string;
+  description: string;
+  icon: string;
+  href?: string;
+}
+
+interface SampleFeatureGridBlock extends SampleSiteBlockBase {
+  type: "feature-grid";
+  headline: string;
+  body: string;
+  columns: 2 | 3 | 4;
+  items: SampleFeatureGridItem[];
+}
+
+interface SampleStoryBlock extends SampleSiteBlockBase {
+  type: "story";
+  headline: string;
+  body: string;
+  quote?: string;
+  quoteAttribution?: string;
+  mediaUrl?: string;
+  layout: "text-left" | "media-left" | "media-right";
+}
+
+type SampleSiteBlock =
+  | SampleHeroBlock
+  | SampleFeatureGridBlock
+  | SampleStoryBlock;
 
 const ENGLISH_SAMPLE_POSTS: SamplePost[] = [
   {
@@ -352,6 +412,10 @@ function sampleSitePages(input: PagesProvisionInput): SampleSitePage[] {
         footerLabel: "首页",
         footerGroup: "站点",
         footerOrder: 0,
+        blocks: [
+          { slug: "home-hero", variant: "hero", order: 10 },
+          { slug: "home-feature-grid", variant: "feature-grid", order: 20 },
+        ],
         coverSeed: "home-page-zh",
         body: [
           {
@@ -388,6 +452,7 @@ function sampleSitePages(input: PagesProvisionInput): SampleSitePage[] {
         footerLabel: "关于",
         footerGroup: "站点",
         footerOrder: 10,
+        blocks: [{ slug: "about-story", variant: "story", order: 10 }],
         coverSeed: "about-page-zh",
         body: [
           {
@@ -473,6 +538,10 @@ function sampleSitePages(input: PagesProvisionInput): SampleSitePage[] {
       footerLabel: "Home",
       footerGroup: "Site",
       footerOrder: 0,
+      blocks: [
+        { slug: "home-hero", variant: "hero", order: 10 },
+        { slug: "home-feature-grid", variant: "feature-grid", order: 20 },
+      ],
       coverSeed: "home-page",
       body: [
         {
@@ -509,6 +578,7 @@ function sampleSitePages(input: PagesProvisionInput): SampleSitePage[] {
       footerLabel: "About",
       footerGroup: "Site",
       footerOrder: 10,
+      blocks: [{ slug: "about-story", variant: "story", order: 10 }],
       coverSeed: "about-page",
       body: [
         {
@@ -570,6 +640,153 @@ function sampleSitePages(input: PagesProvisionInput): SampleSitePage[] {
             "This is placeholder legal copy. Replace it before launch with a policy that matches your product, region, and data handling practices.",
         },
       ],
+    },
+  ];
+}
+
+function sampleBlocks(input: {
+  projectName: string;
+  contentSourceTitle: string;
+  locale?: string;
+}): SampleSiteBlock[] {
+  if (input.locale?.toLowerCase().startsWith("zh")) {
+    return [
+      {
+        title: `${input.projectName} Hero`,
+        slug: "home-hero",
+        type: "hero",
+        description: "首页顶部主视觉区块，适合放标题、副标题与主行动按钮。",
+        pageKeys: ["home"],
+        order: 10,
+        coverSeed: "home-hero-zh",
+        eyebrow: "Notion + Cloudflare",
+        headline: "从一个可以持续编辑的首页开始",
+        subheadline:
+          "把首页的一句话价值、介绍文案和主行动按钮交给 Notion，站点布局继续由代码稳定控制。",
+        primaryCtaLabel: "查看内容列表",
+        primaryCtaHref: "/blog",
+        secondaryCtaLabel: "了解项目",
+        secondaryCtaHref: "/about",
+        alignment: "center",
+        theme: "muted",
+      },
+      {
+        title: "首页功能展示",
+        slug: "home-feature-grid",
+        type: "feature-grid",
+        description: "用于首页中段的功能/能力展示区块。",
+        pageKeys: ["home"],
+        order: 20,
+        coverSeed: "home-feature-grid-zh",
+        headline: "把内容、运行时和发布流程串成一个清晰系统",
+        body: "这个区块默认用三列卡片展示项目能力，适合介绍内容工作流、部署基础设施和持续发布能力。",
+        columns: 3,
+        items: [
+          {
+            title: "内容编辑",
+            description: "让编辑直接在 Notion 中维护页面与内容，不需要改代码。",
+            icon: "pen-square",
+            href: "/about",
+          },
+          {
+            title: "云端运行",
+            description: "基于 Cloudflare Workers、D1 和 KV 提供轻量稳定的运行时能力。",
+            icon: "cloud",
+          },
+          {
+            title: "持续更新",
+            description: `${input.contentSourceTitle} 列表可以持续发布新内容，并自动进入站点路由。`,
+            icon: "newspaper",
+            href: "/blog",
+          },
+        ],
+      },
+      {
+        title: "关于页品牌故事",
+        slug: "about-story",
+        type: "story",
+        description: "适合 About 页面使用的故事型介绍区块。",
+        pageKeys: ["about"],
+        order: 10,
+        coverSeed: "about-story-zh",
+        headline: "讲清楚这个项目为什么存在",
+        body:
+          "这个 story 区块适合承载项目背景、团队工作方式和长期目标，让 About 页面一开始就有一段完整叙事。",
+        quote: "先把结构做稳定，再把编辑权交给内容团队。",
+        quoteAttribution: "默认脚手架设计原则",
+        mediaUrl: "https://picsum.photos/seed/about-story-zh/960/720",
+        layout: "media-right",
+      },
+    ];
+  }
+
+  return [
+    {
+      title: `${input.projectName} Hero`,
+      slug: "home-hero",
+      type: "hero",
+      description: "Homepage hero module for headline, supporting copy, and primary CTA.",
+      pageKeys: ["home"],
+      order: 10,
+      coverSeed: "home-hero",
+      eyebrow: "Notion + Cloudflare",
+      headline: "Start with a homepage you can keep editing",
+      subheadline:
+        "Keep the layout stable in code while the hero copy, positioning, and primary call to action evolve in Notion.",
+      primaryCtaLabel: "Explore the blog",
+      primaryCtaHref: "/blog",
+      secondaryCtaLabel: "Read the story",
+      secondaryCtaHref: "/about",
+      alignment: "center",
+      theme: "muted",
+    },
+    {
+      title: "Homepage Feature Grid",
+      slug: "home-feature-grid",
+      type: "feature-grid",
+      description: "Mid-page feature section for capabilities, benefits, or service pillars.",
+      pageKeys: ["home"],
+      order: 20,
+      coverSeed: "home-feature-grid",
+      headline: "Show the system working together",
+      body:
+        "Use this grid to explain how editing, infrastructure, and publishing fit together without overwhelming the homepage.",
+      columns: 3,
+      items: [
+        {
+          title: "Editorial workflows",
+          description: "Use Notion as the editor for pages, posts, and reusable sections.",
+          icon: "pen-square",
+          href: "/about",
+        },
+        {
+          title: "Cloudflare runtime",
+          description: "Ship on Workers with storage and caching primitives ready to grow.",
+          icon: "cloud",
+        },
+        {
+          title: `${input.contentSourceTitle} updates`,
+          description: "Publish new entries and surface them through the generated routes automatically.",
+          icon: "newspaper",
+          href: "/blog",
+        },
+      ],
+    },
+    {
+      title: "About Story",
+      slug: "about-story",
+      type: "story",
+      description: "Story-led section for the About page.",
+      pageKeys: ["about"],
+      order: 10,
+      coverSeed: "about-story",
+      headline: "Explain why this project exists",
+      body:
+        "Use this reusable story block to introduce the team, the editorial mission, or the thinking behind the site in a stable layout.",
+      quote: "Content should stay editable without turning the app into a page builder.",
+      quoteAttribution: "Starter philosophy",
+      mediaUrl: "https://picsum.photos/seed/about-story/960/720",
+      layout: "media-right",
     },
   ];
 }
@@ -1226,12 +1443,54 @@ function buildPageProperties(): NotionPropertyMap {
     "Footer Group": { select: {} },
     "Footer Order": { number: {} },
     "Content Source": { rich_text: {} },
+    Blocks: { rich_text: {} },
     Cover: { files: {} },
+  };
+}
+
+function buildBlocksProperties(): NotionPropertyMap {
+  return {
+    Name: { title: {} },
+    Slug: { rich_text: {} },
+    Status: { select: {} },
+    Type: { select: {} },
+    Description: { rich_text: {} },
+    "Page Keys": { rich_text: {} },
+    Order: { number: {} },
+    Cover: { files: {} },
+    Eyebrow: { rich_text: {} },
+    Headline: { rich_text: {} },
+    Subheadline: { rich_text: {} },
+    "Primary CTA Label": { rich_text: {} },
+    "Primary CTA Href": { url: {} },
+    "Secondary CTA Label": { rich_text: {} },
+    "Secondary CTA Href": { url: {} },
+    Alignment: { select: {} },
+    Theme: { select: {} },
+    Columns: { number: {} },
+    Items: { rich_text: {} },
+    Body: { rich_text: {} },
+    Quote: { rich_text: {} },
+    "Quote Attribution": { rich_text: {} },
+    "Media Url": { url: {} },
+    Layout: { select: {} },
   };
 }
 
 function richText(content: string) {
   return content ? [{ text: { content } }] : [];
+}
+
+function selectPropertyValue(name?: string) {
+  return name ? { select: { name } } : { select: null };
+}
+
+function urlPropertyValue(url?: string) {
+  return { url: url ?? null };
+}
+
+function numberPropertyValue(value?: number) {
+  return { number: value ?? null };
 }
 
 function buildSitePagePayload(input: {
@@ -1266,6 +1525,9 @@ function buildSitePagePayload(input: {
       "Footer Group": { select: { name: page.footerGroup } },
       "Footer Order": { number: page.footerOrder },
       "Content Source": { rich_text: richText(page.contentSource ?? "") },
+      Blocks: {
+        rich_text: richText(JSON.stringify(page.blocks ?? [])),
+      },
       Cover: {
         files: [
           {
@@ -1299,6 +1561,107 @@ function buildSitePagePayload(input: {
         },
       })),
     ]),
+  };
+}
+
+function buildSiteBlockPayload(input: {
+  databaseId: string;
+  projectName: string;
+  block: SampleSiteBlock;
+}) {
+  const { block, databaseId, projectName } = input;
+  const coverUrl = `https://picsum.photos/seed/${slugify(projectName)}-${block.coverSeed}/1200/600`;
+  return {
+    parent: { type: "database_id", database_id: databaseId },
+    cover: {
+      type: "external",
+      external: { url: coverUrl },
+    },
+    properties: {
+      Name: { title: richText(block.title) },
+      Slug: { rich_text: richText(block.slug) },
+      Status: { select: { name: "Published" } },
+      Type: { select: { name: block.type } },
+      Description: { rich_text: richText(block.description) },
+      "Page Keys": { rich_text: richText(JSON.stringify(block.pageKeys)) },
+      Order: { number: block.order },
+      Eyebrow: {
+        rich_text: richText(block.type === "hero" ? block.eyebrow : ""),
+      },
+      Headline: {
+        rich_text: richText(
+          block.type === "hero" ||
+            block.type === "feature-grid" ||
+            block.type === "story"
+            ? block.headline
+            : ""
+        ),
+      },
+      Subheadline: {
+        rich_text: richText(block.type === "hero" ? block.subheadline : ""),
+      },
+      "Primary CTA Label": {
+        rich_text: richText(
+          block.type === "hero" ? block.primaryCtaLabel : ""
+        ),
+      },
+      "Primary CTA Href": urlPropertyValue(
+        block.type === "hero" ? block.primaryCtaHref : undefined
+      ),
+      "Secondary CTA Label": {
+        rich_text: richText(
+          block.type === "hero" ? block.secondaryCtaLabel ?? "" : ""
+        ),
+      },
+      "Secondary CTA Href": urlPropertyValue(
+        block.type === "hero" ? block.secondaryCtaHref : undefined
+      ),
+      Alignment: selectPropertyValue(
+        block.type === "hero" ? block.alignment : undefined
+      ),
+      Theme: selectPropertyValue(
+        block.type === "hero" ? block.theme : undefined
+      ),
+      Columns: numberPropertyValue(
+        block.type === "feature-grid" ? block.columns : undefined
+      ),
+      Items: {
+        rich_text: richText(
+          block.type === "feature-grid" ? JSON.stringify(block.items) : ""
+        ),
+      },
+      Body: {
+        rich_text: richText(
+          block.type === "feature-grid" || block.type === "story"
+            ? block.body
+            : ""
+        ),
+      },
+      Quote: {
+        rich_text: richText(block.type === "story" ? block.quote ?? "" : ""),
+      },
+      "Quote Attribution": {
+        rich_text: richText(
+          block.type === "story" ? block.quoteAttribution ?? "" : ""
+        ),
+      },
+      "Media Url": urlPropertyValue(
+        block.type === "story" ? block.mediaUrl : undefined
+      ),
+      Layout: selectPropertyValue(
+        block.type === "story" ? block.layout : undefined
+      ),
+      Cover: {
+        files: [
+          {
+            name: `${block.slug}-cover`,
+            type: "external",
+            external: { url: coverUrl },
+          },
+        ],
+      },
+    },
+    children: [],
   };
 }
 
@@ -1517,6 +1880,91 @@ export async function ensurePagesDatabase(
   };
 }
 
+export async function ensureBlocksDatabase(
+  input: PagesProvisionInput
+): Promise<NotionProvisionResult> {
+  const title = `${input.projectName} Blocks`;
+  const stableKey = "blocks:default";
+  const properties = buildBlocksProperties();
+  const existingByStableKey = await findExistingDatabaseByStableKey({
+    apiToken: input.apiToken,
+    parentPageId: input.parentPageId,
+    stableKey,
+  });
+  const existing =
+    existingByStableKey ??
+    (await findExistingDatabaseByTitle({
+      apiToken: input.apiToken,
+      parentPageId: input.parentPageId,
+      title,
+    }));
+
+  if (existing) {
+    await ensureDataSourceProperties({
+      apiToken: input.apiToken,
+      dataSourceId: existing.dataSourceId,
+      desired: properties,
+      title,
+    });
+    if (extractScaffoldKey(existing.description) !== stableKey) {
+      await patchDatabaseDescription({
+        apiToken: input.apiToken,
+        databaseId: existing.databaseId,
+        existingDescription: existing.description,
+        stableKey,
+      });
+    }
+    return {
+      dataSourceId: existing.dataSourceId,
+      databaseId: existing.databaseId,
+      url: existing.url,
+      created: false,
+      seeded: 0,
+    };
+  }
+
+  const { databaseId, dataSourceId, url } = await createDatabaseWithProperties({
+    apiToken: input.apiToken,
+    parentPageId: input.parentPageId,
+    title,
+    properties,
+  });
+  await patchDatabaseDescription({
+    apiToken: input.apiToken,
+    databaseId,
+    existingDescription: "",
+    stableKey,
+  });
+
+  let seeded = 0;
+  for (const block of sampleBlocks(input)) {
+    const body = buildSiteBlockPayload({
+      databaseId,
+      projectName: input.projectName,
+      block,
+    });
+    const result = await runNtn(["api", "v1/pages", "-d", JSON.stringify(body)], {
+      env: { NOTION_API_TOKEN: input.apiToken },
+    });
+    if (result.code === 0) {
+      seeded++;
+    } else {
+      const detail = (result.stderr || result.stdout).trim().slice(0, 500);
+      console.warn(
+        `[notion seed] block "${block.slug}" failed (code ${result.code}): ${detail}`
+      );
+    }
+  }
+
+  return {
+    dataSourceId,
+    databaseId,
+    url,
+    created: true,
+    seeded,
+  };
+}
+
 async function seedPlaceholderPages(
   apiToken: string,
   databaseId: string,
@@ -1579,10 +2027,13 @@ export const _internal = {
   notionPropertyType,
   buildProperties,
   buildPageProperties,
+  buildBlocksProperties,
   buildSitePagePayload,
+  buildSiteBlockPayload,
   resolveTitlePropertyName,
   buildSamplePage,
   sampleSitePages,
+  sampleBlocks,
   samplePostFor,
   buildScaffoldMarker,
   extractScaffoldKey,

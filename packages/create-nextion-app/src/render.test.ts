@@ -108,6 +108,7 @@ describe("template token substitution", () => {
       "NOTION_DATA_SOURCE_ID",
       "NOTION_PAGES_DATA_SOURCE_ID",
       "NOTION_SITE_SETTINGS_DATA_SOURCE_ID",
+      "NOTION_BLOCKS_DATA_SOURCE_ID",
       "RESEND_API_KEY",
       "RESEND_FROM",
       "GOOGLE_CLIENT_ID",
@@ -115,6 +116,98 @@ describe("template token substitution", () => {
     ]) {
       expect(devVarsExample).toMatch(new RegExp(`^${key}=`, "m"));
     }
+  });
+
+  it("renders the first-phase blocks wiring into config and content templates", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-blocks-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "blocks-app",
+        targetDir: outDir,
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const wrangler = await fs.readFile(path.join(outDir, "wrangler.jsonc"), "utf8");
+    expect(wrangler).toContain("NOTION_BLOCKS_DATA_SOURCE_ID");
+
+    const models = await fs.readFile(
+      path.join(outDir, "lib/content/models.ts"),
+      "utf8"
+    );
+    expect(models).toContain('id: "blocks"');
+    expect(models).toContain('dataSourceEnv: "NOTION_BLOCKS_DATA_SOURCE_ID"');
+
+    const pagesSource = await fs.readFile(
+      path.join(outDir, "lib/pages/source.ts"),
+      "utf8"
+    );
+    expect(pagesSource).toContain("getPageBlocks");
+    expect(pagesSource).toContain("structuredBlocks");
+  });
+
+  it("renders typed structured block mapping into lib/pages/source.ts", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-typed-blocks-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "typed-blocks-app",
+        targetDir: outDir,
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const source = await fs.readFile(path.join(outDir, "lib/pages/source.ts"), "utf8");
+    expect(source).toContain('type: "hero"');
+    expect(source).toContain('type: "feature-grid"');
+    expect(source).toContain('type: "story"');
+    expect(source).toContain("primaryCta");
+    expect(source).toContain("fallbackToLegacyNotionBlocks");
+  });
+
+  it("renders dedicated structured block component files", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-page-block-components-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "page-block-components-app",
+        targetDir: outDir,
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const hero = await fs.readFile(
+      path.join(outDir, "components/page-blocks/hero-block.tsx"),
+      "utf8"
+    );
+    const featureGrid = await fs.readFile(
+      path.join(outDir, "components/page-blocks/feature-grid-block.tsx"),
+      "utf8"
+    );
+    const story = await fs.readFile(
+      path.join(outDir, "components/page-blocks/story-block.tsx"),
+      "utf8"
+    );
+
+    expect(hero).toContain("export function HeroBlock");
+    expect(featureGrid).toContain("export function FeatureGridBlock");
+    expect(story).toContain("export function StoryBlock");
   });
 });
 

@@ -143,6 +143,7 @@ describe("sample page builders", () => {
     const properties = _internal.buildPageProperties();
     expect(properties.Name).toEqual({ title: {} });
     expect(properties.Key).toEqual({ rich_text: {} });
+    expect(properties.Blocks).toEqual({ rich_text: {} });
     expect(properties["Show in Nav"]).toEqual({ checkbox: {} });
     expect(properties["Nav Order"]).toEqual({ number: {} });
 
@@ -160,15 +161,105 @@ describe("sample page builders", () => {
       projectName: "Demo",
       page: home,
     });
-    const pageProperties = payload.properties as {
+    const pageProperties = payload.properties as unknown as {
       Key: { rich_text: Array<{ text: { content: string } }> };
       Layout: { select: { name: string } };
+      Blocks: { rich_text: Array<{ text: { content: string } }> };
       "Show Header": { checkbox: boolean };
     };
 
     expect(pageProperties.Key.rich_text[0].text.content).toBe("home");
     expect(pageProperties.Layout.select.name).toBe("home");
+    const blocks = pageProperties.Blocks as {
+      rich_text: Array<{ text: { content: string } }>;
+    };
+    expect(blocks.rich_text[0].text.content).toContain('"slug":"home-hero"');
     expect(pageProperties["Show Header"].checkbox).toBe(true);
+  });
+});
+
+describe("blocks data source builders", () => {
+  it("exposes a dedicated schema and starter rows for reusable page blocks", () => {
+    const helpers = _internal as unknown as {
+      buildBlocksProperties?: () => Record<string, unknown>;
+      sampleBlocks?: (input: {
+        projectName: string;
+        contentSourceTitle: string;
+        locale?: string;
+      }) => Array<{ slug: string; type: string; pageKeys: string[] }>;
+    };
+
+    expect(typeof helpers.buildBlocksProperties).toBe("function");
+    expect(typeof helpers.sampleBlocks).toBe("function");
+
+    const properties = helpers.buildBlocksProperties?.() ?? {};
+    expect(properties.Name).toEqual({ title: {} });
+    expect(properties.Slug).toEqual({ rich_text: {} });
+    expect(properties.Type).toEqual({ select: {} });
+    expect(properties["Page Keys"]).toEqual({ rich_text: {} });
+    expect(properties.Order).toEqual({ number: {} });
+
+    const blocks =
+      helpers.sampleBlocks?.({
+        projectName: "Demo",
+        contentSourceTitle: "Blog",
+        locale: "en",
+      }) ?? [];
+    expect(blocks.map((block) => block.slug)).toEqual(
+      expect.arrayContaining(["home-hero", "home-feature-grid", "about-story"])
+    );
+    expect(blocks.find((block) => block.slug === "home-hero")?.type).toBe("hero");
+    expect(blocks.find((block) => block.slug === "home-hero")?.pageKeys).toContain(
+      "home"
+    );
+  });
+
+  it("builds typed block properties for hero, feature-grid, and story", () => {
+    const properties = _internal.buildBlocksProperties();
+
+    expect(properties.Type).toEqual({ select: {} });
+    expect(properties.Eyebrow).toEqual({ rich_text: {} });
+    expect(properties.Headline).toEqual({ rich_text: {} });
+    expect(properties.Subheadline).toEqual({ rich_text: {} });
+    expect(properties["Primary CTA Label"]).toEqual({ rich_text: {} });
+    expect(properties["Primary CTA Href"]).toEqual({ url: {} });
+    expect(properties["Secondary CTA Label"]).toEqual({ rich_text: {} });
+    expect(properties["Secondary CTA Href"]).toEqual({ url: {} });
+    expect(properties.Alignment).toEqual({ select: {} });
+    expect(properties.Theme).toEqual({ select: {} });
+    expect(properties.Columns).toEqual({ number: {} });
+    expect(properties.Items).toEqual({ rich_text: {} });
+    expect(properties.Body).toEqual({ rich_text: {} });
+    expect(properties.Quote).toEqual({ rich_text: {} });
+    expect(properties["Quote Attribution"]).toEqual({ rich_text: {} });
+    expect(properties["Media Url"]).toEqual({ url: {} });
+    expect(properties.Layout).toEqual({ select: {} });
+  });
+
+  it("seeds hero blocks from structured fields instead of page body content", () => {
+    const [hero] = _internal.sampleBlocks({
+      projectName: "Demo",
+      contentSourceTitle: "Blog",
+      locale: "en",
+    });
+    const payload = _internal.buildSiteBlockPayload({
+      databaseId: "db-id",
+      projectName: "Demo",
+      block: hero,
+    });
+    const properties = payload.properties as unknown as {
+      Type: { select: { name: string } };
+      Headline: { rich_text: Array<{ text: { content: string } }> };
+      "Primary CTA Label": { rich_text: Array<{ text: { content: string } }> };
+      "Primary CTA Href": { url: string };
+      Alignment: { select: { name: string } };
+    };
+
+    expect(properties.Type.select.name).toBe("hero");
+    expect(properties.Headline.rich_text[0]?.text.content).toBeTruthy();
+    expect(properties["Primary CTA Label"].rich_text[0]?.text.content).toBeTruthy();
+    expect(properties["Primary CTA Href"].url).toMatch(/^\//);
+    expect(properties.Alignment.select.name).toBe("center");
   });
 });
 

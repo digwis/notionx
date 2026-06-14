@@ -2,6 +2,12 @@ import type { NotionBlock } from "../notion/types";
 
 export type SitePageLayout = "home" | "default" | "legal" | "content-list";
 
+export type SitePageBlockRef = {
+  slug: string;
+  variant?: string;
+  order?: number;
+};
+
 export type SitePageFields = {
   title: string;
   key: string;
@@ -21,6 +27,7 @@ export type SitePageFields = {
   footerGroup: string;
   footerOrder: string;
   contentSource: string;
+  blocks: string;
   cover: string;
 };
 
@@ -47,6 +54,7 @@ export type SitePage = {
   contentSource: string;
   coverImage: string | null;
   editUrl: string | null;
+  structuredBlocks: SitePageBlockRef[];
   blocks: NotionBlock[];
 };
 
