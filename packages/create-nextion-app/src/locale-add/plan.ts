@@ -88,8 +88,9 @@ export function buildLocaleAddPlan(
     risk: metadata.supportedLocales.includes(locale) ? "conflict" : "safe",
     async apply() {
       const fs = await import("node:fs/promises");
+      const full = `${projectDir}/${metadataPath}`;
       await fs.writeFile(
-        metadataPath,
+        full,
         JSON.stringify(nextMetadata, null, 2) + "\n",
         "utf8"
       );
