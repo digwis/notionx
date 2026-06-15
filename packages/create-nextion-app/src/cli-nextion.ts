@@ -85,6 +85,56 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
     return;
   }
 
+  if (command === "locale" && subcommand === "add") {
+    const localeArg = argv[2];
+    if (!localeArg) {
+      throw new Error(
+        "Usage: nextion locale add <locale> [--apply] [--with-notion] [--copy-from <locale>]"
+      );
+    }
+    const tail = argv.slice(3);
+    const withNotion = tail.includes("--with-notion");
+    const apply = tail.includes("--apply");
+    const copyFromIdx = tail.indexOf("--copy-from");
+    const copyFrom = copyFromIdx >= 0 ? tail[copyFromIdx + 1] : undefined;
+
+    const { validateLocaleAdd } = await import("./locale-add/validate.js");
+    const { buildLocaleAddPlan } = await import("./locale-add/plan.js");
+    const { runLocaleAddPlan } = await import("./locale-add/apply.js");
+    const {
+      logLocaleAddDryRun,
+      logLocaleAddSummary,
+    } = await import("./locale-add/format.js");
+
+    const context = await loadProjectContext(process.cwd());
+    const validation = validateLocaleAdd({
+      locale: localeArg,
+      supportedLocales: context.metadata.supportedLocales,
+      defaultLocale: context.metadata.defaultLocale,
+    });
+    if (!validation.ok) {
+      throw new Error(validation.reason);
+    }
+
+    const plan = buildLocaleAddPlan({
+      projectDir: context.projectDir,
+      metadata: context.metadata,
+      locale: validation.locale,
+      withNotion,
+      copyFrom,
+    });
+    logLocaleAddDryRun(plan);
+
+    if (!apply) {
+      p.log.info("re-run with --apply to write the changes.");
+      return;
+    }
+
+    const summary = await runLocaleAddPlan(plan);
+    logLocaleAddSummary(summary);
+    return;
+  }
+
   throw new Error(
     `Unsupported command: ${[command, subcommand].filter(Boolean).join(" ")}`
   );
