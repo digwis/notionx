@@ -209,6 +209,156 @@ describe("template token substitution", () => {
     expect(featureGrid).toContain("export function FeatureGridBlock");
     expect(story).toContain("export function StoryBlock");
   });
+
+  it("renders three homepage fallback structured blocks with semantic names", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-homepage-fallbacks-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "homepage-fallbacks-app",
+        targetDir: outDir,
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const source = await fs.readFile(path.join(outDir, "lib/pages/source.ts"), "utf8");
+    expect(source).toContain('title: "Homepage Hero"');
+    expect(source).toContain('title: "Homepage Feature Grid"');
+    expect(source).toContain('title: "Homepage Latest Posts"');
+    expect(source).toContain('{ slug: "home-latest-posts", order: 30 }');
+    expect(source).not.toContain('title: "About Story"');
+  });
+
+  it("renders a latest-posts page block component and removes the extra homepage hero copy", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-latest-posts-block-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "latest-posts-block-app",
+        targetDir: outDir,
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const home = await fs.readFile(path.join(outDir, "app/page.tsx"), "utf8");
+    const pageBlocks = await fs.readFile(
+      path.join(outDir, "components/page-blocks.tsx"),
+      "utf8"
+    );
+    const latestPosts = await fs.readFile(
+      path.join(outDir, "components/page-blocks/latest-posts-block.tsx"),
+      "utf8"
+    );
+
+    expect(pageBlocks).toContain("LatestPostsBlock");
+    expect(latestPosts).toContain("export async function LatestPostsBlock");
+    expect(home).not.toContain("Notion Pages + Cloudflare Workers");
+  });
+
+  it("renders a shared post card component for blog grids", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-post-card-grid-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "post-card-grid-app",
+        targetDir: outDir,
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const blogIndex = await fs.readFile(path.join(outDir, "app/blog/page.tsx"), "utf8");
+    const latestPosts = await fs.readFile(
+      path.join(outDir, "components/page-blocks/latest-posts-block.tsx"),
+      "utf8"
+    );
+    const postCard = await fs.readFile(
+      path.join(outDir, "components/content/post-card.tsx"),
+      "utf8"
+    );
+
+    expect(postCard).toContain("export function PostCard");
+    expect(blogIndex).toContain("PostCard");
+    expect(blogIndex).toContain("md:grid-cols-2");
+    expect(blogIndex).toContain("xl:grid-cols-3");
+    expect(latestPosts).toContain("PostCard");
+  });
+
+  it("renders fallback navigation with home, about, and blog defaults", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-nav-defaults-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "nav-defaults-app",
+        targetDir: outDir,
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const siteConfig = await fs.readFile(path.join(outDir, "lib/site/config.ts"), "utf8");
+    const pagesSource = await fs.readFile(path.join(outDir, "lib/pages/source.ts"), "utf8");
+
+    expect(siteConfig).toContain('label: "Home"');
+    expect(siteConfig).toContain('label: "About"');
+    expect(siteConfig).toContain('label: "Blog"');
+    expect(siteConfig).toContain("picsum.photos");
+    expect(pagesSource).toContain('key: "about"');
+    expect(pagesSource).toContain('slug: "about"');
+    expect(pagesSource).toContain('title: "About"');
+    expect(pagesSource).toContain('slug: "privacy"');
+  });
+
+  it("reads runtime site settings in the site header and footer", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-runtime-site-settings-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "runtime-site-settings-app",
+        targetDir: outDir,
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const header = await fs.readFile(
+      path.join(outDir, "components/site/site-header.tsx"),
+      "utf8"
+    );
+    const footer = await fs.readFile(
+      path.join(outDir, "components/site/site-footer.tsx"),
+      "utf8"
+    );
+
+    expect(header).toContain("getSiteSettings");
+    expect(header).toContain("settings.navigation.cta");
+    expect(header).toContain("settings.name");
+    expect(footer).toContain("getSiteSettings");
+    expect(footer).toContain("settings.footer.social");
+    expect(footer).toContain("settings.footer.tagline");
+  });
 });
 
 describe("request-scoped env access (AsyncLocalStorage pattern)", () => {

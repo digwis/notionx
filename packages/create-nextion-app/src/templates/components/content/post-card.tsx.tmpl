@@ -1,0 +1,80 @@
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+type PostCardItem = {
+  title: string;
+  description: string;
+  date: string;
+  tags: string[];
+  coverImage: string | null;
+};
+
+function formatDate(value: string): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+export function PostCard({
+  item,
+  href,
+}: {
+  item: PostCardItem;
+  href: string;
+}) {
+  return (
+    <Link href={href} className="group block h-full">
+      <Card className="h-full overflow-hidden transition-colors group-hover:border-foreground/30">
+        {item.coverImage ? (
+          <div className="relative aspect-[16/9] overflow-hidden bg-muted">
+            <Image
+              src={item.coverImage}
+              alt={item.title}
+              fill
+              sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
+              className="object-cover transition-transform group-hover:scale-[1.02]"
+            />
+          </div>
+        ) : null}
+        <CardHeader>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <time dateTime={item.date}>{formatDate(item.date)}</time>
+            {item.tags.slice(0, 2).map((tag) => (
+              <Badge key={tag} variant="outline">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+          <CardTitle className="line-clamp-2 text-xl group-hover:underline">
+            {item.title}
+          </CardTitle>
+          {item.description ? (
+            <CardDescription className="line-clamp-3">
+              {item.description}
+            </CardDescription>
+          ) : null}
+        </CardHeader>
+        <CardContent>
+          <span className="inline-flex items-center text-sm font-medium text-primary">
+            Read article
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </span>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}

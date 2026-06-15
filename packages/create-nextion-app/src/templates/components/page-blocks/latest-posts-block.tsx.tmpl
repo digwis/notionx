@@ -1,0 +1,59 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { listGenericNotionContent } from "@notionx/core/notion";
+import { {{contentSourceVarName}} } from "@/lib/content/models";
+import { PostCard } from "@/components/content/post-card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import type { StructuredLatestPostsBlock } from "@/lib/pages/source";
+
+export async function LatestPostsBlock({
+  block,
+}: {
+  block: StructuredLatestPostsBlock;
+}) {
+  const items = await listGenericNotionContent({{contentSourceVarName}});
+  const visibleItems = items.slice(0, block.count);
+
+  return (
+    <section className="border-t bg-background">
+      <div className="container mx-auto max-w-6xl px-4 py-14">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-3xl">
+            <Badge variant="secondary">Latest Posts</Badge>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
+              {block.headline}
+            </h2>
+            {block.body ? (
+              <p className="mt-4 text-lg text-muted-foreground">{block.body}</p>
+            ) : null}
+          </div>
+          {block.primaryCta ? (
+            <Button asChild variant="outline">
+              <Link href={block.primaryCta.href}>
+                {block.primaryCta.label}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          ) : null}
+        </div>
+
+        {visibleItems.length ? (
+          <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {visibleItems.map((item) => (
+              <PostCard
+                key={item.pageId}
+                item={item}
+                href={`{{contentSourceListPath}}/${item.slug}`}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-10 rounded-2xl border border-dashed bg-muted/30 px-6 py-12 text-sm text-muted-foreground">
+            Publish a few posts in Notion to turn this homepage block into a live latest-posts grid.
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}

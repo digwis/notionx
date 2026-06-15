@@ -176,6 +176,26 @@ describe("sample page builders", () => {
     expect(blocks.rich_text[0].text.content).toContain('"slug":"home-hero"');
     expect(pageProperties["Show Header"].checkbox).toBe(true);
   });
+
+  it("seeds a semantic homepage with three homepage blocks", () => {
+    const pages = _internal.sampleSitePages({
+      apiToken: "token",
+      parentPageId: "page",
+      projectName: "newpj",
+      contentSourceId: "blog",
+      contentSourceTitle: "Blog",
+      contentSourceListPath: "/blog",
+      locale: "en",
+    });
+
+    const home = pages.find((page) => page.key === "home");
+    expect(home?.title).toBe("Home");
+    expect(home?.blocks).toEqual([
+      { slug: "home-hero", variant: "hero", order: 10 },
+      { slug: "home-feature-grid", variant: "feature-grid", order: 20 },
+      { slug: "home-latest-posts", order: 30 },
+    ]);
+  });
 });
 
 describe("blocks data source builders", () => {
@@ -206,7 +226,7 @@ describe("blocks data source builders", () => {
         locale: "en",
       }) ?? [];
     expect(blocks.map((block) => block.slug)).toEqual(
-      expect.arrayContaining(["home-hero", "home-feature-grid", "about-story"])
+      expect.arrayContaining(["home-hero", "home-feature-grid", "home-latest-posts"])
     );
     expect(blocks.find((block) => block.slug === "home-hero")?.type).toBe("hero");
     expect(blocks.find((block) => block.slug === "home-hero")?.pageKeys).toContain(
@@ -236,6 +256,21 @@ describe("blocks data source builders", () => {
     expect(properties.Layout).toEqual({ select: {} });
   });
 
+  it("seeds semantic homepage blocks and excludes about-story", () => {
+    const blocks = _internal.sampleBlocks({
+      projectName: "newpj",
+      contentSourceTitle: "Blog",
+      locale: "en",
+    });
+
+    expect(blocks.map((block) => block.title)).toEqual([
+      "Homepage Hero",
+      "Homepage Feature Grid",
+      "Homepage Latest Posts",
+    ]);
+    expect(blocks.map((block) => block.slug)).not.toContain("about-story");
+  });
+
   it("seeds hero blocks from structured fields instead of page body content", () => {
     const [hero] = _internal.sampleBlocks({
       projectName: "Demo",
@@ -260,6 +295,44 @@ describe("blocks data source builders", () => {
     expect(properties["Primary CTA Label"].rich_text[0]?.text.content).toBeTruthy();
     expect(properties["Primary CTA Href"].url).toMatch(/^\//);
     expect(properties.Alignment.select.name).toBe("center");
+  });
+});
+
+describe("default content and site settings seeds", () => {
+  it("seeds six published blog posts by default", () => {
+    const helpers = _internal as typeof _internal & {
+      samplePosts?: (locale?: string) => Array<{ slug: string; title: string }>;
+    };
+
+    expect(typeof helpers.samplePosts).toBe("function");
+    const posts = helpers.samplePosts?.("en") ?? [];
+
+    expect(posts).toHaveLength(6);
+    expect(posts.every((post) => Boolean(post.slug))).toBe(true);
+  });
+
+  it("seeds site settings with nav, footer, and icon defaults", () => {
+    const payload = _internal.buildSiteSettingsSeedPage({
+      projectName: "newpj",
+      description: "An editable site",
+      defaultLocale: "en",
+      dataSourceId: "site-settings-ds",
+    });
+    const properties = payload.properties as unknown as {
+      Nav: { rich_text: Array<{ text: { content: string } }> };
+      "Footer Columns": { rich_text: Array<{ text: { content: string } }> };
+      "Social Image": { url: string | null };
+      "OG Image": { url: string | null };
+    };
+
+    expect(properties.Nav.rich_text[0]?.text.content).toContain('"label":"Home"');
+    expect(properties.Nav.rich_text[0]?.text.content).toContain('"label":"About"');
+    expect(properties.Nav.rich_text[0]?.text.content).toContain('"label":"Blog"');
+    expect(properties["Footer Columns"].rich_text[0]?.text.content).toContain(
+      '"label":"Company"'
+    );
+    expect(properties["Social Image"].url).toContain("picsum.photos");
+    expect(properties["OG Image"].url).toContain("picsum.photos");
   });
 });
 

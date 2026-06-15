@@ -93,6 +93,19 @@ export type StructuredStoryBlock = {
   editUrl: string | null;
 };
 
+export type StructuredLatestPostsBlock = {
+  type: "latest-posts";
+  slug: string;
+  title: string;
+  description: string;
+  headline: string;
+  body: string;
+  count: number;
+  primaryCta: BlockCta | null;
+  coverImage: string | null;
+  editUrl: string | null;
+};
+
 export type LegacyStructuredPageBlock = {
   type: "legacy";
   slug: string;
@@ -108,6 +121,7 @@ export type StructuredPageBlock =
   | StructuredHeroBlock
   | StructuredFeatureGridBlock
   | StructuredStoryBlock
+  | StructuredLatestPostsBlock
   | LegacyStructuredPageBlock;
 
 export type SitePage = Omit<BaseSitePage, "structuredBlocks"> & {
@@ -121,14 +135,14 @@ const fallbackStructuredBlocks: Record<
   "home-hero": {
     type: "hero",
     slug: "home-hero",
-    title: "{{projectName}} Hero",
+    title: "Homepage Hero",
     description:
       "Editable hero module seeded into the reusable blocks source for the homepage.",
     eyebrow: "Notion + Cloudflare",
     headline: "Start with a homepage you can keep editing",
     subheadline:
       "Keep the layout stable in code while the hero copy, positioning, and primary call to action evolve in Notion.",
-    primaryCta: { label: "Explore the blog", href: "/{{contentSourceId}}" },
+    primaryCta: { label: "Explore the blog", href: "{{contentSourceListPath}}" },
     secondaryCta: { label: "Read the story", href: "/about" },
     alignment: "center",
     theme: "muted",
@@ -170,19 +184,16 @@ const fallbackStructuredBlocks: Record<
     coverImage: null,
     editUrl: null,
   },
-  "about-story": {
-    type: "story",
-    slug: "about-story",
-    title: "About Story",
-    description: "Story-led reusable section for About-style pages.",
-    headline: "Explain why this project exists",
+  "home-latest-posts": {
+    type: "latest-posts",
+    slug: "home-latest-posts",
+    title: "Homepage Latest Posts",
+    description: "Reusable homepage section for surfacing the latest published posts.",
+    headline: "Read the latest from the blog",
     body:
-      "Use this reusable story block to introduce the team, the editorial mission, or the thinking behind the site in a stable layout.",
-    quote:
-      "Content should stay editable without turning the app into a page builder.",
-    quoteAttribution: "Starter philosophy",
-    mediaUrl: "https://picsum.photos/seed/about-story/960/720",
-    layout: "media-right",
+      "Use this section to prove the content model is working with a grid of recent published posts right on the homepage.",
+    count: 6,
+    primaryCta: { label: "View all posts", href: "{{contentSourceListPath}}" },
     coverImage: null,
     editUrl: null,
   },
@@ -194,20 +205,20 @@ const fallbackPages: BaseSitePage[] = [
     key: "home",
     slug: "",
     href: "/",
-    title: "{{projectName}}",
+    title: "Home",
     description:
       "A Notion-powered site built on @notionx/core, running on Cloudflare Workers with D1, R2, and Cloudflare Images.",
-    seoTitle: "{{projectName}}",
+    seoTitle: "Home",
     seoDescription:
       "A Notion-powered site built on @notionx/core, running on Cloudflare Workers with D1, R2, and Cloudflare Images.",
     layout: "home",
     published: true,
     showHeader: true,
     showFooter: true,
-    showInNav: false,
+    showInNav: true,
     navLabel: "Home",
     navOrder: 0,
-    showInFooter: false,
+    showInFooter: true,
     footerLabel: "Home",
     footerGroup: "Company",
     footerOrder: 0,
@@ -217,8 +228,37 @@ const fallbackPages: BaseSitePage[] = [
     structuredBlocks: [
       { slug: "home-hero", variant: "hero", order: 10 },
       { slug: "home-feature-grid", variant: "feature-grid", order: 20 },
+      { slug: "home-latest-posts", order: 30 },
     ],
     blocks: fallbackBlocks("Configure Notion Pages to edit this homepage from Notion."),
+  },
+  {
+    pageId: "fallback-about",
+    key: "about",
+    slug: "about",
+    href: "/about",
+    title: "About",
+    description:
+      "Use this page to explain the project, the team, or the editorial point of view behind the site.",
+    seoTitle: "About",
+    seoDescription:
+      "Use this page to explain the project, the team, or the editorial point of view behind the site.",
+    layout: "default",
+    published: true,
+    showHeader: true,
+    showFooter: true,
+    showInNav: true,
+    navLabel: "About",
+    navOrder: 10,
+    showInFooter: true,
+    footerLabel: "About",
+    footerGroup: "Company",
+    footerOrder: 10,
+    contentSource: "",
+    coverImage: null,
+    editUrl: null,
+    structuredBlocks: [],
+    blocks: fallbackBlocks("Configure Notion Pages to edit this About page from Notion."),
   },
   {
     pageId: "fallback-blog",
@@ -235,7 +275,7 @@ const fallbackPages: BaseSitePage[] = [
     showFooter: true,
     showInNav: true,
     navLabel: "{{contentSourceNavLabel}}",
-    navOrder: 30,
+    navOrder: 20,
     showInFooter: true,
     footerLabel: "{{contentSourceNavLabel}}",
     footerGroup: "Content",
@@ -245,6 +285,32 @@ const fallbackPages: BaseSitePage[] = [
     editUrl: null,
     structuredBlocks: [],
     blocks: fallbackBlocks("Latest posts from the default Notion content source."),
+  },
+  {
+    pageId: "fallback-privacy",
+    key: "privacy",
+    slug: "privacy",
+    href: "/privacy",
+    title: "Privacy",
+    description: "Publish your privacy policy here once the project is live.",
+    seoTitle: "Privacy",
+    seoDescription: "Publish your privacy policy here once the project is live.",
+    layout: "default",
+    published: true,
+    showHeader: true,
+    showFooter: true,
+    showInNav: false,
+    navLabel: "Privacy",
+    navOrder: 0,
+    showInFooter: true,
+    footerLabel: "Privacy",
+    footerGroup: "Legal",
+    footerOrder: 10,
+    contentSource: "",
+    coverImage: null,
+    editUrl: null,
+    structuredBlocks: [],
+    blocks: fallbackBlocks("Replace this placeholder with your privacy policy in Notion."),
   },
 ];
 
@@ -303,6 +369,11 @@ function normalizeColumns(value: number | null): StructuredFeatureGridBlock["col
 function normalizeLayout(value: string): StructuredStoryBlock["layout"] {
   if (value === "text-left" || value === "media-left") return value;
   return "media-right";
+}
+
+function normalizeCount(value: number | null) {
+  if (typeof value === "number" && value > 0) return Math.min(Math.floor(value), 12);
+  return 6;
 }
 
 function readCta(
@@ -428,6 +499,26 @@ function mapGenericBlockToStructuredBlock(
       quoteAttribution: readString(detail.properties.quoteAttribution),
       mediaUrl: readString(detail.properties.mediaUrl) || null,
       layout: normalizeLayout(readString(detail.properties.layout)),
+      coverImage: detail.coverImage,
+      editUrl: detail.editUrl,
+    };
+  }
+
+  if (type === "latest-posts") {
+    const headline = readString(detail.properties.headline);
+    if (!headline) return fallbackToLegacyNotionBlocks(detail, ref);
+    return {
+      type: "latest-posts",
+      slug: detail.slug,
+      title: detail.title,
+      description: detail.description,
+      headline,
+      body: readString(detail.properties.body),
+      count: normalizeCount(readNumber(detail.properties.count)),
+      primaryCta: readCta(
+        detail.properties.primaryCtaLabel,
+        detail.properties.primaryCtaHref
+      ),
       coverImage: detail.coverImage,
       editUrl: detail.editUrl,
     };

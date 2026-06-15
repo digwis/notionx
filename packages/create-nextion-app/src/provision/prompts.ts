@@ -100,7 +100,7 @@ export async function promptNotion(
   ctx: PromptContext,
   fields: AnswersContentField[],
   preloadedToken?: string,
-  seedCount = 3
+  seedCount = 6
 ): Promise<OptionalNotion | null> {
   if (!ctx.interactive) return null;
   let apiToken = preloadedToken ?? "";
@@ -120,7 +120,7 @@ export async function promptNotion(
       "  1. Create or choose a Notion page.",
       "  2. Add the Notion CLI / integration connection to that page.",
       "  3. Paste the page URL or page id below.",
-      "The scaffolder will create the blog database and 3 realistic sample posts under it.",
+      "The scaffolder will create the blog database and 6 realistic sample posts under it.",
     ].join("\n")
   );
   const parentPageId = await p.text({

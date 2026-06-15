@@ -123,7 +123,7 @@ interface SamplePageBlockRef {
 interface SampleSiteBlockBase {
   title: string;
   slug: string;
-  type: "hero" | "feature-grid" | "story";
+  type: "hero" | "feature-grid" | "story" | "latest-posts";
   description: string;
   pageKeys: string[];
   order: number;
@@ -168,10 +168,20 @@ interface SampleStoryBlock extends SampleSiteBlockBase {
   layout: "text-left" | "media-left" | "media-right";
 }
 
+interface SampleLatestPostsBlock extends SampleSiteBlockBase {
+  type: "latest-posts";
+  headline: string;
+  body: string;
+  count: number;
+  primaryCtaLabel: string;
+  primaryCtaHref: string;
+}
+
 type SampleSiteBlock =
   | SampleHeroBlock
   | SampleFeatureGridBlock
-  | SampleStoryBlock;
+  | SampleStoryBlock
+  | SampleLatestPostsBlock;
 
 const ENGLISH_SAMPLE_POSTS: SamplePost[] = [
   {
@@ -275,6 +285,81 @@ const ENGLISH_SAMPLE_POSTS: SamplePost[] = [
     ],
     closing:
       "That balance gives users editable pages today and a clear path toward richer page modules tomorrow.",
+  },
+  {
+    title: "Turning Starter Content Into a Real Launch Site",
+    slug: "turning-starter-content-into-a-real-launch-site",
+    description:
+      "How to turn generated defaults into a credible launch-ready site without rewriting the whole scaffold.",
+    date: "2026-06-08",
+    tags: ["Launch", "Starter", "Design"],
+    coverSeed: "launch-site",
+    intro:
+      "A scaffold becomes more useful when it already looks believable. The first edits should feel like refinement, not rescue work.",
+    sections: [
+      {
+        heading: "Start with defaults you can trust",
+        body:
+          "Strong starter content gives teams something concrete to react to: rename what matters, keep what works, and replace the placeholders you outgrow.",
+        bullets: [
+          "Use semantic page titles from day one.",
+          "Seed reusable homepage sections that match the UI.",
+          "Make settings visible before customization starts.",
+        ],
+      },
+    ],
+    closing:
+      "Good starter content shortens the distance between installation and a site you would actually show someone.",
+  },
+  {
+    title: "Designing With Reusable Homepage Blocks",
+    slug: "designing-with-reusable-homepage-blocks",
+    description:
+      "Why a homepage should be assembled from named reusable sections instead of route-level one-off copy.",
+    date: "2026-06-10",
+    tags: ["Blocks", "Homepage", "UI"],
+    coverSeed: "homepage-blocks",
+    intro:
+      "Reusable homepage blocks make the starter easier to understand: the content lives in one place, and the layout stays opinionated but editable.",
+    sections: [
+      {
+        heading: "Name blocks by purpose",
+        body:
+          "Homepage Hero, Homepage Feature Grid, and Homepage Latest Posts are easier to edit and reuse than project-name-derived rows.",
+        bullets: [
+          "Keep labels semantic.",
+          "Use stable slugs for page composition.",
+          "Let each block demonstrate one layout idea.",
+        ],
+      },
+    ],
+    closing:
+      "Once the homepage is a composition of reusable blocks, extending it becomes an additive change instead of a rewrite.",
+  },
+  {
+    title: "Making Site Settings Useful On Day One",
+    slug: "making-site-settings-useful-on-day-one",
+    description:
+      "Why navigation, footer, SEO, and image defaults should already be present when the project is first created.",
+    date: "2026-06-12",
+    tags: ["Settings", "SEO", "Navigation"],
+    coverSeed: "site-settings-day-one",
+    intro:
+      "Site settings should not feel like an empty shell. A seeded row helps operators understand what they can change without first reading the code.",
+    sections: [
+      {
+        heading: "Seed the whole frame",
+        body:
+          "Navigation, footer groups, default images, and SEO copy should all exist before the first deploy so the starter looks intentional.",
+        bullets: [
+          "Show Home, About, and Blog consistently.",
+          "Include a visible image URL for social previews.",
+          "Make the footer usable immediately.",
+        ],
+      },
+    ],
+    closing:
+      "A complete settings seed turns the first Notion visit into editing, not troubleshooting.",
   },
 ];
 
@@ -381,20 +466,99 @@ const CHINESE_SAMPLE_POSTS: SamplePost[] = [
     closing:
       "这样用户能立刻编辑页面内容，项目也保留继续长出复杂页面能力的空间。",
   },
+  {
+    title: "把默认内容打磨成一个真正能展示的网站",
+    slug: "starter-content-to-real-launch-site",
+    description:
+      "如何把脚手架初始内容逐步打磨成一个可信、可演示、可继续编辑的网站。",
+    date: "2026-06-08",
+    tags: ["上线", "默认内容", "设计"],
+    coverSeed: "launch-site-zh",
+    intro:
+      "好的脚手架不只是能跑起来，而是应该在第一次打开时就已经像一个完整站点，让后续修改更像打磨而不是补洞。",
+    sections: [
+      {
+        heading: "先把默认体验做完整",
+        body:
+          "首页、导航、设置和文章列表如果一开始就有合理内容，用户就更容易理解系统边界，也更愿意继续往下改。",
+        bullets: [
+          "首页标题使用固定语义名。",
+          "把展示内容集中到可复用区块里。",
+          "让设置项在 Notion 中一打开就可编辑。",
+        ],
+      },
+    ],
+    closing:
+      "当默认内容已经足够可信时，脚手架就不只是起点，而是第一版成品。",
+  },
+  {
+    title: "用可复用首页区块组织默认站点",
+    slug: "reusable-homepage-blocks-for-starter-sites",
+    description:
+      "为什么首页应该由命名清晰的可复用区块组成，而不是写在页面模板里的零散文案。",
+    date: "2026-06-10",
+    tags: ["区块", "首页", "UI"],
+    coverSeed: "homepage-blocks-zh",
+    intro:
+      "当首页 Hero、功能展示和最新文章都来自同一套区块体系时，默认站点更清晰，也更容易被继续扩展。",
+    sections: [
+      {
+        heading: "让区块名称表达用途",
+        body:
+          "像“首页 Hero”“首页功能展示”“首页最新文章”这样的命名，比把项目名拼进去更稳定，也更适合后续重复使用。",
+        bullets: [
+          "名称表达语义而不是品牌名。",
+          "slug 保持稳定，便于页面组合。",
+          "每个区块只负责一种展示模式。",
+        ],
+      },
+    ],
+    closing:
+      "首页一旦被组织成可复用区块，后续新增样式和内容也会更从容。",
+  },
+  {
+    title: "让网站设置从第一天起就真正可用",
+    slug: "site-settings-useful-from-day-one",
+    description:
+      "为什么导航、页脚、SEO 和默认图片应该在项目创建时就已经填好。",
+    date: "2026-06-12",
+    tags: ["设置", "SEO", "导航"],
+    coverSeed: "site-settings-day-one-zh",
+    intro:
+      "网站设置不应该只是一个空白表。预填一行完整设置，能让用户第一次打开 Notion 就理解哪些内容可以直接改。",
+    sections: [
+      {
+        heading: "先把站点框架填起来",
+        body:
+          "导航、页脚分组、默认图片和基础 SEO 文案都应该在首次安装后就已经存在，这样默认站点才像一个完整成品。",
+        bullets: [
+          "首页、关于、博客默认同时出现在导航里。",
+          "社交图与站点图标默认就有可见值。",
+          "页脚第一天就不是空白。",
+        ],
+      },
+    ],
+    closing:
+      "完整的网站设置预设，能把第一次编辑体验从排障变成真正的内容修改。",
+  },
 ];
 
 function samplePostFor(index: number, locale = "en"): SamplePost {
-  const posts = locale.toLowerCase().startsWith("zh")
+  const posts = samplePosts(locale);
+  return posts[(index - 1) % posts.length];
+}
+
+function samplePosts(locale = "en"): SamplePost[] {
+  return locale.toLowerCase().startsWith("zh")
     ? CHINESE_SAMPLE_POSTS
     : ENGLISH_SAMPLE_POSTS;
-  return posts[(index - 1) % posts.length];
 }
 
 function sampleSitePages(input: PagesProvisionInput): SampleSitePage[] {
   if (input.locale?.toLowerCase().startsWith("zh")) {
     return [
       {
-        title: input.projectName,
+        title: "首页",
         key: "home",
         slug: "",
         layout: "home",
@@ -415,6 +579,7 @@ function sampleSitePages(input: PagesProvisionInput): SampleSitePage[] {
         blocks: [
           { slug: "home-hero", variant: "hero", order: 10 },
           { slug: "home-feature-grid", variant: "feature-grid", order: 20 },
+          { slug: "home-latest-posts", order: 30 },
         ],
         coverSeed: "home-page-zh",
         body: [
@@ -452,7 +617,6 @@ function sampleSitePages(input: PagesProvisionInput): SampleSitePage[] {
         footerLabel: "关于",
         footerGroup: "站点",
         footerOrder: 10,
-        blocks: [{ slug: "about-story", variant: "story", order: 10 }],
         coverSeed: "about-page-zh",
         body: [
           {
@@ -520,7 +684,7 @@ function sampleSitePages(input: PagesProvisionInput): SampleSitePage[] {
 
   return [
     {
-      title: input.projectName,
+      title: "Home",
       key: "home",
       slug: "",
       layout: "home",
@@ -541,6 +705,7 @@ function sampleSitePages(input: PagesProvisionInput): SampleSitePage[] {
       blocks: [
         { slug: "home-hero", variant: "hero", order: 10 },
         { slug: "home-feature-grid", variant: "feature-grid", order: 20 },
+        { slug: "home-latest-posts", order: 30 },
       ],
       coverSeed: "home-page",
       body: [
@@ -578,7 +743,6 @@ function sampleSitePages(input: PagesProvisionInput): SampleSitePage[] {
       footerLabel: "About",
       footerGroup: "Site",
       footerOrder: 10,
-      blocks: [{ slug: "about-story", variant: "story", order: 10 }],
       coverSeed: "about-page",
       body: [
         {
@@ -652,7 +816,7 @@ function sampleBlocks(input: {
   if (input.locale?.toLowerCase().startsWith("zh")) {
     return [
       {
-        title: `${input.projectName} Hero`,
+        title: "首页 Hero",
         slug: "home-hero",
         type: "hero",
         description: "首页顶部主视觉区块，适合放标题、副标题与主行动按钮。",
@@ -702,27 +866,25 @@ function sampleBlocks(input: {
         ],
       },
       {
-        title: "关于页品牌故事",
-        slug: "about-story",
-        type: "story",
-        description: "适合 About 页面使用的故事型介绍区块。",
-        pageKeys: ["about"],
-        order: 10,
-        coverSeed: "about-story-zh",
-        headline: "讲清楚这个项目为什么存在",
-        body:
-          "这个 story 区块适合承载项目背景、团队工作方式和长期目标，让 About 页面一开始就有一段完整叙事。",
-        quote: "先把结构做稳定，再把编辑权交给内容团队。",
-        quoteAttribution: "默认脚手架设计原则",
-        mediaUrl: "https://picsum.photos/seed/about-story-zh/960/720",
-        layout: "media-right",
+        title: "首页最新文章",
+        slug: "home-latest-posts",
+        type: "latest-posts",
+        description: "在首页展示最近发布内容的文章卡片区块。",
+        pageKeys: ["home"],
+        order: 30,
+        coverSeed: "home-latest-posts-zh",
+        headline: "看看最近更新了什么",
+        body: "默认展示最新发布的 6 篇内容，既能丰富首页，也能直接验证博客内容链路是否生效。",
+        count: 6,
+        primaryCtaLabel: "查看全部文章",
+        primaryCtaHref: "/blog",
       },
     ];
   }
 
   return [
     {
-      title: `${input.projectName} Hero`,
+      title: "Homepage Hero",
       slug: "home-hero",
       type: "hero",
       description: "Homepage hero module for headline, supporting copy, and primary CTA.",
@@ -773,20 +935,19 @@ function sampleBlocks(input: {
       ],
     },
     {
-      title: "About Story",
-      slug: "about-story",
-      type: "story",
-      description: "Story-led section for the About page.",
-      pageKeys: ["about"],
-      order: 10,
-      coverSeed: "about-story",
-      headline: "Explain why this project exists",
+      title: "Homepage Latest Posts",
+      slug: "home-latest-posts",
+      type: "latest-posts",
+      description: "Homepage latest-posts block for previewing the newest published content.",
+      pageKeys: ["home"],
+      order: 30,
+      coverSeed: "home-latest-posts",
+      headline: "Read the latest from the blog",
       body:
-        "Use this reusable story block to introduce the team, the editorial mission, or the thinking behind the site in a stable layout.",
-      quote: "Content should stay editable without turning the app into a page builder.",
-      quoteAttribution: "Starter philosophy",
-      mediaUrl: "https://picsum.photos/seed/about-story/960/720",
-      layout: "media-right",
+        "Use this section to prove the content model is working with a grid of recent published posts right on the homepage.",
+      count: 6,
+      primaryCtaLabel: "View all posts",
+      primaryCtaHref: "/blog",
     },
   ];
 }
@@ -1468,6 +1629,7 @@ function buildBlocksProperties(): NotionPropertyMap {
     Alignment: { select: {} },
     Theme: { select: {} },
     Columns: { number: {} },
+    Count: { number: {} },
     Items: { rich_text: {} },
     Body: { rich_text: {} },
     Quote: { rich_text: {} },
@@ -1592,7 +1754,8 @@ function buildSiteBlockPayload(input: {
         rich_text: richText(
           block.type === "hero" ||
             block.type === "feature-grid" ||
-            block.type === "story"
+            block.type === "story" ||
+            block.type === "latest-posts"
             ? block.headline
             : ""
         ),
@@ -1602,11 +1765,19 @@ function buildSiteBlockPayload(input: {
       },
       "Primary CTA Label": {
         rich_text: richText(
-          block.type === "hero" ? block.primaryCtaLabel : ""
+          block.type === "hero"
+            ? block.primaryCtaLabel
+            : block.type === "latest-posts"
+              ? block.primaryCtaLabel
+              : ""
         ),
       },
       "Primary CTA Href": urlPropertyValue(
-        block.type === "hero" ? block.primaryCtaHref : undefined
+        block.type === "hero"
+          ? block.primaryCtaHref
+          : block.type === "latest-posts"
+            ? block.primaryCtaHref
+            : undefined
       ),
       "Secondary CTA Label": {
         rich_text: richText(
@@ -1625,6 +1796,9 @@ function buildSiteBlockPayload(input: {
       Columns: numberPropertyValue(
         block.type === "feature-grid" ? block.columns : undefined
       ),
+      Count: numberPropertyValue(
+        block.type === "latest-posts" ? block.count : undefined
+      ),
       Items: {
         rich_text: richText(
           block.type === "feature-grid" ? JSON.stringify(block.items) : ""
@@ -1632,7 +1806,9 @@ function buildSiteBlockPayload(input: {
       },
       Body: {
         rich_text: richText(
-          block.type === "feature-grid" || block.type === "story"
+          block.type === "feature-grid" ||
+            block.type === "story" ||
+            block.type === "latest-posts"
             ? block.body
             : ""
         ),
@@ -2035,6 +2211,7 @@ export const _internal = {
   sampleSitePages,
   sampleBlocks,
   samplePostFor,
+  samplePosts,
   buildScaffoldMarker,
   extractScaffoldKey,
   mergeDescriptionWithScaffoldMarker,
@@ -2147,9 +2324,29 @@ export function buildSiteSettingsSeedPage(input: {
 }) {
   const defaultNav = JSON.stringify([
     { label: "Home", href: "/" },
+    { label: "About", href: "/about" },
     { label: "Blog", href: "/blog" },
   ]);
+  const defaultFooterColumns = JSON.stringify([
+    {
+      label: "Company",
+      items: [
+        { label: "Home", href: "/" },
+        { label: "About", href: "/about" },
+      ],
+    },
+    {
+      label: "Content",
+      items: [{ label: "Blog", href: "/blog" }],
+    },
+    {
+      label: "Legal",
+      items: [{ label: "Privacy", href: "/privacy" }],
+    },
+  ]);
   const footerCopyright = `© ${new Date().getFullYear()} ${input.projectName}`;
+  const socialImageUrl = `https://picsum.photos/seed/${slugify(input.projectName)}-social/1200/630`;
+  const tagline = `${input.projectName} on Notion and Cloudflare`;
   return {
     parent: { type: "data_source_id", data_source_id: input.dataSourceId },
     properties: {
@@ -2157,7 +2354,7 @@ export function buildSiteSettingsSeedPage(input: {
         title: [{ text: { content: input.projectName } }],
       },
       Tagline: {
-        rich_text: [{ text: { content: input.projectName } }],
+        rich_text: [{ text: { content: tagline } }],
       },
       Description: {
         rich_text: [{ text: { content: input.description } }],
@@ -2171,7 +2368,8 @@ export function buildSiteSettingsSeedPage(input: {
       "Meta Description": {
         rich_text: [{ text: { content: input.description } }],
       },
-      "OG Image": { url: null },
+      "Social Image": { url: socialImageUrl },
+      "OG Image": { url: socialImageUrl },
       Nav: {
         rich_text: [{ text: { content: defaultNav } }],
       },
@@ -2180,7 +2378,7 @@ export function buildSiteSettingsSeedPage(input: {
       "Accent Color": { select: { name: "blue" } },
       "Font Family": { select: { name: "inter" } },
       "Footer Columns": {
-        rich_text: [{ text: { content: "[]" } }],
+        rich_text: [{ text: { content: defaultFooterColumns } }],
       },
       "Footer Copyright": {
         rich_text: [{ text: { content: footerCopyright } }],
@@ -2188,7 +2386,9 @@ export function buildSiteSettingsSeedPage(input: {
       "Footer Social Links": {
         rich_text: [{ text: { content: "[]" } }],
       },
-      "Footer Tagline": { rich_text: [] },
+      "Footer Tagline": {
+        rich_text: [{ text: { content: tagline } }],
+      },
     },
   };
 }

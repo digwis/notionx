@@ -22,10 +22,12 @@ export const fallbackSiteConfig = {
   name: "{{projectName}}",
   description:
     "A Notion-powered site built on @notionx/core, running on Cloudflare Workers with D1, R2, and Cloudflare Images.",
-  tagline: "{{projectName}}",
+  tagline: "{{projectName}} on Notion and Cloudflare",
   defaultLocale: "{{defaultLocale}}",
-  socialImageUrl: null as string | null,
-  ogImageUrl: null as string | null,
+  socialImageUrl:
+    "https://picsum.photos/seed/{{projectName}}-social/1200/630" as string | null,
+  ogImageUrl:
+    "https://picsum.photos/seed/{{projectName}}-social/1200/630" as string | null,
   locales: {{supportedLocalesJson}},
   seo: {
     title: "{{projectName}}",
@@ -35,7 +37,17 @@ export const fallbackSiteConfig = {
   navigation: {
     main: [
       {
-        label: "{{contentSourceNavLabel}}",
+        label: "Home",
+        href: "/",
+        modelId: "home",
+      },
+      {
+        label: "About",
+        href: "/about",
+        modelId: "about",
+      },
+      {
+        label: "Blog",
         href: "{{contentSourceListPath}}",
         modelId: "{{contentSourceId}}",
       },
@@ -65,12 +77,28 @@ export const fallbackSiteConfig = {
     font: "inter" as "inter" | "geist" | "system",
   },
   footer: {
-    columns: [] as Array<{
+    columns: [
+      {
+        label: "Company",
+        items: [
+          { label: "Home", href: "/" },
+          { label: "About", href: "/about" },
+        ],
+      },
+      {
+        label: "Content",
+        items: [{ label: "Blog", href: "{{contentSourceListPath}}" }],
+      },
+      {
+        label: "Legal",
+        items: [{ label: "Privacy", href: "/privacy" }],
+      },
+    ] as Array<{
       label: string;
       items: Array<{ label: string; href: string }>;
     }>,
     social: [] as Array<{ label: string; href: string }>,
-    tagline: "",
+    tagline: "{{projectName}} on Notion and Cloudflare",
     copyright: `© ${new Date().getFullYear()} {{projectName}}`,
   },
   primarySourceId: "{{contentSourceId}}",

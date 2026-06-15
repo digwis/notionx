@@ -17,6 +17,10 @@ const baseAnswers: Answers = {
 };
 
 describe("scaffold metadata", () => {
+  it("uses six Notion seed posts by default", () => {
+    expect(DEFAULT_ANSWERS.notionSeedCount).toBe(6);
+  });
+
   it("builds stable metadata from scaffold answers", () => {
     const metadata = buildScaffoldMetadata(baseAnswers, "0.4.10");
     expect(metadata.scaffoldVersion).toBe("0.4.10");

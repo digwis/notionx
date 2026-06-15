@@ -116,7 +116,7 @@ export const DEFAULT_ANSWERS: Omit<
   adminEmail: "admin@example.com",
   adminPassword: "ChangeMe1234",
   notionParentPage: "",
-  notionSeedCount: 3,
+  notionSeedCount: 6,
   // Site-level config lives in a separate Notion data source by
   // default. The generated project reads site name / tagline /
   // description / default locale / social image from there, with

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { siteConfig } from "@/lib/site/config";
 import { getSiteFooterGroups } from "@/lib/pages/source";
+import { getSiteSettings } from "@/lib/site/settings";
 
 type FooterColumn = {
   label: string;
@@ -9,10 +9,17 @@ type FooterColumn = {
 type SocialLink = { label: string; href: string };
 
 export async function SiteFooter() {
-  const groups = (await getSiteFooterGroups()) as FooterColumn[];
-  const social = siteConfig.footer.social as SocialLink[];
-  const tagline = siteConfig.footer.tagline || siteConfig.description;
-  const copyright = siteConfig.footer.copyright;
+  const [pageGroups, settings] = await Promise.all([
+    getSiteFooterGroups() as Promise<FooterColumn[]>,
+    getSiteSettings(),
+  ]);
+  const groups =
+    pageGroups.length > 0
+      ? pageGroups
+      : (settings.footer.columns as unknown as FooterColumn[]);
+  const social = settings.footer.social as SocialLink[];
+  const tagline = settings.footer.tagline || settings.description;
+  const copyright = settings.footer.copyright;
 
   // No columns → single-line copyright layout.
   if (groups.length === 0) {
@@ -44,7 +51,7 @@ export async function SiteFooter() {
       <div className="container mx-auto grid gap-8 px-4 py-10 md:grid-cols-[1.5fr_2fr]">
         <div>
           <Link href="/" className="font-semibold tracking-tight">
-            {siteConfig.name}
+            {settings.name}
           </Link>
           {tagline ? (
             <p className="mt-2 max-w-sm text-sm text-muted-foreground">

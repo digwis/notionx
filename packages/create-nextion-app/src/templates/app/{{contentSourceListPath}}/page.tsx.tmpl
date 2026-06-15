@@ -3,12 +3,10 @@
 // SEO copy, nav placement, and shell visibility can be edited through
 // the Notion-backed Pages model.
 
-import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { listGenericNotionContent } from "@notionx/core/notion";
+import { PostCard } from "@/components/content/post-card";
 import { {{contentSourceVarName}} } from "@/lib/content/models";
-import { Badge } from "@/components/ui/badge";
 import { SiteShell } from "@/components/site/site-shell";
 import { getSitePageForContentSource } from "@/lib/pages/source";
 
@@ -21,17 +19,6 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       page?.seoDescription || page?.description || "{{contentSourceListDescription}}",
   };
-}
-
-function formatDate(value: string): string {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 }
 
 export default async function {{contentSourceConstName}}Page() {
@@ -74,50 +61,10 @@ export default async function {{contentSourceConstName}}Page() {
           <p className="text-muted-foreground">{description}</p>
         </header>
 
-        <ul className="grid gap-6">
+        <ul className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => (
             <li key={item.pageId}>
-              <Link
-                href={`{{contentSourceListPath}}/${item.slug}`}
-                className="group block overflow-hidden rounded-lg border bg-card transition-colors hover:border-foreground/30"
-              >
-                {item.coverImage ? (
-                  <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
-                    <Image
-                      src={item.coverImage}
-                      alt={item.title}
-                      fill
-                      sizes="(min-width: 768px) 768px, 100vw"
-                      className="object-cover transition-transform group-hover:scale-[1.02]"
-                    />
-                  </div>
-                ) : null}
-                <div className="space-y-3 p-6">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <time dateTime={item.date}>{formatDate(item.date)}</time>
-                    {item.tags.length > 0 ? (
-                      <>
-                        <span aria-hidden>·</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {item.tags.map((tag) => (
-                            <Badge key={tag} variant="secondary">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      </>
-                    ) : null}
-                  </div>
-                  <h2 className="text-2xl font-semibold tracking-tight group-hover:underline">
-                    {item.title}
-                  </h2>
-                  {item.description ? (
-                    <p className="line-clamp-3 text-sm text-muted-foreground">
-                      {item.description}
-                    </p>
-                  ) : null}
-                </div>
-              </Link>
+              <PostCard item={item} href={`{{contentSourceListPath}}/${item.slug}`} />
             </li>
           ))}
         </ul>
