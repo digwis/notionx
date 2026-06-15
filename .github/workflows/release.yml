@@ -1,6 +1,7 @@
 name: release
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -115,7 +116,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure npm auth
-        if: steps.pending_changesets.outputs.has_changesets == 'true'
+        if: steps.pending_changesets.outputs.has_changesets == 'true' || github.event_name == 'workflow_dispatch'
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
@@ -135,5 +136,5 @@ jobs:
           echo "Auth configured in ~/.npmrc (token length: ${#TOKEN})."
 
       - name: Publish packages
-        if: steps.pending_changesets.outputs.has_changesets == 'true'
+        if: steps.pending_changesets.outputs.has_changesets == 'true' || github.event_name == 'workflow_dispatch'
         run: node scripts/publish-packages.mjs
