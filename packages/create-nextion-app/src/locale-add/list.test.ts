@@ -1,7 +1,7 @@
 // packages/create-nextion-app/src/locale-add/list.test.ts
 import { describe, expect, it } from "vitest";
-import { buildLocaleListView } from "../../src/locale-add/list";
-import type { ScaffoldMetadata } from "../../src/metadata";
+import { buildLocaleListView } from "../../src/locale-add/list.js";
+import type { ScaffoldMetadata } from "../../src/metadata.js";
 
 const metadata: ScaffoldMetadata = {
   projectKind: "nextion",

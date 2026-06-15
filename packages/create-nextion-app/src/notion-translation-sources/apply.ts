@@ -26,17 +26,14 @@ export async function applyNotionTranslationSources(
       continue;
     }
     try {
-      const cli = await runNtn(
-        [
-          "databases",
-          "create",
-          "--parent",
-          plan.parentPageId,
-          "--title",
-          titleFor(plan.modelId),
-        ],
-        { allowFailure: true }
-      );
+      const cli = await runNtn([
+        "databases",
+        "create",
+        "--parent",
+        plan.parentPageId,
+        "--title",
+        titleFor(plan.modelId),
+      ]);
       if (cli.code !== 0) {
         result.failures.push({
           modelId: plan.modelId,
