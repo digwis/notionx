@@ -5,7 +5,11 @@
 // same `defineX` / `getRegisteredX` pattern. Re-registering the same
 // id replaces the prior value, which keeps HMR + tests deterministic.
 
-import type { LocaleContract } from "./contract";
+import type {
+  FieldMap,
+  LocaleContract,
+  LocaleFallbackRule,
+} from "./contract";
 
 const registry: LocaleContract[] = [];
 
@@ -19,7 +23,7 @@ export function defineLocalizedContentSource(
 }
 
 export function getRegisteredLocalizedSource(
-  id: LocaleContract["id"]
+  id: string
 ): LocaleContract | undefined {
   return registry.find((c) => c.id === id);
 }
@@ -30,4 +34,38 @@ export function getLocalizedContracts(): readonly LocaleContract[] {
 
 export function clearLocalizedRegistryForTests(): void {
   registry.length = 0;
+}
+
+/**
+ * Register a custom locale contract for a non-built-in model (for
+ * example `products`, `events`, `recipes`). The contract is added to
+ * the same registry the four built-in models use, so the LocaleSwitcher
+ * and the path helpers pick it up automatically.
+ *
+ * The `id` is widened to `string` at the boundary so user code can
+ * register any model. Built-in ids are still typed via the
+ * `BuiltInLocaleContractId` literal union for the four shipped
+ * contracts.
+ */
+export function defineLocaleContract(input: {
+  id: string;
+  baseSourceName: string;
+  translationSourceName: string;
+  listPath: string;
+  baseFields: FieldMap;
+  translationFields: FieldMap;
+  fallback?: LocaleFallbackRule;
+  detailParam?: string;
+}): LocaleContract {
+  const contract: LocaleContract = {
+    id: input.id,
+    baseSourceName: input.baseSourceName,
+    translationSourceName: input.translationSourceName,
+    listPath: input.listPath,
+    baseFields: input.baseFields,
+    translationFields: input.translationFields,
+    fallback: input.fallback ?? "default-locale",
+    detailParam: input.detailParam ?? "slug",
+  };
+  return defineLocalizedContentSource(contract);
 }

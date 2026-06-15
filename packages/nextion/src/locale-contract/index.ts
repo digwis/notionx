@@ -7,6 +7,7 @@
 export * from "./contract";
 export * from "./built-in";
 export * from "./define";
+export { defineLocaleContract } from "./define";
 export * from "./lookup";
 export * from "./paths";
 export * from "./locale-switcher";

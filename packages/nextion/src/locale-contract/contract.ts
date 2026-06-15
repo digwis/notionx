@@ -13,9 +13,20 @@ export type LocaleFallbackRule =
 
 export type FieldMap = Record<string, string>;
 
+/** Built-in locale contract ids. The four core models use these. */
+export type BuiltInLocaleContractId =
+  | "blog"
+  | "pages"
+  | "blocks"
+  | "site-settings";
+
 export type LocaleContract = {
-  /** Stable identifier; matches the registered content-source id. */
-  id: "blog" | "pages" | "blocks" | "site-settings";
+  /**
+   * Stable identifier. Built-in models use a `BuiltInLocaleContractId`
+   * literal; user code can register custom contracts with any string
+   * via `defineLocaleContract`.
+   */
+  id: BuiltInLocaleContractId | (string & {});
   /** Notion data source name for the base side. */
   baseSourceName: string;
   /** Notion data source name for the translation side. */
@@ -32,9 +43,9 @@ export type LocaleContract = {
   detailParam: string;
 };
 
-export function isLocaleContractId(
+export function isBuiltInLocaleContractId(
   value: string
-): value is LocaleContract["id"] {
+): value is BuiltInLocaleContractId {
   return (
     value === "blog" ||
     value === "pages" ||
@@ -42,3 +53,9 @@ export function isLocaleContractId(
     value === "site-settings"
   );
 }
+
+/**
+ * @deprecated kept for backward compatibility. Prefer
+ * `isBuiltInLocaleContractId` for the same check.
+ */
+export const isLocaleContractId = isBuiltInLocaleContractId;
