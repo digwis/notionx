@@ -135,6 +135,30 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
     return;
   }
 
+  if (command === "locale" && subcommand === "list") {
+    const { loadProjectContext } = await import("./project-context.js");
+    const { buildLocaleListView } = await import("./locale-add/list.js");
+    const context = await loadProjectContext(process.cwd());
+    const view = buildLocaleListView({ metadata: context.metadata });
+    p.log.info(`default locale: ${context.metadata.defaultLocale}`);
+    for (const row of view.rows) {
+      const tag = row.isDefault ? " (default)" : "";
+      p.log.info(`  - ${row.locale}${tag}`);
+      for (const ts of row.translationSources) {
+        const mark = ts.configured ? "✓" : "·";
+        p.log.info(`      [${mark}] ${ts.modelId} → ${ts.envVar}`);
+      }
+    }
+    return;
+  }
+
+  if (command === "locale" && !subcommand) {
+    p.log.info("Usage: npx nextion locale <add|list> ...");
+    p.log.info("  add <locale> [--apply] [--with-notion] [--copy-from <locale>]");
+    p.log.info("  list");
+    return;
+  }
+
   throw new Error(
     `Unsupported command: ${[command, subcommand].filter(Boolean).join(" ")}`
   );
