@@ -41,6 +41,18 @@ export interface ScaffoldMetadata {
    * skip files that they otherwise would have flagged.
    */
   extras?: Record<string, unknown>;
+  /**
+   * Maps a built-in translation source name (or content source id)
+   * to the Notion data source that holds its locale-specific rows.
+   * The scaffolder never writes or rewrites this block on a normal
+   * update run; the `nextion locale add` command manages it.
+   */
+  translationSources?: Record<string, TranslationSourceRef>;
+}
+
+export interface TranslationSourceRef {
+  dataSourceId: string;
+  envVar: string;
 }
 
 export function buildScaffoldMetadata(
@@ -63,6 +75,7 @@ export function buildScaffoldMetadata(
         notionName: field.notionName,
       })),
     },
+    translationSources: {},
   };
 }
 
