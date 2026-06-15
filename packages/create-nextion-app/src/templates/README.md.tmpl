@@ -49,6 +49,26 @@ A single-language project can keep both values to the same locale. If you later
 add translations, keep the original `defaultLocale` and add new entries to
 `locales`.
 
+## Multilingual foundation
+
+This project ships with a built-in multilingual foundation that covers the four core models:
+
+- `blog` — base + `blog-translations`
+- `pages` — base + `page-translations`
+- `blocks` — base + `block-translations`
+- `site settings` — base + `site-settings-translations`
+
+The runtime helpers live under `lib/i18n/` and `lib/locale-contract/`. The contracts are imported from `@notionx/core` and pinned in `lib/locale-contract/built-in.ts`.
+
+Fallback rules per model:
+
+- `blog` — missing translations are hidden from the list
+- `pages` — missing translations are treated as "page does not exist in this locale"
+- `blocks` — missing translations fall back to the default-locale copy
+- `site settings` — missing translations fall back to the default-locale copy
+
+The header renders a `LocaleSwitcher` automatically when more than one locale is configured. Adding a new locale to an existing project is a separate `nextion locale add <locale>` workflow.
+
 ## Notion-backed pages
 
 The starter has two Notion concepts:
@@ -148,10 +168,17 @@ pnpm exec wrangler r2 bucket create {{projectNameLower}}-assets
 - `app/login/page.tsx` — email/password login wired to `authConfig`
 - `lib/auth.config.ts` — `AuthConfig` consumed by `createAuth`
 - `lib/admin/nav.ts` — sidebar items for `/admin/*`
+- `lib/i18n/config.ts` — project locale config + `isAppLocale` guard
+- `lib/locale-contract/*` — built-in locale contracts, path helpers, and the LocaleSwitcher contract surface
+- `lib/blog/translations.ts` — blog translation lookup helpers
+- `lib/pages/translations.ts` — pages translation lookup helpers
+- `lib/blocks/translations.ts` — blocks translation lookup helpers
+- `lib/site/translations.ts` — site-settings translation lookup helpers
 - `lib/site/config.ts` — static fallback values for site-level config
 - `lib/site/settings.ts` — Notion-backed loader for the same config (KV-cached, 5 min TTL)
 - `lib/pages/*` — Notion-backed Pages model, mapper, navigation, and footer helpers
 - `lib/content/models.ts` — Notion-backed content sources: `{{contentSourceId}}` + `site-settings` (singleton)
+- `components/site/locale-switcher.tsx` — default `LocaleSwitcher` UI
 - `worker/index.ts` — `createNextionWorker` + vinext fallthrough
 - `migrations/0001_init.sql` — nextion auth schema (users, app_settings, auth_rate_limits)
 - `wrangler.jsonc` — D1 + KV + R2 + Images + Assets bindings

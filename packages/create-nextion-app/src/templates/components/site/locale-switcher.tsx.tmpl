@@ -1,0 +1,65 @@
+// Default `LocaleSwitcher` for the four built-in starter models.
+// Renders one link per supported locale, following the locale-switcher
+// rule from the design:
+//
+//   - link to the same model's translated detail when one exists
+//   - fall back to the localized list when a detail is missing
+//
+// The component is intentionally a server component: the link list
+// is computed from the request URL and the supported locales — no
+// client state needed.
+
+import Link from "next/link";
+import { i18n, isAppLocale } from "@/lib/i18n";
+import {
+  buildLocaleSwitcherLinks,
+  type LocaleSwitcherTranslation,
+} from "@notionx/core";
+import { blogContract } from "@/lib/locale-contract";
+
+type Props = {
+  currentLocale: string;
+  currentSlug?: string;
+  translations?: readonly LocaleSwitcherTranslation[];
+};
+
+export function LocaleSwitcher({
+  currentLocale,
+  currentSlug,
+  translations = [],
+}: Props) {
+  if (i18n.supportedLocales.length < 2) return null;
+  if (!isAppLocale(currentLocale)) return null;
+
+  const links = currentSlug
+    ? buildLocaleSwitcherLinks({
+        contract: blogContract,
+        currentLocale,
+        defaultLocale: i18n.defaultLocale,
+        currentSlug,
+        supportedLocales: i18n.supportedLocales,
+        translations,
+      })
+    : i18n.supportedLocales.map((locale) => ({
+        locale,
+        href:
+          locale === i18n.defaultLocale
+            ? blogContract.listPath
+            : `/${locale}${blogContract.listPath}`,
+      }));
+
+  return (
+    <nav aria-label="Language" className="flex items-center gap-2 text-sm">
+      {links.map((link) => (
+        <Link
+          key={link.locale}
+          href={link.href}
+          aria-current={link.locale === currentLocale ? "true" : undefined}
+          className="rounded px-2 py-1 hover:bg-muted"
+        >
+          {link.locale}
+        </Link>
+      ))}
+    </nav>
+  );
+}
