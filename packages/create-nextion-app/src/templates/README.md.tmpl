@@ -69,6 +69,18 @@ Fallback rules per model:
 
 The header renders a `LocaleSwitcher` automatically when more than one locale is configured. Adding a new locale to an existing project is a separate `nextion locale add <locale>` workflow.
 
+## Custom content models
+
+To add a new content model to the locale foundation (for example a `products` source), declare a contract in `lib/locale-contract/<model>.ts` using the `defineLocaleContract` helper. A full worked example lives in [the locale-contract extension example](https://github.com/digwis/nextion/blob/main/docs/locale-contract-extension-example.md). The same shape works for jobs, events, recipes, and any other model.
+
+## Inspecting current locales
+
+```bash
+npx nextion locale list
+```
+
+Prints the current supported locales plus the status of each built-in translation data source (`configured` or `missing`). Use the output to confirm a `nextion locale add` ran cleanly.
+
 ## Adding a locale to an existing project
 
 ```bash
