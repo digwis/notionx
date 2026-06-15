@@ -60,7 +60,7 @@ importers:
   packages/create-nextion-app-shim:
     dependencies:
       '@notionx/create-nextion-app':
-        specifier: ^0.6.0
+        specifier: ^0.7.1
         version: link:../create-nextion-app
 
   packages/nextion:
@@ -3131,6 +3131,7 @@ packages:
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
+    deprecated: unmaintained
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
