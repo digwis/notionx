@@ -118,6 +118,32 @@ describe("template token substitution", () => {
     }
   });
 
+  it("renders the verified vinext versions into package.json", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-vinext-versions-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "vinext-versions-app",
+        targetDir: outDir,
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const packageJson = JSON.parse(
+      await fs.readFile(path.join(outDir, "package.json"), "utf8")
+    ) as {
+      devDependencies: Record<string, string>;
+    };
+
+    expect(packageJson.devDependencies.vinext).toBe("^0.1.3");
+    expect(packageJson.devDependencies["@vinext/cloudflare"]).toBe("^0.1.2");
+  });
+
   it("renders the first-phase blocks wiring into config and content templates", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-blocks-"));
     const outDir = path.join(root, "app");
