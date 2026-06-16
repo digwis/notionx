@@ -4,16 +4,19 @@
 // the Notion-backed Pages model.
 
 import type { Metadata } from "next";
-import { listGenericNotionContent } from "@notionx/core/notion";
+import { listGenericNotionContentForLocale } from "@notionx/core";
 import { PostCard } from "@/components/content/post-card";
 import { {{contentSourceVarName}} } from "@/lib/content/models";
 import { SiteShell } from "@/components/site/site-shell";
 import { getSitePageForContentSource } from "@/lib/pages/source";
+import { getRequestLocale } from "@/lib/site/request-env";
+import { i18n } from "@/lib/i18n";
 
 export const revalidate = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const page = await getSitePageForContentSource("{{contentSourceId}}");
+  const locale = getRequestLocale(i18n.defaultLocale);
+  const page = await getSitePageForContentSource("{{contentSourceId}}", locale);
   return {
     title: page?.seoTitle || page?.title || "{{contentSourceListTitle}}",
     description:
@@ -22,8 +25,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function {{contentSourceConstName}}Page() {
-  const items = await listGenericNotionContent({{contentSourceVarName}});
-  const page = await getSitePageForContentSource("{{contentSourceId}}");
+  const locale = getRequestLocale(i18n.defaultLocale);
+  const items = await listGenericNotionContentForLocale({{contentSourceVarName}}, locale);
+  const page = await getSitePageForContentSource("{{contentSourceId}}", locale);
   const title = page?.title || "{{contentSourceListTitle}}";
   const description = page?.description || "{{contentSourceListDescription}}";
 
