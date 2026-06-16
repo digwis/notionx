@@ -46,6 +46,12 @@ import { AsyncLocalStorage } from "node:async_hooks";
  */
 export interface RequestEnv {
   CONTENT_CACHE?: KVNamespace;
+  /**
+   * Locale resolved by the middleware from the `/{locale}` path
+   * prefix. Server components and data loaders read this via
+   * `getRequestLocale()` to pick the right translation rows.
+   */
+  NOTIONX_LOCALE?: string;
   // Extend as new runtime consumers need to read env outside the
   // worker entry (e.g. cron-triggered helpers).
 }
@@ -68,4 +74,14 @@ export function runWithRequestEnv<T>(env: RequestEnv, fn: () => T): T {
  */
 export function getRequestEnv(): RequestEnv | undefined {
   return _envStore.getStore();
+}
+
+/**
+ * Read the locale for the current request, set by the locale prefix
+ * middleware. Falls back to the default locale when called outside a
+ * request scope (build scripts, tests) or when the middleware did
+ * not run (e.g. single-locale projects).
+ */
+export function getRequestLocale(defaultLocale = "en"): string {
+  return getRequestEnv()?.NOTIONX_LOCALE ?? defaultLocale;
 }
