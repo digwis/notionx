@@ -23,6 +23,8 @@ const context = {
       fields: [{ key: "title", notionName: "Name" }],
     },
   },
+  installations: { templates: [], modules: [] },
+  managedFiles: { platformManaged: [], bridge: [], userOwned: [] },
 };
 
 vi.mock("./project-context.js", () => ({
@@ -42,12 +44,19 @@ vi.mock("./update/unified.js", () => ({
   formatUnifiedUpdateSummary: (summary: {
     appliedSafe: Array<{ label: string }>;
     appliedConflicts: Array<{ label: string }>;
+    reviewRemaining: Array<{ label: string }>;
     conflictsRemaining: Array<{ label: string }>;
   }) => {
     const lines: string[] = [];
     if (summary.appliedSafe.length > 0) {
       lines.push("safe updates:");
       for (const entry of summary.appliedSafe) {
+        lines.push(`  - ${entry.label}`);
+      }
+    }
+    if (summary.reviewRemaining.length > 0) {
+      lines.push("review items:");
+      for (const entry of summary.reviewRemaining) {
         lines.push(`  - ${entry.label}`);
       }
     }
@@ -86,6 +95,7 @@ describe("cli nextion update", () => {
     runUnifiedUpdateMock.mockResolvedValue({
       appliedSafe: [],
       appliedConflicts: [],
+      reviewRemaining: [],
       conflictsRemaining: [],
       needsInstall: false,
       compatibilityPreserved: false,
@@ -131,6 +141,7 @@ describe("cli nextion update", () => {
         },
       ],
       appliedConflicts: [],
+      reviewRemaining: [],
       conflictsRemaining: [],
       needsInstall: false,
       compatibilityPreserved: false,
@@ -142,5 +153,42 @@ describe("cli nextion update", () => {
     expect(infoMock).toHaveBeenCalledWith(
       "  - cloudflare-secret:NOTION_DATA_SOURCE_ID"
     );
+  });
+
+  it("prints installed templates before running update", async () => {
+    loadProjectContextMock.mockResolvedValue({
+      ...context,
+      installations: {
+        templates: [
+          {
+            name: "blog",
+            kind: "site-template",
+            version: 1,
+            params: { contentSourceId: "blog" },
+          },
+        ],
+        modules: [],
+      },
+      managedFiles: {
+        platformManaged: ["package.json"],
+        bridge: ["worker/index.ts"],
+        userOwned: ["app/blog/page.tsx"],
+      },
+    });
+    buildTemplatePlanMock.mockResolvedValue([]);
+    inspectProvisionRepairMock.mockResolvedValue([]);
+    runUnifiedUpdateMock.mockResolvedValue({
+      appliedSafe: [],
+      appliedConflicts: [],
+      reviewRemaining: [],
+      conflictsRemaining: [],
+      needsInstall: false,
+      compatibilityPreserved: false,
+    });
+
+    await main(["update"]);
+
+    expect(infoMock).toHaveBeenCalledWith("templates:");
+    expect(infoMock).toHaveBeenCalledWith("  - blog@1");
   });
 });

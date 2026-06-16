@@ -41,6 +41,16 @@ export function formatUpdateSummary(summary: UpdateSummary): string[] {
   return lines;
 }
 
+function formatInstalledTemplates(
+  templates: Array<{ name: string; version: number }>
+): string[] {
+  if (templates.length === 0) return [];
+  return [
+    "templates:",
+    ...templates.map((template) => `  - ${template.name}@${template.version}`),
+  ];
+}
+
 async function chooseConflictStrategy(conflictCount: number) {
   if (conflictCount === 0) {
     return "safe-only" as const;
@@ -61,6 +71,11 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
 
   if (command === "update" && !subcommand) {
     const context = await loadProjectContext(process.cwd());
+    for (const line of formatInstalledTemplates(
+      context.installations.templates
+    )) {
+      p.log.info(line);
+    }
     const [templateEntries, repairEntries] = await Promise.all([
       buildUpdatePlan(context),
       inspectProvisionRepair(context),
