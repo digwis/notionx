@@ -2490,3 +2490,134 @@ export async function ensureSiteSettingsDatabase(
     seeded: seedResult.code === 0 ? 1 : 0,
   };
 }
+
+/**
+ * Build the Notion `properties` object for the blog-translations
+ * data source. Mirrors `blogTranslationFields` in
+ * `@notionx/core/locale-contract/built-in`.
+ *
+ * `Source` is a relation to the base blog data source so each
+ * translation row points at its base post.
+ */
+export function buildBlogTranslationProperties(): NotionPropertyMap {
+  return {
+    Title: { title: {} },
+    Source: { relation: { database_property: {} } },
+    Locale: { select: {} },
+    Slug: { rich_text: {} },
+    Description: { rich_text: {} },
+    "SEO Title": { rich_text: {} },
+    "SEO Description": { rich_text: {} },
+    Body: { rich_text: {} },
+    Published: { checkbox: {} },
+  };
+}
+
+export function buildPageTranslationProperties(): NotionPropertyMap {
+  return {
+    Title: { title: {} },
+    Source: { relation: { database_property: {} } },
+    Locale: { select: {} },
+    Slug: { rich_text: {} },
+    Description: { rich_text: {} },
+    "SEO Title": { rich_text: {} },
+    "SEO Description": { rich_text: {} },
+    "Nav Label": { rich_text: {} },
+    "Footer Label": { rich_text: {} },
+    Body: { rich_text: {} },
+    Published: { checkbox: {} },
+  };
+}
+
+export function buildBlockTranslationProperties(): NotionPropertyMap {
+  return {
+    Title: { title: {} },
+    Source: { relation: { database_property: {} } },
+    Locale: { select: {} },
+    Description: { rich_text: {} },
+    Eyebrow: { rich_text: {} },
+    Headline: { rich_text: {} },
+    Subheadline: { rich_text: {} },
+    Body: { rich_text: {} },
+    Quote: { rich_text: {} },
+    "Quote Attribution": { rich_text: {} },
+    "Primary CTA Label": { rich_text: {} },
+    "Primary CTA Href": { url: {} },
+    "Secondary CTA Label": { rich_text: {} },
+    "Secondary CTA Href": { url: {} },
+    Published: { checkbox: {} },
+  };
+}
+
+export function buildSiteSettingsTranslationProperties(): NotionPropertyMap {
+  return {
+    Title: { title: {} },
+    Source: { relation: { database_property: {} } },
+    Locale: { select: {} },
+    Tagline: { rich_text: {} },
+    Description: { rich_text: {} },
+    "SEO Title": { rich_text: {} },
+    "SEO Description": { rich_text: {} },
+    "Nav Labels": { rich_text: {} },
+    "Footer Labels": { rich_text: {} },
+    "Global Fallback Copy": { rich_text: {} },
+    Published: { checkbox: {} },
+  };
+}
+
+export type TranslationModelId =
+  | "blog-translations"
+  | "page-translations"
+  | "block-translations"
+  | "site-settings-translations";
+
+export async function ensureTranslationDatabase(input: {
+  apiToken: string;
+  parentPageId: string;
+  modelId: TranslationModelId;
+}): Promise<{
+  databaseId: string;
+  dataSourceId: string;
+  url: string;
+  reused: boolean;
+}> {
+  const title = titleForTranslationModel(input.modelId);
+  const properties = propertiesForTranslationModel(input.modelId);
+  const result = await createDatabaseWithProperties({
+    apiToken: input.apiToken,
+    parentPageId: input.parentPageId,
+    title,
+    properties,
+  });
+  return {
+    databaseId: result.databaseId,
+    dataSourceId: result.dataSourceId,
+    url: result.url,
+    reused: false,
+  };
+}
+
+function titleForTranslationModel(modelId: TranslationModelId): string {
+  const map: Record<TranslationModelId, string> = {
+    "blog-translations": "Blog Translations",
+    "page-translations": "Page Translations",
+    "block-translations": "Block Translations",
+    "site-settings-translations": "Site Settings Translations",
+  };
+  return map[modelId];
+}
+
+function propertiesForTranslationModel(
+  modelId: TranslationModelId
+): NotionPropertyMap {
+  switch (modelId) {
+    case "blog-translations":
+      return buildBlogTranslationProperties();
+    case "page-translations":
+      return buildPageTranslationProperties();
+    case "block-translations":
+      return buildBlockTranslationProperties();
+    case "site-settings-translations":
+      return buildSiteSettingsTranslationProperties();
+  }
+}
