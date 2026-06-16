@@ -47,7 +47,7 @@ installer rather than a one-shot starter.
 - Do not introduce migration objects yet.
 - Do not solve arbitrary multi-template composition rules beyond the first
   `blog + docs + search` combination.
-- Do not extract a separate `@nextion/cli` or `@nextion/upgrader` package yet.
+- Do not extract a separate `@notionx/cli` or `@notionx/upgrader` package yet.
 
 ## Product Decision
 

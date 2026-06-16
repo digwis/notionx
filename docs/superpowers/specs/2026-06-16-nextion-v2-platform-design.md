@@ -209,7 +209,7 @@ docs/
 
 ### Package Responsibilities
 
-#### `@nextion/cli`
+#### `@notionx/cli`
 
 Public command surface:
 
@@ -220,7 +220,7 @@ Public command surface:
 - `doctor`
 - `info`
 
-#### `@nextion/runtime`
+#### `@notionx/runtime`
 
 Engine responsibilities:
 
@@ -229,7 +229,7 @@ Engine responsibilities:
 - auth, cache, SEO, media, storage, webhook
 - worker bootstrap and page rendering primitives
 
-#### `@nextion/upgrader`
+#### `@notionx/upgrader`
 
 Migration responsibilities:
 
@@ -239,7 +239,7 @@ Migration responsibilities:
 - apply safe changes
 - surface conflicts and manual steps
 
-#### `@nextion/template-sdk`
+#### `@notionx/template-sdk`
 
 Template contract responsibilities:
 
@@ -249,15 +249,15 @@ Template contract responsibilities:
 - registry update contracts
 - migration declarations
 
-#### `@nextion/template-*`
+#### `@notionx/template-*`
 
 Official site-type product units such as:
 
-- `@nextion/template-blog`
-- `@nextion/template-docs`
-- `@nextion/template-changelog`
+- `@notionx/template-blog`
+- `@notionx/template-docs`
+- `@notionx/template-changelog`
 
-#### `@nextion/module-*`
+#### `@notionx/module-*`
 
 Cross-cutting capability units such as:
 
@@ -655,7 +655,7 @@ but responsibilities are still grouped around historical package boundaries.
 
 Recommended target role:
 
-- evolve into `@nextion/runtime`
+- evolve into `@notionx/runtime`
 
 Reason:
 
@@ -666,8 +666,8 @@ Reason:
 
 Recommended target role:
 
-- split toward `@nextion/cli`
-- split toward `@nextion/upgrader`
+- split toward `@notionx/cli`
+- split toward `@notionx/upgrader`
 
 Reason:
 

@@ -91,10 +91,10 @@ function listChangedFiles(diffBase) {
 }
 
 const PACKAGE_DIR_TO_NAME = {
-  notionx: "@notionx/core",
-  "create-notionx-app": "@notionx/create-notionx-app",
-  "create-notionx-app-shim": "create-notionx",
-  "notionx-skill": "@notionx/skill",
+  nextion: "@notionx/core",
+  "create-nextion-app": "@notionx/create-notionx-app",
+  "create-nextion-app-shim": "create-notionx",
+  "nextion-skill": "@notionx/skill",
 };
 
 function categorize(file) {

@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🚀 vinext 发布准备检查"
+echo "🚀 notionx 发布准备检查"
 echo "===================="
 echo ""
 
@@ -103,19 +103,19 @@ echo ""
 # 9. 检查包信息
 echo "9️⃣  包信息检查..."
 echo ""
-echo "📦 @nextion/core"
+echo "📦 @notionx/core"
 cd packages/nextion
-NEXTION_VERSION=$(node -p "require('./package.json').version")
-NEXTION_PRIVATE=$(node -p "require('./package.json').private")
-echo "   版本: $NEXTION_VERSION"
-echo "   私有: $NEXTION_PRIVATE"
-if [ "$NEXTION_PRIVATE" = "true" ]; then
+NOTIONX_VERSION=$(node -p "require('./package.json').version")
+NOTIONX_PRIVATE=$(node -p "require('./package.json').private")
+echo "   版本: $NOTIONX_VERSION"
+echo "   私有: $NOTIONX_PRIVATE"
+if [ "$NOTIONX_PRIVATE" = "true" ]; then
   echo -e "   ${YELLOW}⚠ 包设置为私有，不会发布到 npm${NC}"
 fi
 cd ../..
 echo ""
 
-echo "📦 create-nextion-app"
+echo "📦 @notionx/create-notionx-app"
 cd packages/create-nextion-app
 CREATE_VERSION=$(node -p "require('./package.json').version")
 CREATE_PRIVATE=$(node -p "require('./package.json').private || 'false'")
@@ -147,6 +147,6 @@ echo "3. 推送到 main 分支: git push origin main"
 echo "4. GitHub Actions 会自动处理发布"
 echo ""
 echo "或手动发布："
-echo "  pnpm --filter @nextion/core publish"
-echo "  pnpm --filter create-nextion-app publish"
+echo "  pnpm --filter @notionx/core publish"
+echo "  pnpm --filter @notionx/create-notionx-app publish"
 echo ""

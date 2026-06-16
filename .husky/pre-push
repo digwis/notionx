@@ -14,9 +14,9 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
     # New branch: compare against main, since the branch doesn't exist
     # upstream yet.
-    export NEXTION_DIFF_BASE="origin/main"
+    export NOTIONX_DIFF_BASE="origin/main"
   else
-    export NEXTION_DIFF_BASE="origin/${remote_branch}"
+    export NOTIONX_DIFF_BASE="origin/${remote_branch}"
   fi
   node "$(dirname "$0")/../scripts/check-changeset.mjs" || exit 1
 done
