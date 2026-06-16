@@ -1,6 +1,6 @@
 {
   "name": "create-notionx",
-  "version": "0.6.6",
+  "version": "1.0.0",
   "description": "Unscoped npm create alias for @notionx/create-notionx-app.",
   "type": "module",
   "bin": {
@@ -24,7 +24,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@notionx/create-notionx-app": "^0.9.0"
+    "@notionx/create-notionx-app": "^1.0.0"
   },
   "publishConfig": {
     "access": "public",

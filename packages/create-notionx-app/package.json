@@ -1,6 +1,6 @@
 {
   "name": "@notionx/create-notionx-app",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Scaffold a new vinext (Next.js on Cloudflare Workers + D1 + R2) project backed by @notionx/core, with one-step provisioning of D1 / KV / R2 / Turnstile / Notion / Resend / Google OAuth.",
   "type": "module",
   "bin": {
