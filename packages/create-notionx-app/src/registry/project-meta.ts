@@ -96,6 +96,7 @@ export async function rerenderModelsFile(input: {
     contentSourceSourcesVarNames: tokens.contentSourceSourcesVarNames,
     internalSourceDeclarations: tokens.internalSourceDeclarations,
     internalSourceVarNames: tokens.internalSourceVarNames,
+    translationSourceDeclarations: tokens.translationSourceDeclarations,
   };
   const rendered = tpl.replace(
     /\{\{\s*([a-zA-Z][a-zA-Z0-9_]*)\s*\}\}/g,

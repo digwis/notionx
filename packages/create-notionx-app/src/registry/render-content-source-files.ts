@@ -102,6 +102,7 @@ export async function renderContentSourceFiles(
     contentSourceSourcesVarNames: tokens.contentSourceSourcesVarNames,
     internalSourceDeclarations: tokens.internalSourceDeclarations,
     internalSourceVarNames: tokens.internalSourceVarNames,
+    translationSourceDeclarations: tokens.translationSourceDeclarations,
     projectName: input.project.projectName,
     projectNameLower: input.project.projectName.toLowerCase(),
     targetDir: input.project.targetDir,

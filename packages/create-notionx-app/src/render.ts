@@ -59,6 +59,12 @@ interface TokenMap {
    */
   internalSourceDeclarations: string;
   /**
+   * Pre-rendered `export const *TranslationsSource` declarations for
+   * the four translation data sources. All `null` when bilingual
+   * mode is disabled.
+   */
+  translationSourceDeclarations: string;
+  /**
    * Comma-joined list of internal `*Source` variable names. Empty
    * string when no internal sources are enabled.
    */
@@ -163,6 +169,7 @@ async function buildTokenMap(
       contentSourceSourcesVarNames: string;
       internalSourceDeclarations: string;
       internalSourceVarNames: string;
+      translationSourceDeclarations: string;
     } => {
       const multi = buildMultiSourceTokenMap({
         project: {
@@ -174,6 +181,7 @@ async function buildTokenMap(
           adminEmail: answers.adminEmail,
           adminPassword: answers.adminPassword,
           scaffoldVersion,
+          bilingual: answers.supportedLocales.length > 1,
         },
         installed: [
           {
@@ -198,6 +206,7 @@ async function buildTokenMap(
         contentSourceSourcesVarNames: multi.contentSourceSourcesVarNames,
         internalSourceDeclarations: multi.internalSourceDeclarations,
         internalSourceVarNames: multi.internalSourceVarNames,
+        translationSourceDeclarations: multi.translationSourceDeclarations,
       };
     })(),
   };

@@ -86,10 +86,6 @@ export interface MultiSourceTokenMap {
 function buildTranslationSourceDeclarations(
   input: {
     bilingual?: boolean;
-    translationSources?: Record<
-      string,
-      { dataSourceId: string; envVar: string } | undefined
-    >;
   }
 ): string {
   if (!input.bilingual) {
@@ -102,142 +98,74 @@ function buildTranslationSourceDeclarations(
     ].join("\n");
   }
 
-  const sources = input.translationSources ?? {};
-  const decls: string[] = [];
-
-  const blogTrans = sources["blog-translations"];
-  decls.push(
-    blogTrans
-      ? `export const blogTranslationsSource = defineContentSource({
-  id: "blog-translations",
+  // When bilingual, declare all four translation sources with their
+  // standard env var names. The actual data source ids are created
+  // during provisioning and set as Cloudflare worker secrets / env
+  // vars — the runtime reads them via `process.env[envVar]`.
+  const decl = (
+    varName: string,
+    id: string,
+    envVar: string,
+    name: string,
+    description: string
+  ) => `export const ${varName} = defineContentSource({
+  id: "${id}",
   kind: "directory",
   visibility: { public: false, admin: true },
   source: {
     type: "notion",
     tokenEnv: "NOTION_TOKEN",
-    dataSourceEnv: "${blogTrans.envVar}",
+    dataSourceEnv: "${envVar}",
     fields: { title: "Title", slug: "Slug", published: "Published" },
     query: { pageSize: 100 },
   },
   routes: {
-    listPath: "/__internal/blog-translations",
-    detailPath: "/__internal/blog-translations/[slug]",
+    listPath: "/__internal/${id}",
+    detailPath: "/__internal/${id}/[slug]",
     detailParam: "slug",
-    publicApiPath: "/api/__internal/blog-translations",
+    publicApiPath: "/api/__internal/${id}",
   },
   ui: {
-    name: "Blog Translations",
-    pluralName: "Blog Translations",
-    navLabel: "Blog Translations",
-    listTitle: "Blog Translations",
-    listDescription: "Locale-specific rows for blog posts.",
+    name: "${name}",
+    pluralName: "${name}",
+    navLabel: "${name}",
+    listTitle: "${name}",
+    listDescription: "${description}",
     emptyState: "No translations yet.",
   },
   capabilities: { richBlocks: false, coverImages: false, gatedAssets: false },
-});`
-      : `export const blogTranslationsSource = null;`
-  );
+});`;
 
-  const pageTrans = sources["page-translations"];
-  decls.push(
-    pageTrans
-      ? `export const pageTranslationsSource = defineContentSource({
-  id: "page-translations",
-  kind: "directory",
-  visibility: { public: false, admin: true },
-  source: {
-    type: "notion",
-    tokenEnv: "NOTION_TOKEN",
-    dataSourceEnv: "${pageTrans.envVar}",
-    fields: { title: "Title", slug: "Slug", published: "Published" },
-    query: { pageSize: 100 },
-  },
-  routes: {
-    listPath: "/__internal/page-translations",
-    detailPath: "/__internal/page-translations/[slug]",
-    detailParam: "slug",
-    publicApiPath: "/api/__internal/page-translations",
-  },
-  ui: {
-    name: "Page Translations",
-    pluralName: "Page Translations",
-    navLabel: "Page Translations",
-    listTitle: "Page Translations",
-    listDescription: "Locale-specific rows for site pages.",
-    emptyState: "No translations yet.",
-  },
-  capabilities: { richBlocks: false, coverImages: false, gatedAssets: false },
-});`
-      : `export const pageTranslationsSource = null;`
-  );
-
-  const blockTrans = sources["block-translations"];
-  decls.push(
-    blockTrans
-      ? `export const blockTranslationsSource = defineContentSource({
-  id: "block-translations",
-  kind: "directory",
-  visibility: { public: false, admin: true },
-  source: {
-    type: "notion",
-    tokenEnv: "NOTION_TOKEN",
-    dataSourceEnv: "${blockTrans.envVar}",
-    fields: { title: "Title", slug: "Slug", published: "Published" },
-    query: { pageSize: 100 },
-  },
-  routes: {
-    listPath: "/__internal/block-translations",
-    detailPath: "/__internal/block-translations/[slug]",
-    detailParam: "slug",
-    publicApiPath: "/api/__internal/block-translations",
-  },
-  ui: {
-    name: "Block Translations",
-    pluralName: "Block Translations",
-    navLabel: "Block Translations",
-    listTitle: "Block Translations",
-    listDescription: "Locale-specific rows for page blocks.",
-    emptyState: "No translations yet.",
-  },
-  capabilities: { richBlocks: false, coverImages: false, gatedAssets: false },
-});`
-      : `export const blockTranslationsSource = null;`
-  );
-
-  const settingsTrans = sources["site-settings-translations"];
-  decls.push(
-    settingsTrans
-      ? `export const siteSettingsTranslationsSource = defineContentSource({
-  id: "site-settings-translations",
-  kind: "directory",
-  visibility: { public: false, admin: true },
-  source: {
-    type: "notion",
-    tokenEnv: "NOTION_TOKEN",
-    dataSourceEnv: "${settingsTrans.envVar}",
-    fields: { title: "Title", slug: "Slug", published: "Published" },
-    query: { pageSize: 100 },
-  },
-  routes: {
-    listPath: "/__internal/site-settings-translations",
-    detailPath: "/__internal/site-settings-translations/[slug]",
-    detailParam: "slug",
-    publicApiPath: "/api/__internal/site-settings-translations",
-  },
-  ui: {
-    name: "Site Settings Translations",
-    pluralName: "Site Settings Translations",
-    navLabel: "Site Settings Translations",
-    listTitle: "Site Settings Translations",
-    listDescription: "Locale-specific rows for site settings.",
-    emptyState: "No translations yet.",
-  },
-  capabilities: { richBlocks: false, coverImages: false, gatedAssets: false },
-});`
-      : `export const siteSettingsTranslationsSource = null;`
-  );
-
-  return decls.join("\n\n");
+  return [
+    decl(
+      "blogTranslationsSource",
+      "blog-translations",
+      "NOTION_BLOG_TRANSLATIONS_DATA_SOURCE_ID",
+      "Blog Translations",
+      "Locale-specific rows for blog posts."
+    ),
+    decl(
+      "pageTranslationsSource",
+      "page-translations",
+      "NOTION_PAGES_TRANSLATIONS_DATA_SOURCE_ID",
+      "Page Translations",
+      "Locale-specific rows for site pages."
+    ),
+    decl(
+      "blockTranslationsSource",
+      "block-translations",
+      "NOTION_BLOCKS_TRANSLATIONS_DATA_SOURCE_ID",
+      "Block Translations",
+      "Locale-specific rows for page blocks."
+    ),
+    decl(
+      "siteSettingsTranslationsSource",
+      "site-settings-translations",
+      "NOTION_SITE_SETTINGS_TRANSLATIONS_DATA_SOURCE_ID",
+      "Site Settings Translations",
+      "Locale-specific rows for site settings."
+    ),
+  ].join("\n\n");
 }
 
 /**
