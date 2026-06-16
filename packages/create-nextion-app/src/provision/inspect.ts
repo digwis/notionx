@@ -2,8 +2,6 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { setWorkerSecret } from "./cloudflare.js";
 import { run } from "./shell.js";
-import type { ProjectContext } from "../project-context.js";
-import type { UnifiedUpdateEntry } from "../update/types.js";
 
 type LocalNotionSecretState = {
   notionToken?: string;
@@ -50,12 +48,25 @@ async function listRemoteWorkerSecretNames(projectDir: string): Promise<Set<stri
   return new Set(parsed.map((entry) => String(entry.name ?? "").trim()).filter(Boolean));
 }
 
+/**
+ * Entry shape for provision repair. We accept a minimal struct
+ * rather than a full project context — the inspector only
+ * needs the project directory.
+ */
+export interface ProvisionRepairEntry {
+  label: string;
+  kind: "cloudflare";
+  group: "cloudflareBinding";
+  risk: "safe";
+  apply(): Promise<void>;
+}
+
 export async function inspectProvisionRepair(
-  context: ProjectContext
-): Promise<UnifiedUpdateEntry[]> {
-  const local = await readLocalNotionSecretState(context.projectDir);
-  const remoteNames = await listRemoteWorkerSecretNames(context.projectDir);
-  const entries: UnifiedUpdateEntry[] = [];
+  projectDir: string,
+): Promise<ProvisionRepairEntry[]> {
+  const local = await readLocalNotionSecretState(projectDir);
+  const remoteNames = await listRemoteWorkerSecretNames(projectDir);
+  const entries: ProvisionRepairEntry[] = [];
 
   const addSecretEntry = (name: string, value: string | undefined) => {
     if (!value) return;
@@ -66,7 +77,7 @@ export async function inspectProvisionRepair(
       group: "cloudflareBinding",
       risk: "safe",
       async apply() {
-        await setWorkerSecret(name, value, context.projectDir, [value]);
+        await setWorkerSecret(name, value, projectDir, [value]);
       },
     });
   };
@@ -80,7 +91,7 @@ export async function inspectProvisionRepair(
   // Surface them in the update repair so a fresh deploy picks them
   // up automatically.
   const localTranslations = await readLocalTranslationSourceState(
-    context.projectDir
+    projectDir
   );
   for (const [modelId, ref] of Object.entries(localTranslations)) {
     if (!ref.dataSourceId) continue;
@@ -91,7 +102,7 @@ export async function inspectProvisionRepair(
       group: "cloudflareBinding",
       risk: "safe",
       async apply() {
-        await setWorkerSecret(ref.envVar, ref.dataSourceId, context.projectDir, [
+        await setWorkerSecret(ref.envVar, ref.dataSourceId, projectDir, [
           ref.dataSourceId,
         ]);
       },

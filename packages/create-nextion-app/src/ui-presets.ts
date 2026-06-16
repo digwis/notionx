@@ -1,4 +1,9 @@
-import type { UiPreset } from "./presets.js";
+// packages/create-nextion-app/src/ui-presets.ts
+//
+// Mirrors the component list from `presets.ts` for callers that
+// need the raw array (e.g. the README's "What's included" section)
+// plus dependency rendering helpers. The scaffolder only ships the
+// "site" set, so there is no preset-selection layer here.
 
 const SITE_PRESET_COMPONENTS = [
   "accordion",
@@ -41,39 +46,28 @@ const COMPONENT_DEPENDENCIES: Record<string, Record<string, string>> = {
   tooltip: { "@radix-ui/react-tooltip": "^1.1.4" },
 };
 
-export function normalizeUiPreset(value: string | undefined): UiPreset {
-  if (value === "site" || value === undefined) {
-    return "site";
-  }
-  throw new Error(
-    `Invalid UI preset: ${value}. The 0.5.4 scaffolder only ships the "site" preset.`
-  );
-}
-
-export function uiComponentsForPreset(_preset: UiPreset): readonly string[] {
+export function uiComponents(): readonly string[] {
   return SITE_PRESET_COMPONENTS;
 }
 
-export function uiDependenciesForPreset(
-  _preset: UiPreset
-): Record<string, string> {
+export function uiDependencies(): Record<string, string> {
   const deps: Record<string, string> = { ...BASE_DEPENDENCIES };
   for (const component of SITE_PRESET_COMPONENTS) {
     Object.assign(deps, COMPONENT_DEPENDENCIES[component]);
   }
   return Object.fromEntries(
-    Object.entries(deps).sort(([a], [b]) => a.localeCompare(b))
+    Object.entries(deps).sort(([a], [b]) => a.localeCompare(b)),
   );
 }
 
 export function renderDependencyLines(
   deps: Record<string, string>,
-  indent = "    "
+  indent = "    ",
 ): string {
   return Object.entries(deps)
     .map(
       ([name, version]) =>
-        `${indent}${JSON.stringify(name)}: ${JSON.stringify(version)},`
+        `${indent}${JSON.stringify(name)}: ${JSON.stringify(version)},`,
     )
     .join("\n");
 }

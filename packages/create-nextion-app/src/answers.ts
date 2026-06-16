@@ -38,10 +38,59 @@ interface CliOverrides {
    * to opt out.
    */
   enableSiteSettings?: boolean;
+  /**
+   * When true (the default) the scaffolder creates a separate
+   * Notion data source for reusable structured page blocks and the
+   * generated `components/page-blocks.tsx` reads from it. Pass
+   * `--no-blocks` to opt out.
+   */
+  enableBlocks?: boolean;
+  /**
+   * When true (the default) the scaffolder ships the auth module
+   * (login/register, D1 users table, sessions). Pass `--no-auth`
+   * to opt out.
+   */
+  enableAuth?: boolean;
+  /**
+   * When true (the default) the scaffolder ships the admin dashboard.
+   * Pass `--no-admin` to opt out. Requires auth.
+   */
+  enableAdmin?: boolean;
+  /**
+   * When true (the default) the scaffolder ships the pages module
+   * (Notion-backed dynamic pages). Pass `--no-pages` to opt out.
+   * Requires blocks.
+   */
+  enablePages?: boolean;
+  /**
+   * When true (the default) the scaffolder ships the search module
+   * (D1-backed search index, `/api/search` route, search UI). Pass
+   * `--no-search` to opt out.
+   */
+  enableSearch?: boolean;
   yes?: boolean;
 }
 
 const DEFAULT_FIELDS = "Name, Slug, Description, Published, Date, Tags, Cover";
+
+/**
+ * Resolve a boolean feature flag from CLI overrides or a
+ * `CREATE_NEXTION_NO_*` env var. Defaults to `true` (feature on).
+ */
+function resolveFlag(
+  override: boolean | undefined,
+  envVar: string,
+): boolean {
+  if (override !== undefined) return override;
+  const v = process.env[envVar];
+  if (v) {
+    const lower = v.toLowerCase();
+    if (lower === "1" || lower === "true" || lower === "yes") {
+      return false;
+    }
+  }
+  return true;
+}
 
 function parseLocales(value: string): string[] {
   return value
@@ -268,6 +317,48 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
     }
   }
 
+  // `enableBlocks` mirrors `enableSiteSettings` for the reusable
+  // page-blocks feature. Same env-var convention.
+  let enableBlocks: boolean = true;
+  if (overrides.enableBlocks !== undefined) {
+    enableBlocks = overrides.enableBlocks;
+  } else if (process.env.CREATE_NEXTION_NO_BLOCKS) {
+    const v = process.env.CREATE_NEXTION_NO_BLOCKS.toLowerCase();
+    if (v === "1" || v === "true" || v === "yes") {
+      enableBlocks = false;
+    }
+  }
+
+  // `enableAuth` / `enableAdmin` / `enablePages` follow the same
+  // pattern. Each defaults to true; the `CREATE_NEXTION_NO_*` env
+  // var (or the `--no-*` CLI flag via overrides) opts out.
+  const enableAuth = resolveFlag(
+    overrides.enableAuth,
+    "CREATE_NEXTION_NO_AUTH",
+  );
+  let enableAdmin = resolveFlag(
+    overrides.enableAdmin,
+    "CREATE_NEXTION_NO_ADMIN",
+  );
+  let enablePages = resolveFlag(
+    overrides.enablePages,
+    "CREATE_NEXTION_NO_PAGES",
+  );
+  const enableSearch = resolveFlag(
+    overrides.enableSearch,
+    "CREATE_NEXTION_NO_SEARCH",
+  );
+
+  // Enforce dependency constraints: admin requires auth, pages
+  // requires blocks. If a dependency is disabled, the dependent
+  // feature is forced off regardless of the user's explicit flag.
+  if (!enableAuth && enableAdmin) {
+    enableAdmin = false;
+  }
+  if (!enableBlocks && enablePages) {
+    enablePages = false;
+  }
+
   return {
     projectName,
     targetDir,
@@ -286,6 +377,11 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
     notionParentPage,
     notionSeedCount,
     enableSiteSettings,
+    enableBlocks,
+    enableAuth,
+    enableAdmin,
+    enablePages,
+    enableSearch,
     // Carry the random password (if any) so the CLI can echo it to
     // stdout once at the very end of the run. Never persisted to disk
     // and never sent to the database — only the hash lands in D1.

@@ -23,10 +23,12 @@ import type {
   AuthConfig,
   ContentSource,
 } from "../types";
+import type { SearchAdapter } from "../search/adapter";
 import { filesRoute } from "../storage/routes/files";
 import { cdnRoute } from "../storage/routes/cdn";
 import { notionMediaRoute } from "../media/routes/notion-media";
 import { healthRoute, healthRouteHandle } from "./routes/health";
+import { createSearchRouteHandler } from "./routes/search";
 
 /**
  * Public surface for the bootstrap options. Mirrors the placeholder
@@ -36,7 +38,12 @@ import { healthRoute, healthRouteHandle } from "./routes/health";
 export interface FoundationWorkerOptions {
   sources: ContentSource[];
   adminNav: AdminNavItem[];
-  authConfig: AuthConfig;
+  /**
+   * Auth configuration. When omitted (e.g. the project was
+   * scaffolded with `--no-auth`), the worker runs without auth —
+   * no session cookies, no admin gate, no viewer resolution.
+   */
+  authConfig?: AuthConfig;
   /**
    * Placeholder for the future site config. Kept on the options
    * surface so consumers can wire it today; the bootstrap itself
@@ -55,6 +62,12 @@ export interface FoundationWorkerOptions {
    * the admin gate but always reports no viewer.
    */
   sessionLookup?: NextionMiddlewareOptions["sessionLookup"];
+  /**
+   * Search adapter. When present, the worker registers `/api/search`
+   * automatically. Omit when the project was scaffolded with
+   * `--no-search` or after `nextion remove search`.
+   */
+  searchAdapter?: SearchAdapter;
   /**
    * Project-injected routes. Each entry maps a pathname to a
    * dynamic loader. The loader returns a module whose `default`
@@ -137,9 +150,24 @@ export function createNextionWorker(
   options: FoundationWorkerOptions
 ): FoundationWorker {
   const sources: ContentSource[] = options.sources;
-  const auth = { databaseBinding: options.authConfig.databaseBinding };
+  const auth = options.authConfig
+    ? { databaseBinding: options.authConfig.databaseBinding }
+    : { databaseBinding: "DB" };
 
   const routes: RouteEntry[] = buildStaticRoutes();
+
+  // Register the search route only when a SearchAdapter is provided.
+  // This keeps `/api/search` absent in projects scaffolded with
+  // `--no-search` or after `nextion remove search`.
+  if (options.searchAdapter) {
+    const handleSearch = createSearchRouteHandler({
+      adapter: options.searchAdapter,
+    });
+    routes.push({
+      match: (req) => new URL(req.url).pathname === "/api/search",
+      handle: handleSearch,
+    });
+  }
 
   if (options.extraRoutes) {
     for (const [path, load] of Object.entries(options.extraRoutes)) {

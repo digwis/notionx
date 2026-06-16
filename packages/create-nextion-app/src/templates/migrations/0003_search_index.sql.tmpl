@@ -1,0 +1,29 @@
+-- content_search_index: D1-backed text search index for content sources.
+-- Used by the D1SearchAdapter to answer /api/search queries via
+-- LIKE-based keyword matching. Each row represents one indexed
+-- content page, keyed by (model_id, route_id).
+--
+-- This migration is rendered only when the `search` feature module
+-- is installed (enableSearch = true). When search is removed, the
+-- table is NOT dropped — existing index data is preserved in case
+-- the user re-adds search later.
+
+CREATE TABLE IF NOT EXISTS content_search_index (
+  model_id TEXT NOT NULL,
+  page_id TEXT NOT NULL,
+  route_id TEXT NOT NULL,
+  title TEXT NOT NULL DEFAULT '',
+  summary TEXT NOT NULL DEFAULT '',
+  body_text TEXT NOT NULL DEFAULT '',
+  facets TEXT NOT NULL DEFAULT '[]',
+  normalized_text TEXT NOT NULL DEFAULT '',
+  source_updated_at TEXT,
+  indexed_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (model_id, route_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_content_search_model
+  ON content_search_index (model_id);
+
+CREATE INDEX IF NOT EXISTS idx_content_search_indexed_at
+  ON content_search_index (indexed_at DESC);

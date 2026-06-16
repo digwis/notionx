@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { defaultProvisionMode } from "./options.js";
 import type { Answers } from "../prompt.js";
-import type { ProjectContext } from "../project-context.js";
+import type { LoadedRegistry } from "../registry/registry-types.js";
 import { inspectProvisionRepair, runProvisionRepair } from "./repair.js";
 
 const provisionMock = vi.hoisted(() => vi.fn());
@@ -24,23 +24,35 @@ vi.mock("./inspect.js", async () => {
   };
 });
 
-const context: ProjectContext = {
-  projectDir: "/tmp/demo",
-  metadata: {
+const registry: LoadedRegistry = {
+  manifest: {
+    $schema: "https://nextion.dev/schemas/registry.v2.json",
     projectKind: "nextion",
     projectName: "demo",
     scaffoldVersion: "0.4.10",
+    nextionCore: "^0.1.2",
     defaultLocale: "en",
     supportedLocales: ["en"],
-    nextionSource: "^0.1.2",
     enableSiteSettings: true,
+    enableBlocks: true,
+    enableAuth: true,
+    enableAdmin: true,
+    enablePages: true,
+    enableSearch: true,
     contentSource: {
       id: "blog",
       title: "Blog",
       fields: [{ key: "title", notionName: "Name" }],
     },
+    compat: { mode: "v2-native" },
+    registries: {},
+    installed: [],
+    managedFiles: { platform: [], bridge: [], user: [] },
   },
+  managedFiles: { platform: [], bridge: [], user: [] },
 };
+
+const projectDir = "/tmp/demo";
 
 describe("provision mode defaults", () => {
   it("disables deploy for repair mode", () => {
@@ -61,6 +73,11 @@ describe("runProvisionRepair", () => {
       supportedLocales: ["en"],
       nextionSource: "^0.1.2",
       enableSiteSettings: true,
+      enableBlocks: true,
+      enableAuth: true,
+      enableAdmin: true,
+      enablePages: true,
+      enableSearch: true,
       contentSource: {
         id: "blog",
         title: "Blog",
@@ -73,7 +90,7 @@ describe("runProvisionRepair", () => {
     };
     provisionMock.mockResolvedValueOnce({ deploy: { skipped: true } });
 
-    await runProvisionRepair(context, answers);
+    await runProvisionRepair(registry, projectDir, answers);
 
     expect(provisionMock).toHaveBeenCalledWith(
       answers,
@@ -105,7 +122,9 @@ describe("runProvisionRepair", () => {
       },
     ]);
 
-    await runProvisionRepair(context, undefined, { conflictChoice: "safe-only" });
+    await runProvisionRepair(registry, projectDir, undefined, {
+      conflictChoice: "safe-only",
+    });
 
     expect(safeApply).toHaveBeenCalledTimes(1);
     expect(conflictApply).not.toHaveBeenCalled();
@@ -124,7 +143,7 @@ describe("inspectProvisionRepair", () => {
       },
     ]);
 
-    const entries = await inspectProvisionRepair(context);
+    const entries = await inspectProvisionRepair(projectDir);
 
     expect(entries[0]?.risk).toBe("safe");
   });
@@ -140,7 +159,7 @@ describe("inspectProvisionRepair", () => {
       },
     ]);
 
-    const entries = await inspectProvisionRepair(context);
+    const entries = await inspectProvisionRepair(projectDir);
 
     expect(entries[0]?.risk).toBe("conflict");
   });

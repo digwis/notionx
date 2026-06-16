@@ -46,6 +46,93 @@ describe("rendering", () => {
 });
 
 describe("template token substitution", () => {
+  it("writes a v2 registry.json manifest into .nextion", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-manifests-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "manifest-app",
+        targetDir: outDir,
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const manifest = JSON.parse(
+      await fs.readFile(path.join(outDir, ".nextion/registry.json"), "utf8")
+    ) as {
+      $schema: string;
+      projectKind: string;
+      projectName: string;
+      installed: Array<{
+        id: string;
+        kind: string;
+        version: number;
+        params: Record<string, string>;
+      }>;
+      managedFiles: {
+        platform: string[];
+        bridge: string[];
+        user: string[];
+      };
+    };
+
+    expect(manifest.$schema).toBe(
+      "https://nextion.dev/schemas/registry.v2.json",
+    );
+    expect(manifest.projectName).toBe("manifest-app");
+    expect(manifest.installed).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "blog",
+          kind: "content-source",
+          version: 1,
+          params: { contentSourceId: "blog" },
+        }),
+        expect.objectContaining({
+          id: "site-settings",
+          kind: "feature-module",
+        }),
+        expect.objectContaining({
+          id: "blocks",
+          kind: "feature-module",
+        }),
+        expect.objectContaining({
+          id: "auth",
+          kind: "feature-module",
+        }),
+        expect.objectContaining({
+          id: "admin",
+          kind: "feature-module",
+        }),
+        expect.objectContaining({
+          id: "pages",
+          kind: "feature-module",
+        }),
+        expect.objectContaining({
+          id: "search",
+          kind: "feature-module",
+        }),
+      ]),
+    );
+    expect(manifest.installed).toHaveLength(7);
+    expect(manifest.managedFiles.platform).toContain("package.json");
+    expect(manifest.managedFiles.bridge).toContain("worker/index.ts");
+    expect(manifest.managedFiles.bridge).toContain("lib/site/settings.ts");
+    expect(manifest.managedFiles.bridge).toContain(
+      "components/page-blocks.tsx",
+    );
+    expect(manifest.managedFiles.bridge).toContain("lib/auth.config.ts");
+    expect(manifest.managedFiles.bridge).toContain("app/admin/layout.tsx");
+    expect(manifest.managedFiles.bridge).toContain("lib/pages/source.ts");
+    expect(manifest.managedFiles.bridge).toContain("lib/search/config.ts");
+    expect(manifest.managedFiles.user).toContain("app/blog/page.tsx");
+  });
+
   it("replaces {{nextionSource}} with a real semver in the generated package.json", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-tokens-"));
     const outDir = path.join(root, "app");
@@ -140,7 +227,7 @@ describe("template token substitution", () => {
       devDependencies: Record<string, string>;
     };
 
-    expect(packageJson.devDependencies.vinext).toBe("^0.1.3");
+    expect(packageJson.devDependencies.vinext).toBe("^0.1.4");
     expect(packageJson.devDependencies["@vinext/cloudflare"]).toBe("^0.1.2");
   });
 

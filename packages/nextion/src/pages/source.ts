@@ -1,7 +1,4 @@
 import { cache } from "react";
-import { listBlockChildrenDeep, type NotionBlockClient } from "../notion/blocks";
-import { createNotionClient } from "../notion/client";
-import { getNotionConfigForModel, hasNotionModelConfig } from "../notion/config";
 import { coverImageUrlForPage } from "../notion/media";
 import {
   getCheckboxProperty,
@@ -11,6 +8,10 @@ import {
   isRecord,
   notionPageEditUrl,
 } from "../notion/property-mappers";
+import {
+  createNotionSourceContext,
+  queryAllNotionDataSourcePages,
+} from "../notion/source-helpers";
 import type { NotionBlock, NotionPageLike } from "../notion/types";
 import { defineSitePageModel } from "./model";
 import type {
@@ -23,12 +24,6 @@ import type {
   SitePageSourceDeps,
   SitePageLayout,
 } from "./types";
-
-function normalizePage(input: unknown): NotionPageLike | null {
-  if (!input || typeof input !== "object") return null;
-  const page = input as NotionPageLike;
-  return page.id ? page : null;
-}
 
 export function slugToHref(slug: string) {
   const normalized = slug.trim().replace(/^\/+|\/+$/g, "");
@@ -166,40 +161,31 @@ export function createSitePageSource(
 
   return {
     async listPages(): Promise<SitePage[]> {
-      const pages: SitePage[] = [];
-      let cursor: string | undefined;
+      const pages = await queryAllNotionDataSourcePages(deps.queryDataSource);
+      const result: SitePage[] = [];
+      for (const page of pages) {
+        const mapped = mapNotionPageToSitePage(
+          page,
+          fields,
+          await deps.getPageBlocks(page.id),
+          { editBaseUrl: deps.editBaseUrl }
+        );
+        if (mapped) result.push(mapped);
+      }
 
-      do {
-        const response = await deps.queryDataSource({ startCursor: cursor });
-        for (const item of response.results ?? []) {
-          const page = normalizePage(item);
-          if (!page) continue;
-          const mapped = mapNotionPageToSitePage(
-            page,
-            fields,
-            await deps.getPageBlocks(page.id),
-            { editBaseUrl: deps.editBaseUrl }
-          );
-          if (mapped) pages.push(mapped);
-        }
-
-        cursor = response.next_cursor ?? undefined;
-        if (!response.has_more) break;
-      } while (cursor);
-
-      return pages.sort((a, b) => a.navOrder - b.navOrder || a.title.localeCompare(b.title));
+      return result.sort((a, b) => a.navOrder - b.navOrder || a.title.localeCompare(b.title));
     },
   };
 }
 
 async function createDefaultSitePageSource(modelInput: SitePageModel) {
   const model = defineSitePageModel(modelInput);
-  if (!(await hasNotionModelConfig(model))) return null;
+  const ctx = await createNotionSourceContext(model);
+  if (!ctx) return null;
 
-  const config = await getNotionConfigForModel(model);
-  const client = createNotionClient(config);
+  const { client, config, editBaseUrl, getPageBlocks } = ctx;
   return createSitePageSource(model, {
-    editBaseUrl: config.editBaseUrl,
+    editBaseUrl,
     queryDataSource: async ({ startCursor } = {}) =>
       client.dataSources.query({
         data_source_id: config.dataSourceId,
@@ -207,8 +193,7 @@ async function createDefaultSitePageSource(modelInput: SitePageModel) {
         sorts: [{ property: model.source.fields.navOrder, direction: "ascending" }],
         ...(startCursor ? { start_cursor: startCursor } : {}),
       }),
-    getPageBlocks: (pageId) =>
-      listBlockChildrenDeep(client as unknown as NotionBlockClient, pageId),
+    getPageBlocks,
   });
 }
 

@@ -21,3 +21,5 @@ export type {
   PrewarmFn,
   CreateContentPrewarmRouteOptions,
 } from "./content-prewarm";
+export { createSearchRouteHandler } from "./search";
+export type { SearchRouteOptions } from "./search";

@@ -1,16 +1,8 @@
 // Public surface for the @notionx/core/auth subpath.
 //
-// The `createAuth` factory and its `Auth` interface are the public API.
 // Internal helpers (session, users, rate-limit, turnstile, passwords)
-// are also re-exported so the starter's re-export shims and existing
+// are re-exported so the starter's re-export shims and existing
 // server actions can keep using the same import paths.
-
-export { createAuth } from "./auth";
-export type {
-  Auth,
-  AuthUser,
-  AuthRateLimitResult,
-} from "./auth";
 
 export type { SessionUser } from "./session";
 export {

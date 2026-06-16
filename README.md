@@ -1,38 +1,58 @@
-# vinext
+# nextion
 
-vinext is a Next.js / App Router–style framework for [Cloudflare Workers](https://workers.cloudflare.com/). This repository is the official pnpm monorepo maintained by the vinext team: the reusable platform layer is bundled and published as `@notionx/core` to GitHub Packages, a reference business implementation lives in `apps/moviebluebook/`, and the project scaffolding tool lives in `packages/create-nextion-app/`.
+nextion is a pnpm monorepo for the Notion-powered Cloudflare stack behind the
+published `@notionx/*` packages. This repository is the framework source, not a
+deployable user app: it contains the reusable runtime, the scaffolder, the
+unscoped `npm create` shim, the skill installer, and the release tooling used
+to publish those packages to npm.
 
-## Architecture
+## What Lives Here
 
-vinext is a pnpm monorepo: the reusable platform, authentication, admin shell, and Notion toolkit are all extracted into the `@notionx/core` package. New projects only need `pnpm create nextion-app my-new-site` plus a few `defineContentSource(...)` calls to get full authentication, admin, and Cloudflare deployment out of the box. The repository layout, the seven dependency layers, the four boundary contracts (`ContentSource` / `AuthConfig` / `AdminExtension` / `WorkerOptions`), and the distribution model are all described in detail in [`docs/architecture/nextion-package.md`](docs/architecture/nextion-package.md).
+- `@notionx/core`: the runtime and framework primitives for Cloudflare Workers
+- `@notionx/create-nextion-app`: the scaffolder and `nextion` maintenance CLI
+- `create-nextion-app`: the unscoped shim behind `npm create nextion-app`
+- `@notionx/skill`: the packaged nextion skill installer
 
-- Full architecture overview: [`docs/architecture/nextion-package.md`](docs/architecture/nextion-package.md)
-- Creating a new project: [`docs/architecture/creating-new-project.md`](docs/architecture/creating-new-project.md)
-- Adding / modifying content domains: [`docs/architecture/customizing-content-source.md`](docs/architecture/customizing-content-source.md)
-- Upgrading `@notionx/core`: [`docs/architecture/upgrading-nextion.md`](docs/architecture/upgrading-nextion.md)
-- Release notes: [`docs/architecture/nextion-changelog.md`](docs/architecture/nextion-changelog.md)
-- Legacy content-nextion docs (no longer authoritative): [`docs/architecture/content-nextion.md`](docs/architecture/content-nextion.md)
+End users should create a separate app repository with `npm create nextion-app`
+and deploy that generated project to Cloudflare. This monorepo stays focused on
+framework and release work.
 
-## Repository layout
+## Repository Layout
 
 ```text
-packages/nextion/        # Compiled and published as @notionx/core
-apps/moviebluebook/         # Reference business app (consumes @notionx/core)
-packages/create-nextion-app/    # `pnpm create nextion-app` scaffolding
-docs/                       # Architecture docs and design specs
+packages/nextion/                 # Published as @notionx/core
+packages/create-nextion-app/      # Published scaffolder + `nextion` CLI
+packages/create-nextion-app-shim/ # Published `npm create nextion-app` shim
+packages/nextion-skill/           # Published skill installer
+scripts/                          # Release and repository automation
+docs/                             # Architecture, publishing, and design docs
+skills/                           # Skill source material bundled by the installer
 ```
 
-## Local development
+## Key Docs
+
+- Architecture overview: [`docs/architecture/nextion-package.md`](docs/architecture/nextion-package.md)
+- Create a new project: [`docs/architecture/creating-new-project.md`](docs/architecture/creating-new-project.md)
+- Customize content sources: [`docs/architecture/customizing-content-source.md`](docs/architecture/customizing-content-source.md)
+- Upgrade generated projects: [`docs/architecture/upgrading-nextion.md`](docs/architecture/upgrading-nextion.md)
+- Unified registry protocol (v2, planned): [`docs/architecture/registry-protocol.md`](docs/architecture/registry-protocol.md)
+- Publish packages: [`docs/PUBLISHING.md`](docs/PUBLISHING.md)
+- Release notes: [`docs/architecture/nextion-changelog.md`](docs/architecture/nextion-changelog.md)
+
+## Local Development
 
 ```bash
 pnpm install
 pnpm --filter @notionx/core build
-pnpm --filter @nextion/moviebluebook dev
+pnpm --filter @notionx/create-nextion-app test
+pnpm --filter @notionx/skill test
 ```
 
-## Testing and diagnostics
+## Repository Checks
 
 ```bash
 pnpm -r test
-pnpm --filter @notionx/core nextion:doctor
+pnpm -r typecheck
+pnpm -r lint
+pnpm release:status
 ```

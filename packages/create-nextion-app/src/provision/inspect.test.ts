@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ProjectContext } from "../project-context.js";
 
 const readFileMock = vi.hoisted(() => vi.fn());
 const runMock = vi.hoisted(() => vi.fn());
@@ -28,23 +27,7 @@ vi.mock("./cloudflare.js", async () => {
 
 import { inspectProvisionRepair } from "./inspect.js";
 
-const context: ProjectContext = {
-  projectDir: "/tmp/demo",
-  metadata: {
-    projectKind: "nextion",
-    projectName: "demo",
-    scaffoldVersion: "0.7.0",
-    defaultLocale: "en",
-    supportedLocales: ["en"],
-    nextionSource: "^1.1.0",
-    enableSiteSettings: true,
-    contentSource: {
-      id: "blog",
-      title: "Blog",
-      fields: [{ key: "title", notionName: "Name" }],
-    },
-  },
-};
+const projectDir = "/tmp/demo";
 
 describe("inspectProvisionRepair", () => {
   beforeEach(() => {
@@ -67,7 +50,7 @@ describe("inspectProvisionRepair", () => {
       stderr: "",
     });
 
-    const entries = await inspectProvisionRepair(context);
+    const entries = await inspectProvisionRepair(projectDir);
 
     expect(entries.map((entry) => entry.label)).toEqual([
       "cloudflare-secret:NOTION_DATA_SOURCE_ID",
@@ -85,7 +68,7 @@ describe("inspectProvisionRepair", () => {
       stderr: "",
     });
 
-    const entries = await inspectProvisionRepair(context);
+    const entries = await inspectProvisionRepair(projectDir);
 
     expect(entries).toEqual([]);
   });
@@ -104,7 +87,7 @@ describe("inspectProvisionRepair", () => {
       stderr: "",
     });
 
-    const entries = await inspectProvisionRepair(context);
+    const entries = await inspectProvisionRepair(projectDir);
 
     await entries[0]?.apply();
 

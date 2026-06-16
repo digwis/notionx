@@ -1,0 +1,18 @@
+// Public API: list items for the {{contentSourceTitle}} content source.
+// Returns a JSON array of published items with their metadata.
+
+import { NextResponse } from "next/server";
+import { listGenericNotionContent } from "@notionx/core/notion";
+import { {{contentSourceVarName}} } from "@/lib/content/models";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  try {
+    const items = await listGenericNotionContent({{contentSourceVarName}});
+    return NextResponse.json({ items });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

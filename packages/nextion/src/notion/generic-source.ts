@@ -1,7 +1,4 @@
 import { cache } from "react";
-import { listBlockChildrenDeep, type NotionBlockClient } from "./blocks";
-import { createNotionClient } from "./client";
-import { getNotionConfigForModel, hasNotionModelConfig } from "./config";
 import { coverImageUrlForPage } from "./media";
 import {
   getCheckboxProperty,
@@ -10,10 +7,16 @@ import {
   getRichTextProperty,
   getSelectProperty,
   getTagsProperty,
+  isRecord,
   isValidPublicSlug,
   notionPageEditUrl,
   pickDescriptionFallback,
 } from "./property-mappers";
+import {
+  createNotionSourceContext,
+  type NotionQueryDataSourceFn,
+  queryAllNotionDataSourcePages,
+} from "./source-helpers";
 import type {
   NotionBlock,
   NotionFieldMap,
@@ -22,16 +25,6 @@ import type {
 } from "./types";
 
 type PropertyMap = Record<string, unknown>;
-
-type DataSourceQueryResponse = {
-  results?: unknown[];
-  has_more?: boolean;
-  next_cursor?: string | null;
-};
-
-type QueryDataSourceInput = {
-  startCursor?: string;
-};
 
 export type GenericContentListItem = {
   pageId: string;
@@ -55,18 +48,10 @@ export type GenericContentSourceDeps<
 > = {
   model: NotionGenericContentModel & { source: { fields: TFields } };
   dataSourceId: string;
-  queryDataSource: (
-    input?: QueryDataSourceInput
-  ) => Promise<DataSourceQueryResponse>;
+  queryDataSource: NotionQueryDataSourceFn;
   getPageBlocks: (pageId: string) => Promise<NotionBlock[]>;
   editBaseUrl?: string;
 };
-
-function normalizePage(input: unknown): NotionPageLike | null {
-  if (!input || typeof input !== "object") return null;
-  const page = input as NotionPageLike;
-  return page.id ? page : null;
-}
 
 function firstFieldName(value: string | readonly string[] | undefined) {
   if (Array.isArray(value)) return value[0];
@@ -195,19 +180,7 @@ export function createGenericNotionContentSource<
 >(deps: GenericContentSourceDeps<TFields>) {
   return {
     async listItems(): Promise<GenericContentListItem[]> {
-      const pages: NotionPageLike[] = [];
-      let cursor: string | undefined;
-
-      do {
-        const response = await deps.queryDataSource({ startCursor: cursor });
-        for (const item of response.results ?? []) {
-          const page = normalizePage(item);
-          if (page) pages.push(page);
-        }
-
-        cursor = response.next_cursor ?? undefined;
-        if (!response.has_more) break;
-      } while (cursor);
+      const pages = await queryAllNotionDataSourcePages(deps.queryDataSource);
 
       return pages
         .map((page) =>
@@ -234,14 +207,13 @@ export function createGenericNotionContentSource<
 async function createDefaultGenericSource<
   TFields extends NotionFieldMap,
 >(model: NotionGenericContentModel & { source: { fields: TFields } }) {
-  if (!(await hasNotionModelConfig(model))) return null;
-
-  const config = await getNotionConfigForModel(model);
-  const client = createNotionClient(config);
+  const ctx = await createNotionSourceContext(model);
+  if (!ctx) return null;
+  const { client, config, editBaseUrl, getPageBlocks } = ctx;
   return createGenericNotionContentSource({
     model,
     dataSourceId: config.dataSourceId,
-    editBaseUrl: config.editBaseUrl,
+    editBaseUrl,
     queryDataSource: async ({ startCursor } = {}) =>
       client.dataSources.query({
         data_source_id: config.dataSourceId,
@@ -254,8 +226,7 @@ async function createDefaultGenericSource<
           : undefined,
         ...(startCursor ? { start_cursor: startCursor } : {}),
       }),
-    getPageBlocks: (pageId) =>
-      listBlockChildrenDeep(client as unknown as NotionBlockClient, pageId),
+    getPageBlocks,
   });
 }
 
@@ -275,8 +246,4 @@ export async function getGenericNotionContentBySlug<
   const source = await sourceCache(model);
   if (!source) return null;
   return source.getItemBySlug(slug);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value && typeof value === "object");
 }

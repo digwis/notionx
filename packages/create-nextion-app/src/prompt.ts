@@ -64,6 +64,36 @@ export interface Answers {
    * keep site config hard-coded in `lib/site/config.ts`.
    */
   enableSiteSettings: boolean;
+  /**
+   * Create a separate Notion data source for reusable structured
+   * page blocks (hero, feature grid, story, latest posts) and wire
+   * `components/page-blocks.tsx` to read from it. Set to `false`
+   * to skip the extra data source and render a no-op `PageBlocks`.
+   */
+  enableBlocks: boolean;
+  /**
+   * Ship the auth module (login/register routes, D1 users table,
+   * session management). Set to `false` to skip auth entirely
+   * (the project becomes a static site with no login).
+   */
+  enableAuth: boolean;
+  /**
+   * Ship the admin dashboard (`/admin/*`). Requires `enableAuth`.
+   * Set to `false` to skip the admin UI (auth still works for
+   * API-protected routes if any).
+   */
+  enableAdmin: boolean;
+  /**
+   * Ship the pages module (`lib/pages/*`, dynamic slug routes).
+   * Requires `enableBlocks`. Set to `false` to render a static
+   * home page instead of Notion-backed pages.
+   */
+  enablePages: boolean;
+  /**
+   * Ship the search module (`lib/search/config.ts`, `/api/search`
+   * route, search UI). Set to `false` to skip search entirely.
+   */
+  enableSearch: boolean;
 }
 
 const FIELD_KEY_RE = /^[a-z][a-zA-Z0-9]*$/;
@@ -124,6 +154,11 @@ export const DEFAULT_ANSWERS: Omit<
   // skip the extra data source entirely (e.g. for projects that
   // don't need operators to edit site copy from Notion).
   enableSiteSettings: true,
+  enableBlocks: true,
+  enableAuth: true,
+  enableAdmin: true,
+  enablePages: true,
+  enableSearch: true,
   contentSource: {
     id: "blog",
     title: "Blog",
@@ -289,6 +324,11 @@ export async function prompt(
     notionParentPage: DEFAULT_ANSWERS.notionParentPage,
     notionSeedCount: DEFAULT_ANSWERS.notionSeedCount,
     enableSiteSettings: DEFAULT_ANSWERS.enableSiteSettings,
+    enableBlocks: DEFAULT_ANSWERS.enableBlocks,
+    enableAuth: DEFAULT_ANSWERS.enableAuth,
+    enableAdmin: DEFAULT_ANSWERS.enableAdmin,
+    enablePages: DEFAULT_ANSWERS.enablePages,
+    enableSearch: DEFAULT_ANSWERS.enableSearch,
     _generatedAdminPassword: adminPassword,
   } as Answers & { _generatedAdminPassword: string };
 }

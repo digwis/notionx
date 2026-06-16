@@ -71,7 +71,7 @@ dist/
 **/.wrangler/
 .playwright-cli/
 
-# Consumer apps scaffolded via `pnpm create vinext-app` are kept locally
+# Consumer apps scaffolded via `npm create nextion-app` are kept locally
 # as working references and never pushed; downstream users scaffold
 # their own apps from the published packages.
 apps/

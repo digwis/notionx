@@ -1,0 +1,10 @@
+// Auth is disabled in this project (scaffolded with `--no-auth` or
+// `nextion remove auth`). This stub exports `undefined` so the
+// worker entry point can pass it to `createNextionWorker`, which
+// skips session cookie reading and the admin gate entirely.
+
+import type { AuthConfig } from "@notionx/core/types";
+
+export const authConfig: AuthConfig | undefined = undefined;
+
+export default authConfig;

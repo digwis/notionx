@@ -744,25 +744,45 @@ async function provisionNotionContentAndPages({
     seedCount,
   });
 
-  const pages = await ensurePagesDatabase({
-    apiToken,
-    parentPageId,
-    projectName: answers.projectName,
-    contentSourceId: answers.contentSource.id,
-    contentSourceTitle: answers.contentSource.title,
-    contentSourceListPath: `/${answers.contentSource.id}`,
-    locale: answers.defaultLocale,
-  });
+  // Pages data source is optional — skip provisioning entirely
+  // when `--no-pages` is set. The fallback `app/page.tsx` doesn't
+  // read from Notion, so no data source is needed.
+  const pages = answers.enablePages
+    ? await ensurePagesDatabase({
+        apiToken,
+        parentPageId,
+        projectName: answers.projectName,
+        contentSourceId: answers.contentSource.id,
+        contentSourceTitle: answers.contentSource.title,
+        contentSourceListPath: `/${answers.contentSource.id}`,
+        locale: answers.defaultLocale,
+      })
+    : {
+        ok: true,
+        skipped: true,
+        dataSourceId: "",
+        seeded: 0,
+      };
 
-  const blocks = await ensureBlocksDatabase({
-    apiToken,
-    parentPageId,
-    projectName: answers.projectName,
-    contentSourceId: answers.contentSource.id,
-    contentSourceTitle: answers.contentSource.title,
-    contentSourceListPath: `/${answers.contentSource.id}`,
-    locale: answers.defaultLocale,
-  });
+  // Blocks data source is optional — skip provisioning entirely
+  // when `--no-blocks` is set. The fallback `components/page-blocks.tsx`
+  // doesn't read from Notion, so no data source is needed.
+  const blocks = answers.enableBlocks
+    ? await ensureBlocksDatabase({
+        apiToken,
+        parentPageId,
+        projectName: answers.projectName,
+        contentSourceId: answers.contentSource.id,
+        contentSourceTitle: answers.contentSource.title,
+        contentSourceListPath: `/${answers.contentSource.id}`,
+        locale: answers.defaultLocale,
+      })
+    : {
+        ok: true,
+        skipped: true,
+        dataSourceId: "",
+        seeded: 0,
+      };
 
   return { content, pages, blocks };
 }

@@ -1,0 +1,25 @@
+// Search adapter configuration. Exports a `D1SearchAdapter` instance
+// backed by the project's D1 database. The worker entry point passes
+// this to `createNextionWorker`, which registers the `/api/search`
+// route automatically.
+//
+// To switch to a different backend (e.g. Cloudflare Vectorize), replace
+// the adapter factory below. The `SearchAdapter` interface in
+// `@notionx/core/search` defines the contract.
+
+import { createD1SearchAdapter } from "@notionx/core/search";
+import type { SearchAdapter } from "@notionx/core/search";
+import { getRequestEnv } from "../site/request-env";
+
+/**
+ * Lazily resolve the D1 database binding from the request environment.
+ * The adapter is created once and reused across requests.
+ */
+function getDatabase() {
+  const env = getRequestEnv();
+  return env.DB;
+}
+
+export const searchAdapter: SearchAdapter = createD1SearchAdapter(getDatabase);
+
+export default searchAdapter;
