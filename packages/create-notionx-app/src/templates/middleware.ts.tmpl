@@ -1,0 +1,56 @@
+// Locale prefix middleware. Parses the `/{locale}` path prefix for
+// non-default locales, sets `x-notionx-locale` on the request so
+// server components and data loaders can read it, and rewrites the
+// URL to strip the prefix so the App Router matches the same route
+// handlers for every locale.
+//
+// Default locale (`{{defaultLocale}}`) stays unprefixed — `/blog`
+// serves the default locale, `/{{defaultLocale}}/blog` redirects to
+// `/blog` to avoid duplicate-content URLs.
+
+import { NextResponse, type NextRequest } from "next/server";
+
+const SUPPORTED_LOCALES = {{supportedLocalesJson}} as readonly string[];
+const DEFAULT_LOCALE = "{{defaultLocale}}";
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const segments = pathname.split("/").filter(Boolean);
+  const firstSegment = segments[0];
+
+  // No locale prefix — default locale.
+  if (!firstSegment || !SUPPORTED_LOCALES.includes(firstSegment)) {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-notionx-locale", DEFAULT_LOCALE);
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    });
+  }
+
+  // Default locale with explicit prefix — redirect to unprefixed URL
+  // to keep canonical URLs clean.
+  if (firstSegment === DEFAULT_LOCALE) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace(`/${DEFAULT_LOCALE}`, "") || "/";
+    return NextResponse.redirect(url, 308);
+  }
+
+  // Non-default locale — strip the prefix and pass the locale via header.
+  const locale = firstSegment;
+  const stripped = pathname.replace(`/${locale}`, "") || "/";
+  const url = request.nextUrl.clone();
+  url.pathname = stripped;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-notionx-locale", locale);
+  return NextResponse.rewrite(url, {
+    request: { headers: requestHeaders },
+  });
+}
+
+export const config = {
+  // Match all paths except static assets, API routes, Next.js
+  // internals, and admin (admin is single-locale by design).
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|admin|.*\\.).*)",
+  ],
+};
