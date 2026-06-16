@@ -5,6 +5,7 @@ import {
   deriveSiteNavigation,
   mapNotionPageToSitePage,
 } from "./index";
+import { createSitePagesApi } from "./source";
 import type { NotionPageLike } from "../notion/types";
 import type { SitePage } from "./types";
 
@@ -117,3 +118,65 @@ function page(input: {
     blocks: [],
   };
 }
+
+describe("createSitePagesApi locale-aware listing", () => {
+  it("returns fallback pages when no translation source is configured", async () => {
+    const model = {
+      source: {
+        tokenEnv: "NOTION_TOKEN",
+        dataSourceEnv: "NOTION_PAGES_DATA_SOURCE_ID",
+        fields: {
+          title: "Name",
+          key: "Key",
+          slug: "Slug",
+          published: "Status",
+        },
+      },
+    } as unknown as Parameters<typeof createSitePagesApi>[0]["model"];
+
+    const api = createSitePagesApi({
+      model,
+      fallbackPages: [
+        {
+          pageId: "home",
+          key: "home",
+          slug: "",
+          href: "/",
+          title: "Home",
+          description: "",
+          seoTitle: "Home",
+          seoDescription: "",
+          layout: "home" as const,
+          published: true,
+          showHeader: true,
+          showFooter: true,
+          showInNav: false,
+          navLabel: "",
+          navOrder: 0,
+          showInFooter: false,
+          footerLabel: "",
+          footerGroup: "",
+          footerOrder: 0,
+          contentSource: "",
+          coverImage: null,
+          editUrl: null,
+          structuredBlocks: [],
+          blocks: [],
+        },
+      ],
+    });
+
+    const pages = await api.listSitePages("zh-CN");
+    expect(pages).toHaveLength(1);
+    expect(pages[0]!.title).toBe("Home");
+
+    const page = await api.getSitePageByKey("home", "zh-CN");
+    expect(page?.title).toBe("Home");
+
+    const nav = await api.getSiteNavigation("zh-CN");
+    expect(nav).toEqual([]);
+
+    const footer = await api.getSiteFooterGroups("zh-CN");
+    expect(footer).toEqual([]);
+  });
+});

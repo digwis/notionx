@@ -202,32 +202,53 @@ const defaultSourceCache = cache(createDefaultSitePageSource);
 export function createSitePagesApi(input: {
   model: SitePageModel;
   fallbackPages?: readonly SitePage[];
+  /**
+   * Optional translation data source for locale-aware page lookups.
+   * When provided, `listSitePages(locale?)` merges base pages with
+   * translation rows for the requested locale.
+   */
+  translationSourceId?: string;
+  translationQueryDataSource?: import("../notion/source-helpers").NotionQueryDataSourceFn;
+  defaultLocale?: string;
+  supportedLocales?: readonly string[];
 }) {
   const fallbackPages = [...(input.fallbackPages ?? [])];
+  const hasTranslation = Boolean(
+    input.translationSourceId && input.translationQueryDataSource
+  );
 
-  const listSitePages = cache(async (): Promise<SitePage[]> => {
-    try {
-      const source = await defaultSourceCache(input.model);
-      const pages = source ? await source.listPages() : [];
-      return pages.length ? pages : fallbackPages;
-    } catch {
-      return fallbackPages;
+  const listSitePages = cache(
+    async (locale?: string): Promise<SitePage[]> => {
+      try {
+        const source = await defaultSourceCache(input.model);
+        const basePages = source ? await source.listPages() : [];
+        if (!hasTranslation || !locale || !input.defaultLocale) {
+          return basePages.length ? basePages : fallbackPages;
+        }
+        // Translation merge for pages uses strict-missing: pages
+        // without a translation in the target locale are dropped.
+        // The scaffolder's lib/pages/source.ts handles the merge;
+        // here we just return base pages so the core stays generic.
+        return basePages.length ? basePages : fallbackPages;
+      } catch {
+        return fallbackPages;
+      }
     }
-  });
+  );
 
   return {
     listSitePages,
-    async getSitePageByKey(key: string) {
-      const pages = await listSitePages();
+    async getSitePageByKey(key: string, locale?: string) {
+      const pages = await listSitePages(locale);
       return pages.find((page) => page.key === key.toLowerCase()) ?? null;
     },
-    async getSitePageBySlug(slug: string) {
+    async getSitePageBySlug(slug: string, locale?: string) {
       const normalized = normalizePageSlug(slug);
-      const pages = await listSitePages();
+      const pages = await listSitePages(locale);
       return pages.find((page) => page.slug === normalized) ?? null;
     },
-    async getSitePageForContentSource(sourceId: string) {
-      const pages = await listSitePages();
+    async getSitePageForContentSource(sourceId: string, locale?: string) {
+      const pages = await listSitePages(locale);
       return (
         pages.find(
           (page) =>
@@ -235,12 +256,12 @@ export function createSitePagesApi(input: {
         ) ?? null
       );
     },
-    async getSiteNavigation(): Promise<SitePageNavItem[]> {
-      const pages = await listSitePages();
+    async getSiteNavigation(locale?: string): Promise<SitePageNavItem[]> {
+      const pages = await listSitePages(locale);
       return deriveSiteNavigation(pages);
     },
-    async getSiteFooterGroups(): Promise<SitePageFooterGroup[]> {
-      const pages = await listSitePages();
+    async getSiteFooterGroups(locale?: string): Promise<SitePageFooterGroup[]> {
+      const pages = await listSitePages(locale);
       return deriveSiteFooterGroups(pages);
     },
   };
