@@ -10,6 +10,7 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LocaleSwitcher } from "./locale-switcher";
 import { i18n } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/site/request-env";
 import { getSiteNavigation } from "@/lib/pages/source";
 import { getSiteSettings } from "@/lib/site/settings";
 
@@ -20,9 +21,10 @@ type NavItem = {
 };
 
 export async function SiteHeader() {
+  const locale = getRequestLocale(i18n.defaultLocale);
   const [pageNav, settings] = await Promise.all([
-    getSiteNavigation() as Promise<NavItem[]>,
-    getSiteSettings(),
+    getSiteNavigation(locale) as Promise<NavItem[]>,
+    getSiteSettings(locale),
   ]);
   const nav =
     pageNav.length > 0 ? pageNav : (settings.navigation.main as unknown as NavItem[]);
@@ -64,7 +66,7 @@ export async function SiteHeader() {
             </Button>
           ) : null}
           {i18n.supportedLocales.length > 1 ? (
-            <LocaleSwitcher currentLocale={i18n.defaultLocale} />
+            <LocaleSwitcher currentLocale={locale} />
           ) : null}
           <ThemeToggle />
           <Button asChild variant="outline" size="sm">
