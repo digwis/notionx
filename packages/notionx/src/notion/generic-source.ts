@@ -17,6 +17,12 @@ import {
   type NotionQueryDataSourceFn,
   queryAllNotionDataSourcePages,
 } from "./source-helpers";
+import {
+  localizeContentList,
+  mapNotionPageToLocalizedContentTranslation,
+  type LocalizedContentFields,
+} from "../content/localized";
+import type { LocaleContract } from "../locale-contract/contract";
 import type {
   NotionBlock,
   NotionFieldMap,
@@ -51,6 +57,22 @@ export type GenericContentSourceDeps<
   queryDataSource: NotionQueryDataSourceFn;
   getPageBlocks: (pageId: string) => Promise<NotionBlock[]>;
   editBaseUrl?: string;
+  /**
+   * Optional translation data source. When provided, `listItems(locale?)`
+   * and `getItemBySlug(slug, locale?)` merge base rows with translation
+   * rows for the requested locale according to the contract's fallback
+   * rule. When omitted, the source behaves as a single-locale source.
+   */
+  translationSourceId?: string;
+  translationQueryDataSource?: NotionQueryDataSourceFn;
+  contract?: LocaleContract;
+  defaultLocale?: string;
+  supportedLocales?: readonly string[];
+  /**
+   * Field map for the translation data source. Defaults to the contract's
+   * `translationFields` when a contract is provided.
+   */
+  translationFields?: LocalizedContentFields;
 };
 
 function firstFieldName(value: string | readonly string[] | undefined) {
@@ -178,22 +200,98 @@ export function isRenderableGenericContentItem(item: GenericContentListItem) {
 export function createGenericNotionContentSource<
   TFields extends NotionFieldMap,
 >(deps: GenericContentSourceDeps<TFields>) {
-  return {
-    async listItems(): Promise<GenericContentListItem[]> {
-      const pages = await queryAllNotionDataSourcePages(deps.queryDataSource);
+  const hasTranslation =
+    Boolean(deps.translationSourceId && deps.translationQueryDataSource);
 
-      return pages
+  async function loadTranslations() {
+    if (!hasTranslation || !deps.translationQueryDataSource) return [];
+    const pages = await queryAllNotionDataSourcePages(
+      deps.translationQueryDataSource
+    );
+    const fields =
+      deps.translationFields ??
+      (deps.contract?.translationFields as LocalizedContentFields | undefined);
+    if (!fields) return [];
+    return pages
+      .map((page) =>
+        mapNotionPageToLocalizedContentTranslation(page, {
+          fields,
+          editBaseUrl: deps.editBaseUrl,
+          isValidLocale: deps.supportedLocales
+            ? (locale: string) =>
+                (deps.supportedLocales as readonly string[]).includes(locale)
+            : undefined,
+        })
+      )
+      .filter((row): row is NonNullable<typeof row> => row !== null);
+  }
+
+  return {
+    async listItems(locale?: string): Promise<GenericContentListItem[]> {
+      const pages = await queryAllNotionDataSourcePages(deps.queryDataSource);
+      const baseItems = pages
         .map((page) =>
           mapNotionPageToGenericContentItem(deps.model, page, {
             editBaseUrl: deps.editBaseUrl,
           })
         )
-        .filter(isRenderableGenericContentItem)
-        .sort((a, b) => b.date.localeCompare(a.date));
+        .filter(isRenderableGenericContentItem);
+
+      if (!hasTranslation || !locale || !deps.contract || !deps.defaultLocale) {
+        return baseItems.sort((a, b) => b.date.localeCompare(a.date));
+      }
+
+      const translations = await loadTranslations();
+      const contract = deps.contract;
+      const defaultLocale = deps.defaultLocale;
+
+      if (contract.fallback === "hide") {
+        return localizeContentList({
+          baseItems,
+          translations,
+          locale,
+          defaultLocale,
+          getBasePageId: (item) => item.pageId,
+          getTranslationLocale: (row) => row.locale,
+          getTranslationSourcePageId: (row) => row.sourcePageId,
+          applyTranslation: (base, translation) => ({
+            ...base,
+            title: translation.title,
+            slug: translation.slug,
+            description: translation.seoDescription || base.description,
+          }),
+          fallback: (base) => base,
+          sort: (a, b) => b.date.localeCompare(a.date),
+        });
+      }
+
+      // default-locale + strict-missing: return base items when no
+      // translation matches; the caller decides whether to 404.
+      const localized = localizeContentList({
+        baseItems,
+        translations,
+        locale,
+        defaultLocale,
+        getBasePageId: (item) => item.pageId,
+        getTranslationLocale: (row) => row.locale,
+        getTranslationSourcePageId: (row) => row.sourcePageId,
+        applyTranslation: (base, translation) => ({
+          ...base,
+          title: translation.title,
+          slug: translation.slug,
+          description: translation.seoDescription || base.description,
+        }),
+        fallback: (base) => base,
+        sort: (a, b) => b.date.localeCompare(a.date),
+      });
+      return localized;
     },
 
-    async getItemBySlug(slug: string): Promise<GenericContentDetail | null> {
-      const items = await this.listItems();
+    async getItemBySlug(
+      slug: string,
+      locale?: string
+    ): Promise<GenericContentDetail | null> {
+      const items = await this.listItems(locale);
       const item = items.find((candidate) => candidate.slug === slug);
       if (!item) return null;
       return {
