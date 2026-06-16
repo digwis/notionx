@@ -181,8 +181,8 @@ async function buildTokenMap(
           adminEmail: answers.adminEmail,
           adminPassword: answers.adminPassword,
           scaffoldVersion,
-          bilingual: answers.supportedLocales.length > 1,
         },
+        bilingual: answers.supportedLocales.length > 1,
         installed: [
           {
             id: answers.contentSource.id,
