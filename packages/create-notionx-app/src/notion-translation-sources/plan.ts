@@ -6,6 +6,13 @@
 // resolves into actual Notion resources.
 
 import type { TranslationSourceRef } from "../metadata.js";
+import {
+  buildBlogTranslationProperties,
+  buildPageTranslationProperties,
+  buildBlockTranslationProperties,
+  buildSiteSettingsTranslationProperties,
+  type NotionPropertyMap,
+} from "../provision/notion.js";
 
 export type NotionTranslationSourcePlan = {
   modelId:
@@ -14,10 +21,12 @@ export type NotionTranslationSourcePlan = {
     | "block-translations"
     | "site-settings-translations";
   envVar: string;
+  apiToken: string;
   parentPageId: string;
   copyFrom?: string;
   existingDataSourceId?: string;
   action: "create" | "reuse";
+  properties: NotionPropertyMap;
 };
 
 const MODEL_ID_TO_ENV: Record<
@@ -38,6 +47,16 @@ const ALL_MODEL_IDS: NotionTranslationSourcePlan["modelId"][] = [
   "site-settings-translations",
 ];
 
+const MODEL_ID_TO_PROPERTIES: Record<
+  NotionTranslationSourcePlan["modelId"],
+  NotionPropertyMap
+> = {
+  "blog-translations": buildBlogTranslationProperties(),
+  "page-translations": buildPageTranslationProperties(),
+  "block-translations": buildBlockTranslationProperties(),
+  "site-settings-translations": buildSiteSettingsTranslationProperties(),
+};
+
 export type PlanNotionTranslationSourcesInput = {
   locale: string;
   parentPageId: string;
@@ -55,10 +74,12 @@ export function planNotionTranslationSources(
     return {
       modelId,
       envVar,
+      apiToken: input.apiToken,
       parentPageId: input.parentPageId,
       copyFrom: input.copyFrom,
       existingDataSourceId: existing?.dataSourceId,
       action: existing ? "reuse" : "create",
+      properties: MODEL_ID_TO_PROPERTIES[modelId],
     };
   });
 }

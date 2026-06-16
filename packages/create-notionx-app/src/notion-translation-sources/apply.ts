@@ -5,7 +5,7 @@
 // translation sources; everything else flows through the same
 // `LocaleAddChange` runner.
 
-import { runNtn } from "../provision/shell.js";
+import { createDatabaseWithProperties } from "../provision/notion.js";
 import type { NotionTranslationSourcePlan } from "./plan.js";
 
 export type ApplyTranslationSourcesResult = {
@@ -26,31 +26,16 @@ export async function applyNotionTranslationSources(
       continue;
     }
     try {
-      const cli = await runNtn([
-        "databases",
-        "create",
-        "--parent",
-        plan.parentPageId,
-        "--title",
-        titleFor(plan.modelId),
-      ]);
-      if (cli.code !== 0) {
-        result.failures.push({
-          modelId: plan.modelId,
-          error: cli.stderr || cli.stdout,
-        });
-        continue;
-      }
-      const parsed = JSON.parse(cli.stdout) as { dataSourceId?: string };
-      const dataSourceId = parsed.dataSourceId;
-      if (!dataSourceId) {
-        result.failures.push({
-          modelId: plan.modelId,
-          error: "ntn did not return a dataSourceId",
-        });
-        continue;
-      }
-      result.resolved[plan.modelId] = { dataSourceId, envVar: plan.envVar };
+      const created = await createDatabaseWithProperties({
+        apiToken: plan.apiToken,
+        parentPageId: plan.parentPageId,
+        title: titleFor(plan.modelId),
+        properties: plan.properties,
+      });
+      result.resolved[plan.modelId] = {
+        dataSourceId: created.dataSourceId,
+        envVar: plan.envVar,
+      };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       result.failures.push({ modelId: plan.modelId, error: message });

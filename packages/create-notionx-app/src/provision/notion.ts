@@ -42,8 +42,8 @@ export interface PagesProvisionInput {
   locale?: string;
 }
 
-type NotionPropertyDefinition = Record<string, unknown>;
-type NotionPropertyMap = Record<string, NotionPropertyDefinition>;
+export type NotionPropertyDefinition = Record<string, unknown>;
+export type NotionPropertyMap = Record<string, NotionPropertyDefinition>;
 
 interface ExistingDatabaseInfo {
   databaseId: string;
@@ -1402,7 +1402,7 @@ function findMatchingField(
   return configured;
 }
 
-async function createDatabaseWithProperties(input: {
+export async function createDatabaseWithProperties(input: {
   apiToken: string;
   parentPageId: string;
   title: string;
