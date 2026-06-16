@@ -1,13 +1,13 @@
 # Adding or modifying a content source
 
-Scope: editing an existing nextion consumer project to add or change a
+Scope: editing an existing notionx consumer project to add or change a
 Notion-backed `defineContentSource(...)` module. For broader add/replace/remove
 work, also read `domain-module.md`.
 
 ## Mental model
 
 A content source bridges a Notion data source to a public/admin surface in a
-nextion project. `defineContentSource` registers metadata so package features can
+notionx project. `defineContentSource` registers metadata so package features can
 discover it, but the project still owns concrete pages, optional APIs, UI, docs,
 and tests.
 
@@ -87,7 +87,7 @@ keys stable when renaming Notion columns.
 If `worker/index.ts` imports individual sources, add the new one:
 
 ```ts
-const nextion = createNextionWorker({
+const notionx = createNotionxWorker({
   sources: [blogSource, podcastSource],
   adminNav,
   authConfig,
@@ -149,7 +149,7 @@ Add `NOTION_PODCASTS_DATA_SOURCE_ID` to:
 ### 8. Verify
 
 ```bash
-pnpm nextion:doctor
+pnpm notionx:doctor
 pnpm test
 pnpm build
 pnpm dev

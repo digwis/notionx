@@ -1,10 +1,10 @@
 // packages/create-nextion-app/src/registry/migrations-store.ts
 //
-// Read / write `.nextion/migrations/`.
+// Read / write `.notionx/migrations/`.
 //
 // Layout:
 //
-//   .nextion/
+//   .notionx/
 //   ├── registry.json
 //   └── migrations/
 //       ├── _meta.json
@@ -25,11 +25,11 @@ import {
   type AppliedMigration,
 } from "./migrations-types.js";
 
-export const MIGRATIONS_DIR = ".nextion/migrations" as const;
+export const MIGRATIONS_DIR = ".notionx/migrations" as const;
 export const MIGRATIONS_META = "_meta.json" as const;
 
 export const MIGRATIONS_SCHEMA_V1 =
-  "https://nextion.dev/schemas/migrations-meta.v1.json" as const;
+  "https://notionx.dev/schemas/migrations-meta.v1.json" as const;
 
 /**
  * Empty `migrations/` directory shape. Used as the default when
@@ -44,7 +44,7 @@ export function emptyMeta(nextSequence = 1): MigrationMetaFile {
 }
 
 /**
- * Read `_meta.json` from `<projectDir>/.nextion/migrations/`. Returns
+ * Read `_meta.json` from `<projectDir>/.notionx/migrations/`. Returns
  * `null` when the directory doesn't exist (caller should treat as
  * empty migrations history).
  */
@@ -116,7 +116,7 @@ export async function markMigrationApplied(
   const meta = await readMigrationsMeta(projectDir);
   if (!meta) {
     throw new Error(
-      `Cannot mark migration ${sequence} applied: .nextion/migrations/_meta.json does not exist.`,
+      `Cannot mark migration ${sequence} applied: .notionx/migrations/_meta.json does not exist.`,
     );
   }
   const next: MigrationMetaFile = {

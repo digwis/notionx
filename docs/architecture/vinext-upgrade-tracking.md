@@ -1,6 +1,6 @@
 # vinext 版本升级追踪
 
-本文件记录 nextion 依赖 vinext 的版本历史与升级检查清单，用于在每次升级前评估风险、升级后验证回归。
+本文件记录 notionx 依赖 vinext 的版本历史与升级检查清单，用于在每次升级前评估风险、升级后验证回归。
 
 ## 当前版本
 
@@ -70,15 +70,15 @@
 ```bash
 # 1. 类型检查
 pnpm --filter @notionx/core typecheck
-pnpm --filter @notionx/create-nextion-app typecheck
+pnpm --filter @notionx/create-notionx-app typecheck
 
 # 2. 单元测试
 pnpm --filter @notionx/core test           # 69 tests
-pnpm --filter @notionx/create-nextion-app test  # 208 tests
+pnpm --filter @notionx/create-notionx-app test  # 208 tests
 
 # 3. Lint
 pnpm --filter @notionx/core lint
-pnpm --filter @notionx/create-nextion-app lint
+pnpm --filter @notionx/create-notionx-app lint
 
 # 4. 构建（验证 tsup 产物正常）
 pnpm --filter @notionx/core build

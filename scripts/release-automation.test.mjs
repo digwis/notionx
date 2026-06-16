@@ -26,7 +26,7 @@ test("release workflow pushes the version bump before publishing", async () => {
 test("planPublications skips versions that are already on npm", () => {
   const packages = [
     {
-      name: "@notionx/create-nextion-app",
+      name: "@notionx/create-notionx-app",
       version: "0.6.0",
       directory: "packages/create-nextion-app",
     },
@@ -39,7 +39,7 @@ test("planPublications skips versions that are already on npm", () => {
 
   const plan = planPublications(
     packages,
-    new Set(["@notionx/create-nextion-app@0.6.0"])
+    new Set(["@notionx/create-notionx-app@0.6.0"])
   );
 
   assert.deepEqual(plan, {

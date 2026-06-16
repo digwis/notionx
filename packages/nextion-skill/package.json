@@ -1,10 +1,10 @@
 {
   "name": "@notionx/skill",
   "version": "0.2.0",
-  "description": "One-command installer for the official nextion AI agent skill (Claude Code, Trae IDE, OpenAI Codex).",
+  "description": "One-command installer for the official notionx AI agent skill (Claude Code, Trae IDE, OpenAI Codex).",
   "type": "module",
   "bin": {
-    "nextion-skill": "./dist/cli.js"
+    "notionx-skill": "./dist/cli.js"
   },
   "files": [
     "dist",
@@ -23,7 +23,7 @@
     "prepublishOnly": "pnpm build"
   },
   "keywords": [
-    "nextion",
+    "notionx",
     "vinext",
     "cloudflare",
     "workers",

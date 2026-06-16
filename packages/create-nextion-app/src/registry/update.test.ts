@@ -65,14 +65,14 @@ async function seedProject(
     }),
     "utf8",
   );
-  await mkdir(path.join(projectDir, ".nextion"), { recursive: true });
+  await mkdir(path.join(projectDir, ".notionx"), { recursive: true });
   await writeFile(
-    path.join(projectDir, ".nextion/registry.json"),
+    path.join(projectDir, ".notionx/registry.json"),
     JSON.stringify({
       $schema: REGISTRY_SCHEMA_V2,
-      projectKind: "nextion",
+      projectKind: "notionx",
       scaffoldVersion: "2.0.0",
-      nextionCore: "^2.0.0",
+      notionxCore: "^2.0.0",
       compat: { mode: "v2-native" },
       registries: {},
       installed,
@@ -91,8 +91,8 @@ describe("applyUpdate", () => {
   let templatesDir: string;
 
   beforeEach(async () => {
-    dir = await mkdtemp(path.join(os.tmpdir(), "nextion-update-"));
-    await mkdir(path.join(dir, ".nextion"), { recursive: true });
+    dir = await mkdtemp(path.join(os.tmpdir(), "notionx-update-"));
+    await mkdir(path.join(dir, ".notionx"), { recursive: true });
     templatesDir = await resolveTemplatesDir();
   });
   afterEach(async () => {
@@ -126,7 +126,7 @@ describe("applyUpdate", () => {
     // not touched (we don't have a network call here).
     const notionDiffPath = path.join(
       dir,
-      ".nextion/migrations/blog_1_to_2.notion-diff.json",
+      ".notionx/migrations/blog_1_to_2.notion-diff.json",
     );
     const diff = JSON.parse(await readFile(notionDiffPath, "utf8"));
     expect(diff.steps).toEqual(
@@ -137,7 +137,7 @@ describe("applyUpdate", () => {
 
     // The D1 SQL file was written
     const sql = await readFile(
-      path.join(dir, ".nextion/migrations/blog_1_to_2.d1.sql"),
+      path.join(dir, ".notionx/migrations/blog_1_to_2.d1.sql"),
       "utf8",
     );
     expect(sql).toContain("CREATE TABLE blog_authors");
@@ -145,7 +145,7 @@ describe("applyUpdate", () => {
     // _meta.json is updated
     const meta = JSON.parse(
       await readFile(
-        path.join(dir, ".nextion/migrations/_meta.json"),
+        path.join(dir, ".notionx/migrations/_meta.json"),
         "utf8",
       ),
     );

@@ -1,14 +1,14 @@
 /**
- * OpenAI Codex installer: writes the nextion rule to `AGENTS.md`.
+ * OpenAI Codex installer: writes the notionx rule to `AGENTS.md`.
  *
  * Codex's project-level AGENTS.md is a *shared* conventions file. We do not
  * silently overwrite it. Instead:
  *
- *   - If the file does not exist, create it with the nextion content as the
+ *   - If the file does not exist, create it with the notionx content as the
  *     full body.
- *   - If the file exists and the nextion section is not already there,
- *     **append** a `## nextion` section.
- *   - If the file exists and the nextion section is already there, skip
+ *   - If the file exists and the notionx section is not already there,
+ *     **append** a `## notionx` section.
+ *   - If the file exists and the notionx section is already there, skip
  *     (idempotent re-runs).
  *   - If `--force` is set, overwrite the whole file.
  *
@@ -34,8 +34,8 @@ export interface InstallCodexOptions {
 /** Filename Codex reads for agent instructions. */
 const CODEX_AGENTS_FILE = "AGENTS.md";
 
-/** Marker we use to detect a previously-installed nextion section. */
-const NEXTION_SECTION_HEADER = "## nextion";
+/** Marker we use to detect a previously-installed notionx section. */
+const NOTIONX_SECTION_HEADER = "## notionx";
 
 /** Resolve the full path to the AGENTS.md file. */
 function resolveAgentsPath(scope: Scope, cwd: string): string {
@@ -60,16 +60,16 @@ function buildFreshBody(content: string): string {
 function buildAppendedSection(content: string): string {
   const trimmed = content.endsWith("\n") ? content : `${content}\n`;
   // Two newlines before the header so we get a clean section break.
-  return `\n${NEXTION_SECTION_HEADER}\n\n${trimmed}`;
+  return `\n${NOTIONX_SECTION_HEADER}\n\n${trimmed}`;
 }
 
 /**
- * Check whether `body` already contains a nextion section. We use a
- * heuristic: the literal `## nextion` header (case-insensitive, allowing
+ * Check whether `body` already contains a notionx section. We use a
+ * heuristic: the literal `## notionx` header (case-insensitive, allowing
  * for trailing whitespace / extra # levels).
  */
-function hasNextionSection(body: string): boolean {
-  return /(^|\n)#{1,6}\s+nextion\b/i.test(body);
+function hasNotionxSection(body: string): boolean {
+  return /(^|\n)#{1,6}\s+notionx\b/i.test(body);
 }
 
 export async function installCodex(
@@ -99,7 +99,7 @@ export async function installCodex(
 
   // No-force path: branch on whether the file exists.
   if (!existsSync(filePath)) {
-    // Brand new file: create with the nextion content.
+    // Brand new file: create with the notionx content.
     const result = await writeUnlessExists(filePath, buildFreshBody(content), {
       dryRun: opts.dryRun,
     });
@@ -111,7 +111,7 @@ export async function installCodex(
     return { target: "codex", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
   }
 
-  // File exists. Read it and check whether nextion is already there.
+  // File exists. Read it and check whether notionx is already there.
   let existing = "";
   if (!opts.dryRun) {
     existing = await readFile(filePath, "utf8");
@@ -121,10 +121,10 @@ export async function installCodex(
     existing = "";
   }
 
-  if (hasNextionSection(existing)) {
+  if (hasNotionxSection(existing)) {
     skipped.push({
       path: filePath,
-      reason: "nextion section already present in AGENTS.md (use --force to overwrite)",
+      reason: "notionx section already present in AGENTS.md (use --force to overwrite)",
     });
     return { target: "codex", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
   }

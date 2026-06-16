@@ -15,7 +15,7 @@
 import type { RegistryItem } from "./registry-types.js";
 
 const OFFICIAL_REGISTRY = "@notionx/official" as const;
-const OFFICIAL_URL = "https://registry.nextion.dev/official.json" as const;
+const OFFICIAL_URL = "https://registry.notionx.dev/official.json" as const;
 const PUBLISHED_AT = "2026-06-16T00:00:00.000Z" as const;
 
 const officialSource: RegistryItem["source"] = {

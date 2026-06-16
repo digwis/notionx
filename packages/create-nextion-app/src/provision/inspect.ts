@@ -86,8 +86,8 @@ export async function inspectProvisionRepair(
   addSecretEntry("NOTION_DATA_SOURCE_ID", local.notionDataSourceId);
   addSecretEntry("NOTION_PAGES_DATA_SOURCE_ID", local.notionPagesDataSourceId);
 
-  // Translation-source secrets come from `.nextion/scaffold.json`
-  // (the metadata written by `nextion locale add --with-notion`).
+  // Translation-source secrets come from `.notionx/scaffold.json`
+  // (the metadata written by `notionx locale add --with-notion`).
   // Surface them in the update repair so a fresh deploy picks them
   // up automatically.
   const localTranslations = await readLocalTranslationSourceState(
@@ -122,7 +122,7 @@ async function readLocalTranslationSourceState(
 ): Promise<Record<string, { envVar: string; dataSourceId: string }>> {
   try {
     const raw = await readFile(
-      path.join(projectDir, ".nextion", "scaffold.json"),
+      path.join(projectDir, ".notionx", "scaffold.json"),
       "utf8"
     );
     const parsed = JSON.parse(raw) as {

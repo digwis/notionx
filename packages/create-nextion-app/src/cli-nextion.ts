@@ -30,7 +30,7 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
     const localeArg = argv[2];
     if (!localeArg) {
       throw new Error(
-        "Usage: nextion locale add <locale> [--apply] [--with-notion] [--copy-from <locale>]"
+        "Usage: notionx locale add <locale> [--apply] [--with-notion] [--copy-from <locale>]"
       );
     }
     const tail = argv.slice(3);
@@ -99,7 +99,7 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
   }
 
   if (command === "diff" && subcommand === "--upgrade") {
-    // v2: `nextion update --dry-run` is the canonical preview path.
+    // v2: `notionx update --dry-run` is the canonical preview path.
     // `diff --upgrade` is kept as a thin alias that points users there.
     p.log.info(
       "Use `notionx update --dry-run` to preview pending migrations.",
@@ -136,7 +136,7 @@ Options:
     if (coreOnly) {
       // v2 P0: --core is informational. P1 will fetch the latest
       // from the npm registry via RegistryClient and bump
-      // manifest.nextionCore + package.json atomically.
+      // manifest.notionxCore + package.json atomically.
       const tplDir = await resolveTemplatesDir();
       const { listOfficialItems } = await import("./registry/registry-items.js");
       const { runProjectDoctor } = await import("./registry/doctor.js");
@@ -181,7 +181,7 @@ Options:
       p.log.info(`Next migration sequence: ${summary.sequence}`);
     }
     for (const f of summary.wroteFiles) {
-      p.log.info(`  wrote .nextion/migrations/${f}`);
+      p.log.info(`  wrote .notionx/migrations/${f}`);
     }
     for (const f of summary.rerenderedFiles) {
       p.log.info(`  re-rendered ${f}`);
@@ -227,7 +227,7 @@ Options:
 
   if (command === "pull") {
     // v2.1 feature: reverse-sync from real Notion + D1 state
-    // back into .nextion/migrations/. Not implemented yet.
+    // back into .notionx/migrations/. Not implemented yet.
     p.log.info("notionx pull is not yet implemented (planned for v2.1).");
     p.log.info("See docs/architecture/registry-protocol.md#44 for the design.");
     return;
@@ -242,7 +242,7 @@ Options:
     if (!id || id === "--list") {
       // List installable items from the official catalog, hiding
       // the default scaffold item (`blog`) since it ships with
-      // `nextion init` and `add blog` is a no-op.
+      // `notionx init` and `add blog` is a no-op.
       const DEFAULT_SCAFFOLD_IDS = new Set(["blog"]);
 
       // Try to load the project's manifest so we can show
@@ -254,7 +254,7 @@ Options:
         const loaded = await loadRegistry(process.cwd());
         installedIds = new Set(loaded.manifest.installed.map((i) => i.id));
       } catch {
-        // Not a nextion project, or no registry yet — that's fine.
+        // Not a notionx project, or no registry yet — that's fine.
       }
 
       const kindLabel: Record<string, string> = {
@@ -271,7 +271,7 @@ Options:
       }
       if (installedIds === null) {
         p.log.info(
-          "\n  Run this inside a nextion project to see install status.",
+          "\n  Run this inside a notionx project to see install status.",
         );
       }
       return;
@@ -368,7 +368,7 @@ Options:
     );
 
     // Bump the installed item's version in registry.json so the
-    // next `nextion update` doesn't re-emit the same migration.
+    // next `notionx update` doesn't re-emit the same migration.
     // The migration entry's label follows the convention
     // `<itemId> <fromV>-><toV>` (e.g. "blog 1->2").
     const entry = next.history.find((h) => h.sequence === seq);
@@ -403,7 +403,7 @@ Options:
   }
 
   if (command === "locale" && !subcommand) {
-    p.log.info("Usage: npx nextion locale <add|list> ...");
+    p.log.info("Usage: npx notionx locale <add|list> ...");
     p.log.info("  add <locale> [--apply] [--with-notion] [--copy-from <locale>]");
     p.log.info("  list");
     return;

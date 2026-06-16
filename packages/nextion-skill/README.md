@@ -1,11 +1,11 @@
 # @notionx/skill
 
-One-command installer for the official **nextion** AI agent skill.
+One-command installer for the official **notionx** AI agent skill.
 Supports Claude Code, Trae IDE, and **OpenAI Codex**.
 
-`nextion` is a Next.js App Router framework on Cloudflare Workers with Notion
+`notionx` is a Next.js App Router framework on Cloudflare Workers with Notion
 as the CMS. This package teaches any AI coding assistant how to work on a
-nextion project — see [SKILL.md][skill] for the full description.
+notionx project — see [SKILL.md][skill] for the full description.
 
 ## Install the skill
 
@@ -47,13 +47,13 @@ target.
 
 | Target | User-scope | Project-scope |
 |---|---|---|
-| `claude` | `~/.claude/skills/nextion/` | `./.claude/skills/nextion/` |
-| `trae` | `~/.trae/skills/nextion/` | `./.trae/skills/nextion/` |
+| `claude` | `~/.claude/skills/notionx/` | `./.claude/skills/notionx/` |
+| `trae` | `~/.trae/skills/notionx/` | `./.trae/skills/notionx/` |
 | `codex` | `~/.codex/AGENTS.md` | `./AGENTS.md` |
 
 > **Codex note:** `AGENTS.md` is a *shared* file. The installer is
-> append-aware: if the file already exists, it appends a `## nextion`
-> section instead of overwriting. If a `## nextion` section is already
+> append-aware: if the file already exists, it appends a `## notionx`
+> section instead of overwriting. If a `## notionx` section is already
 > present, the install is a no-op. Pass `--force` to overwrite. Uninstall
 > is manual (the CLI prints the file path and section to remove).
 
@@ -75,8 +75,8 @@ npx @notionx/skill install --target all --scope project --json
 
 ## How it works
 
-The skill content lives at the top of the nextion monorepo:
-[`skills/nextion/`][skill-folder]. When this npm package is published, a
+The skill content lives at the top of the notionx monorepo:
+[`skills/notionx/`][skill-folder]. When this npm package is published, a
 prepublish script copies that folder into `skill/` so it's bundled with
 the tarball. At runtime the CLI:
 
@@ -97,12 +97,12 @@ pnpm dev install --target codex --scope project --source local
 ```
 
 The `pretest` and `prebuild` scripts run `scripts/sync-bundled-skill.mjs`,
-which copies `../../skills/nextion/` into this package's `skill/` folder.
+which copies `../../skills/notionx/` into this package's `skill/` folder.
 That keeps the bundled content in sync with the source of truth.
 
 ## License
 
-MIT © zhaofilms — same as the rest of the nextion monorepo.
+MIT © zhaofilms — same as the rest of the notionx monorepo.
 
-[skill]: https://github.com/digwis/nextion/blob/main/skills/nextion/SKILL.md
-[skill-folder]: https://github.com/digwis/nextion/tree/main/skills/nextion
+[skill]: https://github.com/digwis/nextion/blob/main/skills/notionx/SKILL.md
+[skill-folder]: https://github.com/digwis/nextion/tree/main/skills/notionx

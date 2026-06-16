@@ -35,15 +35,15 @@ async function writeV2ManifestWith(
   managedFiles: { platform?: string[]; bridge?: string[]; user?: string[] } = {},
   overrides: Record<string, unknown> = {},
 ) {
-  await mkdir(path.join(projectDir, ".nextion"), { recursive: true });
+  await mkdir(path.join(projectDir, ".notionx"), { recursive: true });
   await writeFile(
-    path.join(projectDir, ".nextion/registry.json"),
+    path.join(projectDir, ".notionx/registry.json"),
     JSON.stringify({
       $schema: REGISTRY_SCHEMA_V2,
-      projectKind: "nextion",
+      projectKind: "notionx",
       projectName: "demo",
       scaffoldVersion: "2.0.0",
-      nextionCore: "^2.0.0",
+      notionxCore: "^2.0.0",
       defaultLocale: "en",
       supportedLocales: ["en"],
       enableSiteSettings: true,
@@ -73,8 +73,8 @@ describe("uninstallItem", () => {
   let templatesDir: string;
 
   beforeEach(async () => {
-    dir = await mkdtemp(path.join(os.tmpdir(), "nextion-uninstall-"));
-    await mkdir(path.join(dir, ".nextion"), { recursive: true });
+    dir = await mkdtemp(path.join(os.tmpdir(), "notionx-uninstall-"));
+    await mkdir(path.join(dir, ".notionx"), { recursive: true });
     templatesDir = await resolveTemplatesDir();
   });
   afterEach(async () => {
@@ -113,7 +113,7 @@ describe("uninstallItem", () => {
     expect(summary.rerenderedModels).toBe(true);
 
     const manifestRaw = await fs.readFile(
-      path.join(dir, ".nextion/registry.json"),
+      path.join(dir, ".notionx/registry.json"),
       "utf8",
     );
     const manifest = JSON.parse(manifestRaw) as {
@@ -175,7 +175,7 @@ describe("uninstallItem", () => {
     expect(summary.removedItem.id).toBe("docs");
 
     const manifestRaw = await fs.readFile(
-      path.join(dir, ".nextion/registry.json"),
+      path.join(dir, ".notionx/registry.json"),
       "utf8",
     );
     const manifest = JSON.parse(manifestRaw) as {
@@ -221,7 +221,7 @@ describe("uninstallItem", () => {
 
     // Manifest is unchanged
     const manifestRaw = await fs.readFile(
-      path.join(dir, ".nextion/registry.json"),
+      path.join(dir, ".notionx/registry.json"),
       "utf8",
     );
     const manifest = JSON.parse(manifestRaw) as {
@@ -273,7 +273,7 @@ describe("uninstallItem", () => {
 
     // The manifest flag should be flipped to false.
     const manifestRaw = await fs.readFile(
-      path.join(dir, ".nextion/registry.json"),
+      path.join(dir, ".notionx/registry.json"),
       "utf8",
     );
     const manifest = JSON.parse(manifestRaw) as {
@@ -348,7 +348,7 @@ describe("uninstallItem", () => {
 
     // Manifest unchanged.
     const manifestRaw = await fs.readFile(
-      path.join(dir, ".nextion/registry.json"),
+      path.join(dir, ".notionx/registry.json"),
       "utf8",
     );
     const manifest = JSON.parse(manifestRaw) as {

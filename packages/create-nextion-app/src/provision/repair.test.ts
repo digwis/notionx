@@ -26,11 +26,11 @@ vi.mock("./inspect.js", async () => {
 
 const registry: LoadedRegistry = {
   manifest: {
-    $schema: "https://nextion.dev/schemas/registry.v2.json",
-    projectKind: "nextion",
+    $schema: "https://notionx.dev/schemas/registry.v2.json",
+    projectKind: "notionx",
     projectName: "demo",
     scaffoldVersion: "0.4.10",
-    nextionCore: "^0.1.2",
+    notionxCore: "^0.1.2",
     defaultLocale: "en",
     supportedLocales: ["en"],
     enableSiteSettings: true,
@@ -71,7 +71,7 @@ describe("runProvisionRepair", () => {
       targetDir: "./demo",
       defaultLocale: "en",
       supportedLocales: ["en"],
-      nextionSource: "^0.1.2",
+      notionxSource: "^0.1.2",
       enableSiteSettings: true,
       enableBlocks: true,
       enableAuth: true,

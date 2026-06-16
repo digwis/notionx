@@ -46,7 +46,7 @@ export async function readProjectMeta(
     targetDir: projectDir,
     defaultLocale: "en", // TODO: read from a future v2 i18n block
     supportedLocales: ["en"],
-    nextionSource: manifest.nextionCore,
+    notionxSource: manifest.notionxCore,
     adminEmail: "admin@example.com", // placeholder; not used by add/remove/update
     adminPassword: "", // placeholder; not used by add/remove/update
     scaffoldVersion: manifest.scaffoldVersion,

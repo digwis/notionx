@@ -12,7 +12,7 @@ describe("runLocaleAddPlan", () => {
     try {
       await mkdir(`${dir}/lib/i18n`, { recursive: true });
       await mkdir(`${dir}/lib/site`, { recursive: true });
-      await mkdir(`${dir}/.nextion`, { recursive: true });
+      await mkdir(`${dir}/.notionx`, { recursive: true });
       const i18n = `import { defineI18nConfig } from "@notionx/core/i18n";
 export const i18n = defineI18nConfig({
   defaultLocale: "en",
@@ -27,15 +27,15 @@ export const i18n = defineI18nConfig({
       await writeFile(`${dir}/lib/i18n/config.ts`, i18n, "utf8");
       await writeFile(`${dir}/lib/site/config.ts`, site, "utf8");
       await writeFile(
-        `${dir}/.nextion/scaffold.json`,
+        `${dir}/.notionx/scaffold.json`,
         JSON.stringify(
           {
-            projectKind: "nextion",
+            projectKind: "notionx",
             projectName: "demo",
             scaffoldVersion: "1.0.0",
             defaultLocale: "en",
             supportedLocales: ["en"],
-            nextionSource: "1.0.0",
+            notionxSource: "1.0.0",
             enableSiteSettings: true,
             contentSource: { id: "blog", title: "Blog", fields: [] },
             translationSources: {},
@@ -48,7 +48,7 @@ export const i18n = defineI18nConfig({
       const plan = buildLocaleAddPlan({
         projectDir: dir,
         metadata: JSON.parse(
-          await readFile(`${dir}/.nextion/scaffold.json`, "utf8")
+          await readFile(`${dir}/.notionx/scaffold.json`, "utf8")
         ),
         locale: "zh-CN",
       });
@@ -67,7 +67,7 @@ export const i18n = defineI18nConfig({
       const plan2 = buildLocaleAddPlan({
         projectDir: dir,
         metadata: JSON.parse(
-          await readFile(`${dir}/.nextion/scaffold.json`, "utf8")
+          await readFile(`${dir}/.notionx/scaffold.json`, "utf8")
         ),
         locale: "zh-CN",
       });

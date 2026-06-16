@@ -7,7 +7,7 @@ import { parseDevVarsKeys, runProjectDoctor } from "./doctor.js";
 import { REGISTRY_SCHEMA_V2 } from "./registry-types.js";
 
 function mkProject(setup: (dir: string) => void): string {
-  const dir = mkdtempSync(path.join(tmpdir(), "nextion-doctor-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "notionx-doctor-"));
   setup(dir);
   return dir;
 }
@@ -19,13 +19,13 @@ function writeJson(p: string, obj: unknown): void {
 
 const baseManifest = {
   $schema: REGISTRY_SCHEMA_V2,
-  projectKind: "nextion" as const,
+  projectKind: "notionx" as const,
   scaffoldVersion: "0.7.0",
-  nextionCore: "^1.0.0",
+  notionxCore: "^1.0.0",
   compat: { mode: "v2-native" as const },
   registries: {
     "@notionx/official": {
-      url: "https://registry.nextion.dev/official.json",
+      url: "https://registry.notionx.dev/official.json",
     },
   },
   installed: [],
@@ -61,7 +61,7 @@ describe("runProjectDoctor", () => {
 
   it("reports ok + env-ok when everything is wired up", async () => {
     const dir = mkProject((d) => {
-      writeJson(path.join(d, ".nextion", "registry.json"), {
+      writeJson(path.join(d, ".notionx", "registry.json"), {
         ...baseManifest,
         installed: [
           {
@@ -91,7 +91,7 @@ describe("runProjectDoctor", () => {
 
   it("warns when an installed item's envVars are missing from .dev.vars", async () => {
     const dir = mkProject((d) => {
-      writeJson(path.join(d, ".nextion", "registry.json"), {
+      writeJson(path.join(d, ".notionx", "registry.json"), {
         ...baseManifest,
         installed: [
           {
@@ -119,9 +119,9 @@ describe("runProjectDoctor", () => {
 
   it("warns on pending migrations", async () => {
     const dir = mkProject((d) => {
-      writeJson(path.join(d, ".nextion", "registry.json"), baseManifest);
-      writeJson(path.join(d, ".nextion", "migrations", "_meta.json"), {
-        $schema: "https://nextion.dev/schemas/migrations-meta.v1.json",
+      writeJson(path.join(d, ".notionx", "registry.json"), baseManifest);
+      writeJson(path.join(d, ".notionx", "migrations", "_meta.json"), {
+        $schema: "https://notionx.dev/schemas/migrations-meta.v1.json",
         nextSequence: 2,
         history: [
           {
@@ -147,7 +147,7 @@ describe("runProjectDoctor", () => {
 
   it("flags core.drift when package.json @notionx/core differs from manifest", async () => {
     const dir = mkProject((d) => {
-      writeJson(path.join(d, ".nextion", "registry.json"), baseManifest);
+      writeJson(path.join(d, ".notionx", "registry.json"), baseManifest);
       writeFileSync(
         path.join(d, "package.json"),
         JSON.stringify({
@@ -166,7 +166,7 @@ describe("runProjectDoctor", () => {
 
   it("warns when an installed item is not in the catalog", async () => {
     const dir = mkProject((d) => {
-      writeJson(path.join(d, ".nextion", "registry.json"), {
+      writeJson(path.join(d, ".notionx", "registry.json"), {
         ...baseManifest,
         installed: [
           {

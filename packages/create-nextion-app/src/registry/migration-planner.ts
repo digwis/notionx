@@ -101,7 +101,7 @@ export function buildUpdatePlan(input: BuildUpdatePlanInput): UpdatePlan {
     // cumulative `from: "<id>@<currentV>", to: "<id>@<newV>"`
     // migration that bundles every step needed.
     //
-    // After the user applies the hop, the next `nextion update`
+    // After the user applies the hop, the next `notionx update`
     // call picks up the next one. This keeps each migration
     // independently testable + reversible.
     const hop = catalog.migrations.find((m) => {

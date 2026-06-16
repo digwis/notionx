@@ -8,7 +8,7 @@ export { GET as googleCallbackGET } from "./google-callback";
 export { GET as verifyEmailGET } from "./verify-email";
 export { GET as viewerGET } from "./viewer";
 
-// Aggregate route map. Useful for `createNextionWorker` to wire
+// Aggregate route map. Useful for `createNotionxWorker` to wire
 // the auth API surface into the Cloudflare Worker fetch handler.
 export const authRoutes = {
   "/api/auth/google": { GET: "./google" },

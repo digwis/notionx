@@ -8,7 +8,7 @@
 //
 // This module is the **only** place where multi-source text is
 // generated. v1 callers go through the legacy single-source path in
-// `render.ts`; v2 callers (`nextion add` / `nextion init`) build
+// `render.ts`; v2 callers (`notionx add` / `notionx init`) build
 // their token map here and pass it to a thin multi-source render
 // function. The two paths share a `TokenMap` shape so the on-disk
 // output is identical.
@@ -21,7 +21,7 @@ export interface MultiSourceProject {
   targetDir: string;
   defaultLocale: string;
   supportedLocales: readonly string[];
-  nextionSource: string;
+  notionxSource: string;
   adminEmail: string;
   adminPassword: string;
   scaffoldVersion: string;
@@ -73,7 +73,7 @@ export interface MultiSourceTokenMap {
  * generated `models.ts` is deterministic across runs (the order of
  * registration is observable via `getRegisteredSources()` and a
  * non-deterministic order would produce noisy diffs in
- * `nextion update` plans).
+ * `notionx update` plans).
  *
  * Internal singleton sources (`siteSettingsSource`, `blocksSource`)
  * are emitted in a fixed order (site-settings first, then blocks)

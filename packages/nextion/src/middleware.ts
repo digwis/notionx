@@ -44,7 +44,7 @@ export type SessionLookup = (
  * through the bootstrap; the middleware itself only needs the auth
  * block and an optional viewer lookup.
  */
-export interface NextionMiddlewareOptions {
+export interface NotionxMiddlewareOptions {
   /**
    * Auth configuration. When omitted (e.g. the project was scaffolded
    * with `--no-auth`), the middleware skips session cookie reading
@@ -61,7 +61,7 @@ export interface NextionMiddlewareOptions {
    */
   sessionLookup?: SessionLookup;
   /**
-   * Override which paths are gated. The default is nextion's
+   * Override which paths are gated. The default is notionx's
    * own contract: `/api/admin/*` for any method, and non-GET
    * requests to `/admin*` (GET `/admin*` is left for the app
    * router so the admin shell can render a login redirect).
@@ -69,12 +69,12 @@ export interface NextionMiddlewareOptions {
   isProtectedPath?: (request: Request) => boolean;
 }
 
-export interface NextionMiddlewareRequestContext {
+export interface NotionxMiddlewareRequestContext {
   viewer: FoundationViewer | null;
   sessionId: string | null;
 }
 
-const requestContext = new WeakMap<Request, NextionMiddlewareRequestContext>();
+const requestContext = new WeakMap<Request, NotionxMiddlewareRequestContext>();
 
 /**
  * Default admin gate. Returns `true` for paths that require a viewer
@@ -112,8 +112,8 @@ function readSessionCookie(request: Request, name: string): string | null {
  */
 export async function resolveFoundationViewer(
   request: Request,
-  options: NextionMiddlewareOptions
-): Promise<NextionMiddlewareRequestContext> {
+  options: NotionxMiddlewareOptions
+): Promise<NotionxMiddlewareRequestContext> {
   // When auth is disabled (no authConfig), there is no session
   // cookie to read and no viewer to resolve. Short-circuit.
   if (!options.authConfig) {
@@ -148,11 +148,11 @@ export async function resolveFoundationViewer(
 /**
  * Read the cached context for a request. Returns `undefined` when
  * `resolveFoundationViewer` was never run for this Request — i.e.
- * the request did not pass through `nextionMiddleware`.
+ * the request did not pass through `notionxMiddleware`.
  */
 export function getFoundationContext(
   request: Request
-): NextionMiddlewareRequestContext | undefined {
+): NotionxMiddlewareRequestContext | undefined {
   return requestContext.get(request);
 }
 
@@ -161,14 +161,14 @@ export function getFoundationContext(
  * paths that lack a viewer; otherwise `null` to let the request
  * continue through the route table.
  *
- * Side effect: attaches a `NextionMiddlewareRequestContext` to
+ * Side effect: attaches a `NotionxMiddlewareRequestContext` to
  * the request via a `WeakMap` so downstream route handlers can
  * resolve the viewer without a global.
  */
-export async function nextionMiddleware(
+export async function notionxMiddleware(
   request: Request,
   env: unknown,
-  options: NextionMiddlewareOptions
+  options: NotionxMiddlewareOptions
 ): Promise<Response | null> {
   const context = await resolveFoundationViewer(request, options);
   requestContext.set(request, context);
@@ -195,10 +195,10 @@ export async function nextionMiddleware(
  * function with the options pre-bound. Used by the bootstrap and
  * the starter's Next.js middleware so they share one code path.
  */
-export function createNextionMiddleware(
-  options: NextionMiddlewareOptions
+export function createNotionxMiddleware(
+  options: NotionxMiddlewareOptions
 ): (request: Request, env: unknown) => Promise<Response | null> {
-  return (request, env) => nextionMiddleware(request, env, options);
+  return (request, env) => notionxMiddleware(request, env, options);
 }
 
 /**

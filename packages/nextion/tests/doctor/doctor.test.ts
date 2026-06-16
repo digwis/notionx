@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { runNextionDoctor } from "../../src/doctor";
+import { runNotionxDoctor } from "../../src/doctor";
 
-describe("runNextionDoctor", () => {
+describe("runNotionxDoctor", () => {
   it("reports a missing database binding as an error", async () => {
-    const report = await runNextionDoctor({
+    const report = await runNotionxDoctor({
       env: {} as Record<string, string | undefined>,
       runtime: { getBinding: () => undefined },
       sources: [],

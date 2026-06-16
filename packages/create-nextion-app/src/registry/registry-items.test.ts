@@ -1,6 +1,6 @@
 // packages/create-nextion-app/src/registry/registry-items.test.ts
 //
-// The "official catalog". These items are what `nextion add <id>`
+// The "official catalog". These items are what `notionx add <id>`
 // resolves against. We test the shape (not the install behaviour,
 // which is PR 3 territory) so a typo in a field gets caught here.
 

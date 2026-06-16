@@ -1,7 +1,7 @@
 // packages/create-nextion-app/src/locale-add/format.ts
 //
 // Pretty-prints a locale-add summary. The output mirrors the style
-// of `nextion update` so the two commands feel like the same tool.
+// of `notionx update` so the two commands feel like the same tool.
 
 import * as p from "@clack/prompts";
 import type { LocaleAddPlan } from "./plan.js";

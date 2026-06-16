@@ -1,6 +1,6 @@
 // packages/create-nextion-app/src/render.ts
 //
-// File renderer for `create-nextion-app`. Walks the `src/templates/`
+// File renderer for `create-notionx-app`. Walks the `src/templates/`
 // directory, copies static files verbatim, and renders `.tmpl` files
 // with simple `{{token}}` interpolation. The token map is derived
 // from the prompt answers.
@@ -25,8 +25,8 @@ interface TokenMap {
   defaultLocale: string;
   supportedLocales: string;
   supportedLocalesJson: string;
-  nextionSource: string;
-  createNextionAppVersion: string;
+  notionxSource: string;
+  createNotionxAppVersion: string;
   contentSourceId: string;
   contentSourceTitle: string;
   contentSourceKind: string;
@@ -118,8 +118,8 @@ async function buildTokenMap(
     defaultLocale: answers.defaultLocale,
     supportedLocales: answers.supportedLocales.join(", "),
     supportedLocalesJson: JSON.stringify(answers.supportedLocales),
-    nextionSource: answers.nextionSource,
-    createNextionAppVersion: `^${scaffoldVersion}`,
+    notionxSource: answers.notionxSource,
+    createNotionxAppVersion: `^${scaffoldVersion}`,
     contentSourceId: id,
     contentSourceTitle: answers.contentSource.title,
     contentSourceKind: '"article"',
@@ -144,13 +144,13 @@ async function buildTokenMap(
     adminEmail: answers.adminEmail,
     adminName: localPart(answers.adminEmail),
     adminPasswordHash,
-    dependenciesBlock: buildDependenciesBlock(answers.nextionSource),
+    dependenciesBlock: buildDependenciesBlock(answers.notionxSource),
     uiComponentList: uiComponentNames.map((name: string) => `\`${name}\``).join(", "),
     uiComponents: uiComponentNames,
     // Multi-source tokens: the scaffold flow always describes exactly
     // one content source (the "first" one), so we synthesise a
     // single-item InstalledItem list and delegate to the multi-source
-    // builder. `nextion add` will call `buildMultiSourceTokenMap`
+    // builder. `notionx add` will call `buildMultiSourceTokenMap`
     // directly with the project's full installed list.
     //
     // The `MultiSourceTokenMap` returns `contentSourceSourcesBlock`
@@ -170,7 +170,7 @@ async function buildTokenMap(
           targetDir: answers.targetDir,
           defaultLocale: answers.defaultLocale,
           supportedLocales: answers.supportedLocales,
-          nextionSource: answers.nextionSource,
+          notionxSource: answers.notionxSource,
           adminEmail: answers.adminEmail,
           adminPassword: answers.adminPassword,
           scaffoldVersion,
@@ -215,12 +215,12 @@ async function buildTokenMap(
  * `site` preset), filtered against the base set so we never emit
  * duplicate keys.
  */
-function buildDependenciesBlock(nextionSource: string): string {
+function buildDependenciesBlock(notionxSource: string): string {
   // The base dependency set — every project needs these regardless
   // of which UI components it vendors. Keep this list stable: it is
   // the floor of every generated project.
   const baseDependencies: ReadonlyArray<readonly [string, string]> = [
-    ["@notionx/core", nextionSource],
+    ["@notionx/core", notionxSource],
     ["class-variance-authority", "^0.7.1"],
     ["clsx", "^2.1.1"],
     ["lucide-react", "^0.460.0"],
@@ -479,7 +479,7 @@ export async function render(
   const manifest = buildInitialRegistryManifest({
     projectName: answers.projectName,
     scaffoldVersion,
-    nextionCore: answers.nextionSource,
+    notionxCore: answers.notionxSource,
     defaultLocale: answers.defaultLocale,
     supportedLocales: answers.supportedLocales,
     enableSiteSettings: answers.enableSiteSettings,

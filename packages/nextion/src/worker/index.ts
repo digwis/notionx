@@ -4,7 +4,7 @@
 // types the starter's `worker/index.ts` needs to construct one.
 
 export {
-  createNextionWorker,
+  createNotionxWorker,
   healthRoute,
   healthRouteHandle,
   type FoundationExtraRouteHandler,

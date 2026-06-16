@@ -43,20 +43,20 @@ async function writeV2Manifest(
   ],
   managedFiles: { platform?: string[]; bridge?: string[]; user?: string[] } = {},
 ) {
-  await mkdir(path.join(projectDir, ".nextion"), { recursive: true });
+  await mkdir(path.join(projectDir, ".notionx"), { recursive: true });
   await writeFile(
-    path.join(projectDir, ".nextion/registry.json"),
+    path.join(projectDir, ".notionx/registry.json"),
     JSON.stringify({
       $schema: REGISTRY_SCHEMA_V2,
-      projectKind: "nextion",
+      projectKind: "notionx",
       scaffoldVersion: "2.0.0",
-      nextionCore: "^2.0.0",
+      notionxCore: "^2.0.0",
       compat: { mode: "v2-native" },
       registries: {},
       installed,
       managedFiles: {
         platform: managedFiles.platform ?? ["package.json"],
-        bridge: managedFiles.bridge ?? ["lib/nextion/content-registry.ts"],
+        bridge: managedFiles.bridge ?? ["lib/notionx/content-registry.ts"],
         user: managedFiles.user ?? ["lib/content/models.ts", "app/blog/page.tsx"],
       },
     }),
@@ -69,8 +69,8 @@ describe("installItem", () => {
   let templatesDir: string;
 
   beforeEach(async () => {
-    dir = await mkdtemp(path.join(os.tmpdir(), "nextion-install-"));
-    await mkdir(path.join(dir, ".nextion"), { recursive: true });
+    dir = await mkdtemp(path.join(os.tmpdir(), "notionx-install-"));
+    await mkdir(path.join(dir, ".notionx"), { recursive: true });
     templatesDir = await resolveTemplatesDir();
   });
   afterEach(async () => {
@@ -114,7 +114,7 @@ describe("installItem", () => {
 
     // The manifest was updated
     const manifestRaw = await fs.readFile(
-      path.join(dir, ".nextion/registry.json"),
+      path.join(dir, ".notionx/registry.json"),
       "utf8",
     );
     const manifest = JSON.parse(manifestRaw) as {
@@ -196,7 +196,7 @@ describe("installItem", () => {
 
     // Manifest unchanged
     const manifestRaw = await fs.readFile(
-      path.join(dir, ".nextion/registry.json"),
+      path.join(dir, ".notionx/registry.json"),
       "utf8",
     );
     const manifest = JSON.parse(manifestRaw) as {

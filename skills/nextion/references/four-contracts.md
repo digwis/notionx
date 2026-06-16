@@ -142,20 +142,20 @@ export const adminNav = createAdminNav([
 Use lucide icon names. Add domain-specific admin entries only when there is a
 real page under `app/admin/<domain>`.
 
-## 4. `createNextionWorker` options
+## 4. `createNotionxWorker` options
 
 Import from `@notionx/core/worker`. The current generated `worker/index.ts`
-creates a nextion worker first and falls through to vinext for app-router pages:
+creates a notionx worker first and falls through to vinext for app-router pages:
 
 ```ts
 import handler from "vinext/server/app-router-entry";
-import { createNextionWorker } from "@notionx/core/worker";
+import { createNotionxWorker } from "@notionx/core/worker";
 import { authConfig } from "../lib/auth.config";
 import { adminNav } from "../lib/admin/nav";
 import { siteConfig } from "../lib/site/config";
 import { blogSource } from "../lib/content/models";
 
-const nextion = createNextionWorker({
+const notionx = createNotionxWorker({
   sources: [blogSource],
   adminNav,
   authConfig,
@@ -172,8 +172,8 @@ const nextion = createNextionWorker({
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
-    const nextionResponse = await nextion.fetch(request, env, ctx);
-    if (nextionResponse) return nextionResponse;
+    const notionxResponse = await notionx.fetch(request, env, ctx);
+    if (notionxResponse) return notionxResponse;
     return handler.fetch(request, env, ctx);
   },
 };

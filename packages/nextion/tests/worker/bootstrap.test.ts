@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { createNextionWorker } from "../../src/worker/bootstrap";
+import { createNotionxWorker } from "../../src/worker/bootstrap";
 import type { FoundationWorkerOptions } from "../../src/worker/bootstrap";
 import type { SearchAdapter } from "../../src/search/adapter";
 
@@ -27,14 +27,14 @@ const baseOptions: FoundationWorkerOptions = {
   },
 };
 
-describe("createNextionWorker", () => {
+describe("createNotionxWorker", () => {
   it("returns a fetch handler", () => {
-    const handler = createNextionWorker(baseOptions);
+    const handler = createNotionxWorker(baseOptions);
     expect(typeof handler.fetch).toBe("function");
   });
 
   it("returns null when no route matches the path", async () => {
-    const handler = createNextionWorker(baseOptions);
+    const handler = createNotionxWorker(baseOptions);
     const env = {} as unknown as Record<string, unknown>;
     const ctx = {} as unknown as ExecutionContext;
     const request = new Request("https://example.com/some/unknown/path");
@@ -43,7 +43,7 @@ describe("createNextionWorker", () => {
   });
 
   it("blocks /api/admin paths without a viewer cookie", async () => {
-    const handler = createNextionWorker(baseOptions);
+    const handler = createNotionxWorker(baseOptions);
     const env = {} as unknown as Record<string, unknown>;
     const ctx = {} as unknown as ExecutionContext;
     const request = new Request("https://example.com/api/admin/users", {
@@ -58,7 +58,7 @@ describe("createNextionWorker", () => {
     const extraHandler = vi
       .fn()
       .mockResolvedValue(new Response("from extra route", { status: 200 }));
-    const handler = createNextionWorker({
+    const handler = createNotionxWorker({
       ...baseOptions,
       extraRoutes: {
         "/api/custom": () =>
@@ -77,7 +77,7 @@ describe("createNextionWorker", () => {
   });
 
   it("does not register /api/search when searchAdapter is absent", async () => {
-    const handler = createNextionWorker(baseOptions);
+    const handler = createNotionxWorker(baseOptions);
     const env = {} as unknown as Record<string, unknown>;
     const ctx = {} as unknown as ExecutionContext;
     const request = new Request("https://example.com/api/search?q=test");
@@ -95,7 +95,7 @@ describe("createNextionWorker", () => {
       deleteForModel: vi.fn().mockResolvedValue(undefined),
       getMissingRouteIds: vi.fn().mockResolvedValue([]),
     };
-    const handler = createNextionWorker({
+    const handler = createNotionxWorker({
       ...baseOptions,
       searchAdapter: mockAdapter,
     });
@@ -123,7 +123,7 @@ describe("createNextionWorker", () => {
       deleteForModel: vi.fn().mockResolvedValue(undefined),
       getMissingRouteIds: vi.fn().mockResolvedValue([]),
     };
-    const handler = createNextionWorker({
+    const handler = createNotionxWorker({
       ...baseOptions,
       searchAdapter: mockAdapter,
     });

@@ -9,11 +9,11 @@ import {
 
 const baseRegistry: LoadedRegistry = {
   manifest: {
-    $schema: "https://nextion.dev/schemas/registry.v2.json",
-    projectKind: "nextion",
+    $schema: "https://notionx.dev/schemas/registry.v2.json",
+    projectKind: "notionx",
     projectName: "demo",
     scaffoldVersion: "1.0.0",
-    nextionCore: "^2.0.0",
+    notionxCore: "^2.0.0",
     defaultLocale: "en",
     supportedLocales: ["en"],
     enableSiteSettings: true,

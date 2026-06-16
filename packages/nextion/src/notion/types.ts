@@ -62,7 +62,7 @@ export type NotionSort = {
 
 /**
  * Structural subset of the starter's `ContentModelDefinition` consumed by
- * nextion's Notion helpers. Projects that want to plug in their own
+ * notionx's Notion helpers. Projects that want to plug in their own
  * content models must satisfy this shape.
  */
 export type NotionContentModelLike = {

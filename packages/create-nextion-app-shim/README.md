@@ -1,12 +1,12 @@
-# create-nextion
+# create-notionx
 
 Unscoped npm create alias for
-[`@notionx/create-nextion-app`](https://www.npmjs.com/package/@notionx/create-nextion-app).
+[`@notionx/create-notionx-app`](https://www.npmjs.com/package/@notionx/create-notionx-app).
 
 ```bash
-npm create nextion@latest
+npm create notionx@latest
 ```
 
-This package only forwards to the scoped Nextion scaffolder so users can run the
-short `npm create nextion` command. The implementation lives in
-`@notionx/create-nextion-app`.
+This package only forwards to the scoped Notionx scaffolder so users can run the
+short `npm create notionx` command. The implementation lives in
+`@notionx/create-notionx-app`.

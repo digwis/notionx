@@ -104,7 +104,7 @@ And sync it to the worker:
 printf %s "$NOTION_PRODUCT_TRANSLATIONS_DATA_SOURCE_ID" | pnpm exec wrangler secret put NOTION_PRODUCT_TRANSLATIONS_DATA_SOURCE_ID
 ```
 
-`nextion update` will repair this secret on every run, the same way it repairs the built-in ones.
+`notionx update` will repair this secret on every run, the same way it repairs the built-in ones.
 
 ## 6. Render the new model
 

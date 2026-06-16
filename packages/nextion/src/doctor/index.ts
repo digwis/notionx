@@ -1,23 +1,23 @@
 // Re-export the detailed report builder used by the CLI and starter tests.
 export {
-  buildNextionDoctorReport,
-  formatNextionDoctorReport,
+  buildNotionxDoctorReport,
+  formatNotionxDoctorReport,
 } from "./doctor";
 export type {
-  NextionDoctorCheck,
-  NextionDoctorModel,
-  NextionDoctorReport,
-  NextionDoctorStatus,
+  NotionxDoctorCheck,
+  NotionxDoctorModel,
+  NotionxDoctorReport,
+  NotionxDoctorStatus,
   EnvLike,
   WranglerConfigLike,
 } from "./doctor";
 export type { ContentModelDefinition, NotionFieldMap } from "./model";
 
 import {
-  buildNextionDoctorReport,
-  formatNextionDoctorReport,
+  buildNotionxDoctorReport,
+  formatNotionxDoctorReport,
   type EnvLike,
-  type NextionDoctorReport,
+  type NotionxDoctorReport,
   type WranglerConfigLike,
 } from "./doctor";
 
@@ -40,14 +40,14 @@ export type RuntimeLike = {
   getBinding(name: string): unknown;
 };
 
-export type RunNextionDoctorOptions = {
+export type RunNotionxDoctorOptions = {
   env: EnvLike;
   runtime: RuntimeLike;
   sources: readonly unknown[];
   wranglerConfig?: WranglerConfigLike | null;
 };
 
-export type NextionDoctorFindingsReport = NextionDoctorReport & {
+export type NotionxDoctorFindingsReport = NotionxDoctorReport & {
   findings: DoctorFinding[];
 };
 
@@ -71,7 +71,7 @@ function checkToFindingCode(checkId: string): string {
   return checkId;
 }
 
-function checkToFinding(check: import("./doctor").NextionDoctorCheck): DoctorFinding {
+function checkToFinding(check: import("./doctor").NotionxDoctorCheck): DoctorFinding {
   const severity: DoctorFinding["severity"] =
     check.status === "missing" ? "error" : check.status === "warn" ? "warning" : "info";
   return {
@@ -82,7 +82,7 @@ function checkToFinding(check: import("./doctor").NextionDoctorCheck): DoctorFin
 }
 
 function modelToFinding(
-  model: import("./doctor").NextionDoctorModel
+  model: import("./doctor").NotionxDoctorModel
 ): DoctorFinding | null {
   if (model.dataSourceStatus !== "missing") return null;
   return {
@@ -92,15 +92,15 @@ function modelToFinding(
   };
 }
 
-export function runNextionDoctor(
-  options: RunNextionDoctorOptions
-): NextionDoctorFindingsReport {
+export function runNotionxDoctor(
+  options: RunNotionxDoctorOptions
+): NotionxDoctorFindingsReport {
   const wranglerConfig = options.wranglerConfig ?? deriveWranglerConfig(options.runtime);
-  const report = buildNextionDoctorReport({
+  const report = buildNotionxDoctorReport({
     env: options.env,
     wranglerConfig,
     // Phase 6 will map `sources` (ContentSource[]) to the detailed model
-    // shape used by `buildNextionDoctorReport`. For now, treat the
+    // shape used by `buildNotionxDoctorReport`. For now, treat the
     // empty array as the default and rely on binding/env checks.
     models: [],
   });
@@ -115,4 +115,4 @@ export function runNextionDoctor(
   return { ...report, findings };
 }
 
-export { formatNextionDoctorReport as formatDoctorReport };
+export { formatNotionxDoctorReport as formatDoctorReport };

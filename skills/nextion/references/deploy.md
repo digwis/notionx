@@ -18,7 +18,7 @@ edge-style runtime). Generated projects use Node >= 22.
 Run these locally **before every deploy**. If any fails, do not deploy.
 
 ```bash
-pnpm nextion:doctor         # offline config check, if the project exposes this script
+pnpm notionx:doctor         # offline config check, if the project exposes this script
 pnpm typecheck
 pnpm lint
 pnpm test
@@ -99,7 +99,7 @@ jobs:
           TURNSTILE_SECRET_KEY: test
 ```
 
-Run `nextion:doctor` in CI only if the workflow provides the expected dummy env
+Run `notionx:doctor` in CI only if the workflow provides the expected dummy env
 and scaffold metadata. It is primarily a local offline check.
 
 ## Dependabot for `@notionx/core`
@@ -114,26 +114,26 @@ updates:
     schedule: { interval: "weekly", day: "monday" }
     allow:
       - dependency-name: "@notionx/core"
-    labels: ["dependencies", "nextion"]
+    labels: ["dependencies", "notionx"]
     groups:
-      nextion-patch:
+      notionx-patch:
         applies-to: version-updates
         update-types: ["minor", "patch"]
 ```
 
 Pair it with a `dependabot-auto-merge.yml` that auto-merges patch/minor on
 green CI; **major upgrades must always be reviewed by hand** after reading
-the [Nextion Changelog](https://github.com/digwis/nextion/blob/main/docs/architecture/nextion-changelog.md).
+the [Notionx Changelog](https://github.com/digwis/nextion/blob/main/docs/architecture/notionx-changelog.md).
 
 ## Scaffolder-driven sync
 
 Two scaffolder commands that are part of the deploy story:
 
-- `npx nextion update` — sync scaffold-owned files with the latest
-  `create-nextion-app` templates. Current managed files are `package.json`,
-  `wrangler.jsonc`, `README.md`, `.nextion/scaffold.json`, and
+- `npx notionx update` — sync scaffold-owned files with the latest
+  `create-notionx-app` templates. Current managed files are `package.json`,
+  `wrangler.jsonc`, `README.md`, `.notionx/scaffold.json`, and
   `.dev.vars.example`. Default: no cloud side effects.
-- `npx nextion provision repair` — reconcile Notion schemas, Cloudflare
+- `npx notionx provision repair` — reconcile Notion schemas, Cloudflare
   bindings, and secrets. Does write to cloud resources (only the diff).
   Default: no deploy.
 
@@ -142,7 +142,7 @@ Run them in this order: doctor → update → repair → deploy.
 ## When in doubt
 
 ```bash
-pnpm nextion:doctor
+pnpm notionx:doctor
 ```
 
 It is offline, reads only your local files, and never prints secrets.

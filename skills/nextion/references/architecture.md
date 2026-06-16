@@ -1,8 +1,8 @@
 # Architecture reference
 
 > Detailed design rationale lives in
-> [`docs/superpowers/specs/2026-06-10-nextion-package-design.md`](../../docs/superpowers/specs/2026-06-10-nextion-package-design.md).
-> This file is the **operational summary** an AI needs to navigate any nextion
+> [`docs/superpowers/specs/2026-06-10-notionx-package-design.md`](../../docs/superpowers/specs/2026-06-10-notionx-package-design.md).
+> This file is the **operational summary** an AI needs to navigate any notionx
 > project.
 
 ## The two-package split
@@ -14,18 +14,18 @@
                                    admin, storage, media, cache, email,
                                    worker, doctor, i18n, util, hooks
 
-@notionx/create-nextion-app   ← compiled from packages/create-nextion-app/src/
+@notionx/create-notionx-app   ← compiled from packages/create-nextion-app/src/
                                 published to npm
-                                contains: scaffolder, `nextion update`,
-                                          `nextion provision` commands
+                                contains: scaffolder, `notionx update`,
+                                          `notionx provision` commands
 ```
 
-A **consumer project** (what `pnpm create nextion-app` produces) depends on
+A **consumer project** (what `pnpm create notionx-app` produces) depends on
 `@notionx/core` at runtime and uses vinext for the Cloudflare/Next.js app-router
-server. `create-nextion-app` is invoked at scaffold time and later through the
-`nextion` CLI for `nextion update` / `nextion provision repair`.
+server. `create-notionx-app` is invoked at scaffold time and later through the
+`notionx` CLI for `notionx update` / `notionx provision repair`.
 
-## Repository layout of a nextion project (consumer view)
+## Repository layout of a notionx project (consumer view)
 
 ```text
 my-site/
@@ -71,11 +71,11 @@ my-site/
 │   ├── 0001_init.sql              # auth + content_search_index
 │   └── 0002_admin_seed.sql
 ├── worker/
-│   └── index.ts                   # createNextionWorker({...})
+│   └── index.ts                   # createNotionxWorker({...})
 ├── public/
 ├── tests/
 │   └── smoke.test.ts
-├── .nextion/
+├── .notionx/
 │   └── scaffold.json              # scaffold metadata used by update/repair
 ├── wrangler.jsonc                 # CF bindings, vars, cron, queue
 ├── vite.config.ts
@@ -102,7 +102,7 @@ Imports only go **downwards**. ESLint `import/no-restricted-paths` enforces this
 | 5 | `auth` | content | D1 auth, session, role |
 | 5.5 | `email`, `storage`, `media` | platform, cache | Cross-cutting services |
 | 6 | `admin` | auth, content | Admin shell, sidebar, user mgmt |
-| 7 | `worker` | admin and below | `createNextionWorker` entry |
+| 7 | `worker` | admin and below | `createNotionxWorker` entry |
 
 Forbidden upward imports: `notion` cannot reference `content` / `auth` / `admin` /
 `worker`; `content` cannot reference `auth` / `admin` / `worker`; `auth` cannot
@@ -116,9 +116,9 @@ When writing code, use the documented subpaths:
 
 ```ts
 import { defineContentSource } from "@notionx/core/content";
-import { createNextionWorker } from "@notionx/core/worker";
+import { createNotionxWorker } from "@notionx/core/worker";
 import { createAdminNav } from "@notionx/core/admin";
-import { runNextionDoctor } from "@notionx/core/doctor";
+import { runNotionxDoctor } from "@notionx/core/doctor";
 ```
 
 Use `@notionx/core/package.json#exports` as the final list. Current exports also
@@ -140,7 +140,7 @@ almost always **inside `@notionx/core`**, not in the consumer. Common lookups:
 | Cache keys / invalidation | `cache/cache-keys.ts`, `content/revalidate.ts` |
 | Search index | `content/search-index.ts`, `content/search.ts` |
 | Admin sidebar / layout | `admin/sidebar.tsx`, `admin/layout.tsx` |
-| `nextion:doctor` | `doctor/doctor.ts`, `doctor/cli.ts` |
+| `notionx:doctor` | `doctor/doctor.ts`, `doctor/cli.ts` |
 | Notion media proxy | `media/routes/notion-media.ts` |
 | R2 / CDN routes | `storage/routes/files.ts`, `storage/routes/cdn.ts` |
 | Worker entry | `worker/bootstrap.ts`, `worker/index.ts` |
@@ -149,7 +149,7 @@ almost always **inside `@notionx/core`**, not in the consumer. Common lookups:
 
 Always read the package source before guessing at the consumer.
 
-## Apps in the monorepo (nextion repo only)
+## Apps in the monorepo (notionx repo only)
 
 `apps/moviebluebook` is the **reference business app** that consumes
 `@notionx/core` from the workspace. It exists to:
@@ -160,4 +160,4 @@ Always read the package source before guessing at the consumer.
 
 It is **not** a template that consumers copy anymore — that is the scaffolder's
 job. If the user is editing `apps/moviebluebook` directly, they are likely
-either nextion maintainers or building the canary for a new feature.
+either notionx maintainers or building the canary for a new feature.

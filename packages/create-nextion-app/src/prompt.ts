@@ -1,13 +1,13 @@
 // packages/create-nextion-app/src/prompt.ts
 //
-// Interactive prompt for `create-nextion-app`. The flow is intentionally
+// Interactive prompt for `create-notionx-app`. The flow is intentionally
 // minimal: we ask for the project name, language mode, and admin email.
 // Everything else (content-source shape, etc.) uses sensible defaults
 // that can be edited in the generated project after scaffolding.
 
 import * as p from "@clack/prompts";
 import { generateRandomPassword } from "./password.js";
-import { FALLBACK_NEXTION_SOURCE } from "./nextion-source.js";
+import { FALLBACK_NOTIONX_SOURCE } from "./nextion-source.js";
 
 export interface AnswersContentField {
   /** Field name in camelCase used in the generated TS model, e.g. "title". */
@@ -35,7 +35,7 @@ export interface Answers {
    * pass `--nextion-source workspace:*` (or `link:…` / `file:…`)
    * so the scaffold consumes the local checkout instead.
    */
-  nextionSource: string;
+  notionxSource: string;
   /**
    * Email that gets `role = 'admin'` after the worker boots. Stored
    * in `app_settings.admin_email` and used by `isAdminEmail` to grant
@@ -138,7 +138,7 @@ export const DEFAULT_ANSWERS: Omit<
 > = {
   defaultLocale: "en",
   supportedLocales: ["en"],
-  nextionSource: FALLBACK_NEXTION_SOURCE,
+  notionxSource: FALLBACK_NOTIONX_SOURCE,
   // Admin defaults are placeholders only — `gatherAnswers()` and the
   // interactive prompt both overwrite them. The strings here are
   // chosen so any logic that accidentally reads them sees clearly
@@ -185,9 +185,9 @@ export const DEFAULT_ANSWERS: Omit<
  */
 export async function prompt(
   argv: string[] = process.argv,
-  resolved: { nextionSource?: string } = {}
+  resolved: { notionxSource?: string } = {}
 ): Promise<Answers> {
-  p.intro("@notionx/create-nextion-app — scaffold a new vinext project");
+  p.intro("@notionx/create-notionx-app — scaffold a new vinext project");
 
   const targetFromArg = argv[2];
 
@@ -307,13 +307,13 @@ export async function prompt(
     targetDir,
     defaultLocale: localeConfig.defaultLocale,
     supportedLocales: [...localeConfig.supportedLocales],
-    // Caller-supplied `nextionSource` (resolved from the npm
+    // Caller-supplied `notionxSource` (resolved from the npm
     // registry / monorepo probe by `gatherAnswers()`) wins over
     // the canned default. Without this, a successful registry
     // resolution is silently discarded and the generated
-    // `package.json` ends up pinned to `DEFAULT_ANSWERS.nextionSource`
+    // `package.json` ends up pinned to `DEFAULT_ANSWERS.notionxSource`
     // even when npm already publishes a newer `@notionx/core`.
-    nextionSource: resolved.nextionSource ?? DEFAULT_ANSWERS.nextionSource,
+    notionxSource: resolved.notionxSource ?? DEFAULT_ANSWERS.notionxSource,
     contentSource: {
       id: DEFAULT_ANSWERS.contentSource.id,
       title: DEFAULT_ANSWERS.contentSource.title,

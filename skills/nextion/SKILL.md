@@ -1,23 +1,23 @@
 ---
-name: "nextion"
-description: "nextion is a Next.js App Router framework running on Cloudflare Workers via vinext, with Notion as the CMS and @notionx/core providing auth, admin, D1/R2, media routes, content registration, search, and diagnostics. Invoke when the user wants to create or update a nextion/vinext project, scaffold with `pnpm create nextion-app`, add/replace/remove/customize a Notion-backed content source (`defineContentSource`, routes, APIs, domain UI, search/sort/filter), run `pnpm nextion:doctor`, upgrade `@notionx/core`, run `nextion update` or `nextion provision repair`, configure Cloudflare / Notion / Turnstile / Resend / Google OAuth, or debug deploy / webhook / cache / auth issues in a nextion-based project. Do NOT invoke for plain Next.js apps, plain Cloudflare Workers without the nextion wrapper, or for editing Notion content itself."
+name: "notionx"
+description: "notionx is a Next.js App Router framework running on Cloudflare Workers via vinext, with Notion as the CMS and @notionx/core providing auth, admin, D1/R2, media routes, content registration, search, and diagnostics. Invoke when the user wants to create or update a notionx/vinext project, scaffold with `pnpm create notionx-app`, add/replace/remove/customize a Notion-backed content source (`defineContentSource`, routes, APIs, domain UI, search/sort/filter), run `pnpm notionx:doctor`, upgrade `@notionx/core`, run `notionx update` or `notionx provision repair`, configure Cloudflare / Notion / Turnstile / Resend / Google OAuth, or debug deploy / webhook / cache / auth issues in a notionx-based project. Do NOT invoke for plain Next.js apps, plain Cloudflare Workers without the notionx wrapper, or for editing Notion content itself."
 ---
 
-# nextion
+# notionx
 
-Use this skill to work on modern **nextion** projects and the nextion monorepo.
-nextion has two moving parts:
+Use this skill to work on modern **notionx** projects and the notionx monorepo.
+notionx has two moving parts:
 
 - `@notionx/core`: reusable runtime/platform package in `packages/nextion/src`.
-- `@notionx/create-nextion-app`: scaffolder and maintenance CLI in
-  `packages/create-nextion-app/src`, including `nextion update` and
-  `nextion provision repair`.
+- `@notionx/create-notionx-app`: scaffolder and maintenance CLI in
+  `packages/create-nextion-app/src`, including `notionx update` and
+  `notionx provision repair`.
 
 Consumer projects are regular source-code apps. They configure the package and
 own their Notion content sources, routes, components, site config, shadcn/ui
 source, Cloudflare bindings, and migrations. Older prompts may still say
-**vinext**; treat that as nextion when the repo imports `@notionx/core` or has
-`createNextionWorker`. The old `vinext-domain-builder` skill was about content
+**vinext**; treat that as notionx when the repo imports `@notionx/core` or has
+`createNotionxWorker`. The old `vinext-domain-builder` skill was about content
 domains, meaning content modules such as blog, movies, courses, or books, not
 DNS domains.
 
@@ -25,10 +25,10 @@ DNS domains.
 
 For a consumer project, read in this order:
 
-1. `.nextion/scaffold.json` if present — scaffold version, initial content
+1. `.notionx/scaffold.json` if present — scaffold version, initial content
    source, UI preset, locales, and `@notionx/core` dependency spec.
 2. `package.json` — confirms scripts, `@notionx/core`, vinext, Node >= 22.
-3. `worker/index.ts` — calls `createNextionWorker(...)` before falling through
+3. `worker/index.ts` — calls `createNotionxWorker(...)` before falling through
    to `vinext/server/app-router-entry`; shows `sources`, `adminNav`,
    `authConfig`, and `siteConfig` wiring.
 4. `lib/content/models.ts` — `defineContentSource(...)` calls and the exported
@@ -41,14 +41,14 @@ For a consumer project, read in this order:
 8. `wrangler.jsonc`, `.dev.vars.example`, `.dev.vars` — bindings, vars, and
    local secrets. Never print secrets.
 
-For the nextion monorepo itself, use these as authority:
+For the notionx monorepo itself, use these as authority:
 
 - Runtime code: `packages/nextion/src/**`.
 - Scaffolder/update/provision code: `packages/create-nextion-app/src/**`.
-- Current docs: `docs/architecture/nextion-package.md`,
+- Current docs: `docs/architecture/notionx-package.md`,
   `creating-new-project.md`, `customizing-content-source.md`, and
-  `upgrading-nextion.md`.
-- Do not treat `docs/architecture/content-nextion.md` as current authority; it
+  `upgrading-notionx.md`.
+- Do not treat `docs/architecture/content-notionx.md` as current authority; it
   documents the pre-package foundation split.
 
 ## Current contracts
@@ -60,7 +60,7 @@ Every project mostly touches four boundaries:
 | `ContentSource` | `@notionx/core/content` | Declare Notion source fields, routes, labels, capabilities. |
 | `AuthConfig` | `@notionx/core/types` | Configure D1 binding, auth tables, cookie, Turnstile, email, OAuth, roles. |
 | `AdminNavItem[]` | `@notionx/core/admin` | Declare project admin sidebar entries with `createAdminNav([...])`. |
-| `FoundationWorkerOptions` | `@notionx/core/worker` | Pass `sources`, `adminNav`, `authConfig`, `siteConfig`, optional route hooks to `createNextionWorker`. |
+| `FoundationWorkerOptions` | `@notionx/core/worker` | Pass `sources`, `adminNav`, `authConfig`, `siteConfig`, optional route hooks to `createNotionxWorker`. |
 
 Load [references/four-contracts.md](references/four-contracts.md) before
 editing these shapes. If this skill conflicts with source code, trust source
@@ -70,30 +70,30 @@ code and update the skill.
 
 | Goal | Command |
 |---|---|
-| Create project | `pnpm create nextion-app my-new-site` |
-| Non-interactive scaffold | `pnpm create nextion-app my-site -- --project-name my-site --admin-email admin@example.com --yes` |
+| Create project | `pnpm create notionx-app my-new-site` |
+| Non-interactive scaffold | `pnpm create notionx-app my-site -- --project-name my-site --admin-email admin@example.com --yes` |
 | Install deps | `pnpm install` |
 | Dev server | `pnpm dev` |
 | Build | `pnpm build` |
 | Tests | `pnpm test` |
 | Typecheck / lint | `pnpm typecheck && pnpm lint` |
-| Offline diagnostics | `pnpm nextion:doctor` |
-| Sync scaffold-owned files | `npx nextion update` |
-| Repair Notion / Cloudflare resources | `npx nextion provision repair` |
+| Offline diagnostics | `pnpm notionx:doctor` |
+| Sync scaffold-owned files | `npx notionx update` |
+| Repair Notion / Cloudflare resources | `npx notionx provision repair` |
 | Apply D1 migrations | `pnpm exec wrangler d1 migrations apply <db> --remote` |
 | Deploy | `pnpm exec vinext deploy` or `pnpm deploy` when scripted |
 
-`nextion update` requires `.nextion/scaffold.json` and currently manages only
-`package.json`, `wrangler.jsonc`, `README.md`, `.nextion/scaffold.json`, and
+`notionx update` requires `.notionx/scaffold.json` and currently manages only
+`package.json`, `wrangler.jsonc`, `README.md`, `.notionx/scaffold.json`, and
 `.dev.vars.example`. It is not a broad source-code rewrite tool.
 
 ## Workflows
 
 ### Create or update a project
 
-Use `pnpm create nextion-app`. The generated project includes vinext scripts,
+Use `pnpm create notionx-app`. The generated project includes vinext scripts,
 `worker/index.ts`, auth/admin route re-exports, shadcn/Tailwind source, Notion
-page helpers, migrations, `.nextion/scaffold.json`, and a first content source.
+page helpers, migrations, `.notionx/scaffold.json`, and a first content source.
 For current scaffold behavior, read
 [references/architecture.md](references/architecture.md) and the templates in
 `packages/create-nextion-app/src/templates`.
@@ -121,12 +121,12 @@ explicitly asks for that product.
 
 ### Upgrade or repair
 
-Use this order when nextion changes:
+Use this order when notionx changes:
 
 1. Runtime dependency change: `pnpm update @notionx/core`.
-2. Scaffold/config/template drift: `npx nextion update`.
+2. Scaffold/config/template drift: `npx notionx update`.
 3. Notion schema, Cloudflare bindings, secrets, or resource drift:
-   `npx nextion provision repair`.
+   `npx notionx provision repair`.
 4. Only deploy after local tests and doctor pass.
 
 Read [references/deploy.md](references/deploy.md) and
@@ -160,7 +160,7 @@ Consumer projects must import only public subpaths declared in
 - Editing `apps/moviebluebook` to fix an external consumer. Fix package bugs in
   `@notionx/core`, then update consumers.
 - Hard-coding secrets in `wrangler.jsonc`, source files, docs, or output.
-- Treating `nextion update` as permission to overwrite arbitrary user code.
+- Treating `notionx update` as permission to overwrite arbitrary user code.
 
 ## References
 

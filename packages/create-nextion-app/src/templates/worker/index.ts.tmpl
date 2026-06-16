@@ -1,9 +1,9 @@
-// Cloudflare Worker entry point. Nextion-routed requests (health,
-// storage, notion media) are handled by `createNextionWorker`
+// Cloudflare Worker entry point. Notionx-routed requests (health,
+// storage, notion media) are handled by `createNotionxWorker`
 // before falling through to the vinext app router.
 
 import handler from "vinext/server/app-router-entry";
-import { createNextionWorker } from "@notionx/core/worker";
+import { createNotionxWorker } from "@notionx/core/worker";
 import { authConfig } from "../lib/auth.config";
 import { searchAdapter } from "../lib/search/config";
 import { adminNav } from "../lib/admin/nav";
@@ -11,15 +11,15 @@ import { managedContentSources } from "../lib/content/models";
 import { siteConfig } from "../lib/site/config";
 import { runWithRequestEnv } from "../lib/site/request-env";
 
-const nextion = createNextionWorker({
+const notionx = createNotionxWorker({
   sources: [...managedContentSources],
   adminNav,
   // `authConfig` is `undefined` when auth is disabled (scaffolded
-  // with `--no-auth` or after `nextion remove auth`). The worker
+  // with `--no-auth` or after `notionx remove auth`). The worker
   // bootstrap handles `undefined` by skipping session/admin gates.
   ...(authConfig ? { authConfig } : {}),
   // `searchAdapter` is `undefined` when search is disabled
-  // (scaffolded with `--no-search` or after `nextion remove search`).
+  // (scaffolded with `--no-search` or after `notionx remove search`).
   // The worker bootstrap handles `undefined` by not registering
   // the `/api/search` route.
   ...(searchAdapter ? { searchAdapter } : {}),
@@ -44,8 +44,8 @@ export default {
     // rationale — we cannot use `cloudflare:workers.getRequestContext`
     // because that module does not export it.
     return runWithRequestEnv(env, async () => {
-      const nextionResponse = await nextion.fetch(request, env, ctx);
-      if (nextionResponse) return nextionResponse;
+      const notionxResponse = await notionx.fetch(request, env, ctx);
+      if (notionxResponse) return notionxResponse;
       return handler.fetch(request, env, ctx);
     });
   },

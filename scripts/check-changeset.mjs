@@ -37,15 +37,15 @@ const __dirname = dirname(__filename);
 const ROOT = resolve(__dirname, "..");
 
 // Diff base resolution priority:
-//   1. NEXTION_DIFF_BASE env var (set by .husky/pre-push with the actual
+//   1. NOTIONX_DIFF_BASE env var (set by .husky/pre-push with the actual
 //      remote ref git is about to push to) — but only if that ref exists
 //   2. origin/<current-branch> (when running the script manually from a
 //      feature branch)
 //   3. origin/main (when on main, or when the feature branch has no
 //      matching remote ref)
 function resolveDiffBase() {
-  if (process.env.NEXTION_DIFF_BASE) {
-    const ref = process.env.NEXTION_DIFF_BASE;
+  if (process.env.NOTIONX_DIFF_BASE) {
+    const ref = process.env.NOTIONX_DIFF_BASE;
     if (tryGit("rev-parse", "--verify", ref) !== null) {
       return ref;
     }
@@ -91,10 +91,10 @@ function listChangedFiles(diffBase) {
 }
 
 const PACKAGE_DIR_TO_NAME = {
-  nextion: "@notionx/core",
-  "create-nextion-app": "@notionx/create-nextion-app",
-  "create-nextion-app-shim": "create-nextion",
-  "nextion-skill": "@notionx/skill",
+  notionx: "@notionx/core",
+  "create-notionx-app": "@notionx/create-notionx-app",
+  "create-notionx-app-shim": "create-notionx",
+  "notionx-skill": "@notionx/skill",
 };
 
 function categorize(file) {

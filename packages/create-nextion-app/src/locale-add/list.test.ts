@@ -4,12 +4,12 @@ import { buildLocaleListView } from "../../src/locale-add/list.js";
 import type { ScaffoldMetadata } from "../../src/metadata.js";
 
 const metadata: ScaffoldMetadata = {
-  projectKind: "nextion",
+  projectKind: "notionx",
   projectName: "demo",
   scaffoldVersion: "1.0.0",
   defaultLocale: "en",
   supportedLocales: ["en", "zh-CN"],
-  nextionSource: "1.0.0",
+  notionxSource: "1.0.0",
   enableSiteSettings: true,
   contentSource: { id: "blog", title: "Blog", fields: [] },
 };

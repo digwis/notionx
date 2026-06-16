@@ -6,13 +6,13 @@ export type {
 } from "./types";
 
 export { defineContentSource } from "./content/models";
-export { createNextionWorker } from "./worker/bootstrap";
-export { runNextionDoctor } from "./doctor";
+export { createNotionxWorker } from "./worker/bootstrap";
+export { runNotionxDoctor } from "./doctor";
 export type {
   DoctorFinding,
   RuntimeLike,
-  RunNextionDoctorOptions,
-  NextionDoctorFindingsReport,
+  RunNotionxDoctorOptions,
+  NotionxDoctorFindingsReport,
 } from "./doctor";
 
 // Multilingual foundation: the built-in four-model locale contract

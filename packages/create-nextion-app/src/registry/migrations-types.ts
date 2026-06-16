@@ -1,14 +1,14 @@
 // packages/create-nextion-app/src/registry/migrations-types.ts
 //
 // v2 Migration Protocol — the on-disk format for
-// `.nextion/migrations/`.
+// `.notionx/migrations/`.
 //
 // Modeled on Prisma's `migrations/` directory: every change to a
 // project's schema (D1 or Notion) is an immutable, append-only
 // file with a monotonically-increasing sequence number. Once a
 // migration has been applied to a real environment, **it is
 // never edited**. To reverse a change, the user runs
-// `nextion update` to apply a *new* migration that undoes it.
+// `notionx update` to apply a *new* migration that undoes it.
 //
 // Three kinds of migration live alongside each other:
 //   - `.sql`       — D1 schema change (run by `wrangler d1 migrations apply`)
@@ -16,7 +16,7 @@
 //                    Notion API in CI; PR 4 ships a *plan*, not the
 //                    run)
 //   - `.codemod.json`— TypeScript code transformation (run by
-//                    `nextion update` against the user's code)
+//                    `notionx update` against the user's code)
 //
 // A single migration usually has exactly one file. We bundle
 // them in `_meta.json` so the planner can apply them in order
@@ -44,7 +44,7 @@ export interface MigrationDirectory {
 
 /**
  * One applied migration. PR 4 emits one of these every time
- * `nextion update` produces a new file.
+ * `notionx update` produces a new file.
  */
 export interface AppliedMigration {
   /** Sequence number, e.g. `0003`. */
@@ -142,7 +142,7 @@ export type PlannedMigrationStep =
 /**
  * The full plan produced by `migration-planner.ts`. The CLI shows
  * this before asking the user to confirm. After confirmation, the
- * writer turns each step into a file in `.nextion/migrations/`.
+ * writer turns each step into a file in `.notionx/migrations/`.
  */
 export interface UpdatePlan {
   /** Plan entries that have data-loss risk. The user MUST confirm. */
@@ -158,10 +158,10 @@ export interface UpdatePlan {
 }
 
 /**
- * Public shape of the `_meta.json` file inside `.nextion/migrations/`.
+ * Public shape of the `_meta.json` file inside `.notionx/migrations/`.
  */
 export interface MigrationMetaFile {
-  $schema: "https://nextion.dev/schemas/migrations-meta.v1.json";
+  $schema: "https://notionx.dev/schemas/migrations-meta.v1.json";
   nextSequence: number;
   history: AppliedMigration[];
 }

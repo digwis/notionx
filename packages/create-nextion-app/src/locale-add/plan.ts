@@ -1,6 +1,6 @@
 // packages/create-nextion-app/src/locale-add/plan.ts
 //
-// Pure planning step for `nextion locale add`. Given the project
+// Pure planning step for `notionx locale add`. Given the project
 // context, a locale, and CLI flags, return the list of changes the
 // runner should apply. The planner is pure: it never touches disk,
 // never shells out, and never throws on missing optional inputs.
@@ -74,7 +74,7 @@ export function buildLocaleAddPlan(
   const { projectDir, metadata, locale } = input;
   const i18nPath = "lib/i18n/config.ts";
   const siteConfigPath = "lib/site/config.ts";
-  const metadataPath = ".nextion/scaffold.json";
+  const metadataPath = ".notionx/scaffold.json";
 
   // 1. metadata: append locale to supportedLocales.
   const nextMetadata: ScaffoldMetadata = {
@@ -84,7 +84,7 @@ export function buildLocaleAddPlan(
   changes.push({
     kind: "metadata",
     label: "metadata:supportedLocales",
-    description: `Append "${locale}" to .nextion/scaffold.json supportedLocales.`,
+    description: `Append "${locale}" to .notionx/scaffold.json supportedLocales.`,
     risk: metadata.supportedLocales.includes(locale) ? "conflict" : "safe",
     async apply() {
       const fs = await import("node:fs/promises");

@@ -22,7 +22,7 @@ async function exists(filePath: string) {
 
 describe("rendering", () => {
   it("always ships the site preset (no UI preset prompt in CLI)", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-render-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-render-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -46,8 +46,8 @@ describe("rendering", () => {
 });
 
 describe("template token substitution", () => {
-  it("writes a v2 registry.json manifest into .nextion", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-manifests-"));
+  it("writes a v2 registry.json manifest into .notionx", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-manifests-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -63,7 +63,7 @@ describe("template token substitution", () => {
     await render(answers, templatesDir, outDir);
 
     const manifest = JSON.parse(
-      await fs.readFile(path.join(outDir, ".nextion/registry.json"), "utf8")
+      await fs.readFile(path.join(outDir, ".notionx/registry.json"), "utf8")
     ) as {
       $schema: string;
       projectKind: string;
@@ -82,7 +82,7 @@ describe("template token substitution", () => {
     };
 
     expect(manifest.$schema).toBe(
-      "https://nextion.dev/schemas/registry.v2.json",
+      "https://notionx.dev/schemas/registry.v2.json",
     );
     expect(manifest.projectName).toBe("manifest-app");
     expect(manifest.installed).toEqual(
@@ -133,8 +133,8 @@ describe("template token substitution", () => {
     expect(manifest.managedFiles.user).toContain("app/blog/page.tsx");
   });
 
-  it("replaces {{nextionSource}} with a real semver in the generated package.json", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-tokens-"));
+  it("replaces {{notionxSource}} with a real semver in the generated package.json", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-tokens-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -142,7 +142,7 @@ describe("template token substitution", () => {
         targetDir: outDir,
         adminEmail: "admin@example.com",
         adminPassword: "Password123",
-        nextionSource: "^1.2.3",
+        notionxSource: "^1.2.3",
         yes: true,
       },
       ["node", "cli"]
@@ -154,7 +154,7 @@ describe("template token substitution", () => {
 
     // The literal token must not survive — pnpm install would fail
     // with an invalid version specifier.
-    expect(raw).not.toContain("{{nextionSource}}");
+    expect(raw).not.toContain("{{notionxSource}}");
 
     const packageJson = JSON.parse(raw) as {
       dependencies: Record<string, string>;
@@ -164,7 +164,7 @@ describe("template token substitution", () => {
   });
 
   it("writes .dev.vars.example as part of the rendered project", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-devvars-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-devvars-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -206,7 +206,7 @@ describe("template token substitution", () => {
   });
 
   it("renders the verified vinext versions into package.json", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-vinext-versions-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-vinext-versions-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -232,7 +232,7 @@ describe("template token substitution", () => {
   });
 
   it("renders the first-phase blocks wiring into config and content templates", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-blocks-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-blocks-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -266,7 +266,7 @@ describe("template token substitution", () => {
   });
 
   it("renders typed structured block mapping into lib/pages/source.ts", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-typed-blocks-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-typed-blocks-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -290,7 +290,7 @@ describe("template token substitution", () => {
   });
 
   it("renders dedicated structured block component files", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-page-block-components-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-page-block-components-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -324,7 +324,7 @@ describe("template token substitution", () => {
   });
 
   it("renders three homepage fallback structured blocks with semantic names", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-homepage-fallbacks-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-homepage-fallbacks-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -348,7 +348,7 @@ describe("template token substitution", () => {
   });
 
   it("renders a latest-posts page block component and removes the extra homepage hero copy", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-latest-posts-block-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-latest-posts-block-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -379,7 +379,7 @@ describe("template token substitution", () => {
   });
 
   it("renders a shared post card component for blog grids", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-post-card-grid-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-post-card-grid-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -412,7 +412,7 @@ describe("template token substitution", () => {
   });
 
   it("renders fallback navigation with home, about, and blog defaults", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-nav-defaults-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-nav-defaults-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -441,7 +441,7 @@ describe("template token substitution", () => {
   });
 
   it("reads runtime site settings in the site header and footer", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-runtime-site-settings-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-runtime-site-settings-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -476,7 +476,7 @@ describe("template token substitution", () => {
 
 describe("request-scoped env access (AsyncLocalStorage pattern)", () => {
   it("renders lib/site/request-env.ts with the AsyncLocalStorage helpers", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-als-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-als-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -506,7 +506,7 @@ describe("request-scoped env access (AsyncLocalStorage pattern)", () => {
   });
 
   it("lib/site/settings.ts no longer imports getRequestContext from cloudflare:workers", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-settings-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-settings-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -539,7 +539,7 @@ describe("request-scoped env access (AsyncLocalStorage pattern)", () => {
   });
 
   it("worker/index.ts wraps the fetch handler in runWithRequestEnv()", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-worker-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-worker-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -564,8 +564,8 @@ describe("request-scoped env access (AsyncLocalStorage pattern)", () => {
 });
 
 describe("scaffolded project ships the scaffolder CLI as a devDependency", () => {
-  it("pins @notionx/create-nextion-app to the scaffolder version, not nextionSource", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-devdep-"));
+  it("pins @notionx/create-notionx-app to the scaffolder version, not notionxSource", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "notionx-devdep-"));
     const outDir = path.join(root, "app");
     const answers = applyDefaults(
       {
@@ -573,7 +573,7 @@ describe("scaffolded project ships the scaffolder CLI as a devDependency", () =>
         targetDir: outDir,
         adminEmail: "admin@example.com",
         adminPassword: "Password123",
-        nextionSource: "^9.9.9",
+        notionxSource: "^9.9.9",
         yes: true,
       },
       ["node", "cli"]
@@ -589,17 +589,17 @@ describe("scaffolded project ships the scaffolder CLI as a devDependency", () =>
     };
 
     // The scaffolder CLI ships as a devDependency so that
-    // `pnpm exec nextion update` and `pnpm exec nextion provision repair`
+    // `pnpm exec notionx update` and `pnpm exec notionx provision repair`
     // work inside the rendered project without having to reach for
     // `pnpm dlx` (which requires the user to know the package name).
     expect(packageJson.devDependencies).toHaveProperty(
-      "@notionx/create-nextion-app"
+      "@notionx/create-notionx-app"
     );
 
     // The version must be a real semver, not the unsubstituted
-    // `{{nextionSource}}` token (which would be the case if the
+    // `{{notionxSource}}` token (which would be the case if the
     // template's token map was incomplete).
-    const version = packageJson.devDependencies!["@notionx/create-nextion-app"];
+    const version = packageJson.devDependencies!["@notionx/create-notionx-app"];
     expect(version).not.toContain("{{");
     expect(version).not.toContain("}}");
     expect(version).toMatch(/^\^?\d+\.\d+\.\d+/);
@@ -608,7 +608,7 @@ describe("scaffolded project ships the scaffolder CLI as a devDependency", () =>
       await fs.readFile(path.resolve(__dirname, "..", "package.json"), "utf8")
     ) as { version: string };
 
-    // The runtime dep follows nextionSource, but the scaffolder CLI
+    // The runtime dep follows notionxSource, but the scaffolder CLI
     // must stay pinned to the actual published CLI version so the
     // generated project never references a non-existent npm release.
     const coreDep = packageJson.dependencies!["@notionx/core"];

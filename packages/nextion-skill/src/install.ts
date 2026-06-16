@@ -19,7 +19,7 @@ import { ALL_TARGETS } from "./types.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-/** Read the version of the installed nextion-skill package (from package.json). */
+/** Read the version of the installed notionx-skill package (from package.json). */
 async function readSelfVersion(): Promise<string> {
   try {
     // dist/install.js -> packages/nextion-skill/package.json

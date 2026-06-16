@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 /**
- * CLI entry point for `nextion-skill`.
+ * CLI entry point for `notionx-skill`.
  *
  * Usage:
- *   nextion-skill install --target <claude|trae|codex|all>
+ *   notionx-skill install --target <claude|trae|codex|all>
  *                        [--scope <user|project>]
  *                        [--source <local|github|npm>]
  *                        [--ref <github-ref>]
  *                        [--force] [--dry-run] [--cwd <path>]
  *
- *   nextion-skill uninstall --target <...> [--scope <...>] [--cwd <path>]
+ *   notionx-skill uninstall --target <...> [--scope <...>] [--cwd <path>]
  *
- *   nextion-skill info
+ *   notionx-skill info
  *
  * No external CLI parser — kept dependency-free on purpose.
  */
@@ -27,10 +27,10 @@ import { resolveBaseDir } from "./targets/base.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const HELP = `nextion-skill — install the official nextion AI agent skill
+const HELP = `notionx-skill — install the official notionx AI agent skill
 
 USAGE
-  nextion-skill <command> [options]
+  notionx-skill <command> [options]
 
 COMMANDS
   install     Install the skill (default if no command given)
@@ -50,19 +50,19 @@ OPTIONS (install / uninstall)
 
 EXAMPLES
   # Install the skill for Claude Code globally:
-  npx nextion-skill install --target claude --scope user
+  npx notionx-skill install --target claude --scope user
 
   # Install for every supported editor, project-scope, from the npm package:
-  npx nextion-skill install --target all --scope project
+  npx notionx-skill install --target all --scope project
 
   # Try the latest skill from main branch (requires network):
-  npx nextion-skill install --target claude --source github --ref main
+  npx notionx-skill install --target claude --source github --ref main
 
   # See where files would go without writing:
-  npx nextion-skill info
+  npx notionx-skill info
 
 For a manual install per editor, see:
-  https://github.com/digwis/nextion/blob/main/skills/nextion/INSTALL.md
+  https://github.com/digwis/nextion/blob/main/skills/notionx/INSTALL.md
 `;
 
 // -------- arg parsing -----------------------------------------------------
@@ -224,7 +224,7 @@ async function runInfo(args: ParsedArgs): Promise<number> {
     return 0;
   }
 
-  console.log("nextion-skill install plan:");
+  console.log("notionx-skill install plan:");
   console.log(`  source: ${args.source}`);
   console.log(`  scope:  ${args.scope}`);
   console.log(`  cwd:    ${args.cwd}`);
@@ -254,7 +254,7 @@ async function runUninstall(args: ParsedArgs): Promise<number> {
       const file = resolve(base, "AGENTS.md");
       if (existsSync(file)) {
         manualEdits.push(
-          `codex: edit ${file} and remove the "## nextion" section`,
+          `codex: edit ${file} and remove the "## notionx" section`,
         );
       } else {
         missing.push(file);
@@ -311,7 +311,7 @@ async function runInstallCmd(args: ParsedArgs): Promise<number> {
     return 0;
   }
 
-  console.log(`Installed nextion skill v${bundle.version} (source: ${args.source})`);
+  console.log(`Installed notionx skill v${bundle.version} (source: ${args.source})`);
   if (args.dryRun) console.log("(dry run; nothing was actually written)");
 
   for (const r of results) {

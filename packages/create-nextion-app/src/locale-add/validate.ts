@@ -1,6 +1,6 @@
 // packages/create-nextion-app/src/locale-add/validate.ts
 //
-// Conservative validator for `nextion locale add <locale>`. The
+// Conservative validator for `notionx locale add <locale>`. The
 // command only ever adds, never removes. The validator refuses:
 //
 //   - empty / whitespace-only input

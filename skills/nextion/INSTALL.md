@@ -1,7 +1,7 @@
-# Installing the nextion skill manually
+# Installing the notionx skill manually
 
-The official nextion skill is shipped from the
-[nextion repository](https://github.com/digwis/nextion) under `skills/nextion/`.
+The official notionx skill is shipped from the
+[notionx repository](https://github.com/digwis/nextion) under `skills/notionx/`.
 The recommended install is via the `@notionx/skill` CLI package (see below), but every
 target also supports a **manual install** that you can do without any extra
 tooling.
@@ -22,33 +22,33 @@ Supported `--target` values: `claude`, `trae`, `codex`, `all`.
 
 | Target | User-scope path | Project-scope path |
 |---|---|---|
-| `claude` (Claude Code) | `~/.claude/skills/nextion/` | `./.claude/skills/nextion/` |
-| `trae` (Trae IDE) | `~/.trae/skills/nextion/` | `./.trae/skills/nextion/` |
+| `claude` (Claude Code) | `~/.claude/skills/notionx/` | `./.claude/skills/notionx/` |
+| `trae` (Trae IDE) | `~/.trae/skills/notionx/` | `./.trae/skills/notionx/` |
 | `codex` (OpenAI Codex) | `~/.codex/AGENTS.md` | `./AGENTS.md` |
 
 The project-scope paths are designed to be **committed to the repo** so every
 contributor picks up the rule automatically.
 
 > **Codex note:** `AGENTS.md` is a shared file. If `./AGENTS.md` already
-> exists, the installer **appends** a `## nextion` section instead of
+> exists, the installer **appends** a `## notionx` section instead of
 > overwriting, so you can keep your other project conventions. Pass
 > `--force` to overwrite.
 
 ## Manual install — Claude Code
 
 ```bash
-mkdir -p ~/.claude/skills/nextion
-curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/nextion/SKILL.md \
-  -o ~/.claude/skills/nextion/SKILL.md
+mkdir -p ~/.claude/skills/notionx
+curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/SKILL.md \
+  -o ~/.claude/skills/notionx/SKILL.md
 ```
 
 Optionally also pull the references:
 
 ```bash
-cd ~/.claude/skills/nextion
+cd ~/.claude/skills/notionx
 mkdir -p references
 for f in architecture content-source domain-module deploy troubleshooting four-contracts; do
-  curl -L "https://raw.githubusercontent.com/digwis/nextion/main/skills/nextion/references/${f}.md" \
+  curl -L "https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/references/${f}.md" \
     -o "references/${f}.md"
 done
 ```
@@ -56,9 +56,9 @@ done
 ## Manual install — Trae IDE
 
 ```bash
-mkdir -p ~/.trae/skills/nextion
-curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/nextion/SKILL.md \
-  -o ~/.trae/skills/nextion/SKILL.md
+mkdir -p ~/.trae/skills/notionx
+curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/SKILL.md \
+  -o ~/.trae/skills/notionx/SKILL.md
 ```
 
 (Same shape as Claude Code — Trae reads the same SKILL.md format.)
@@ -71,11 +71,11 @@ project-scope at the repo root as `./AGENTS.md`.
 ```bash
 # User-scope (applies to every project on this machine):
 mkdir -p ~/.codex
-curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/nextion/rules/codex.md \
+curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/rules/codex.md \
   -o ~/.codex/AGENTS.md
 
 # Project-scope (commit the file to the repo):
-curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/nextion/rules/codex.md \
+curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/rules/codex.md \
   -o AGENTS.md
 ```
 
@@ -83,8 +83,8 @@ If `AGENTS.md` already exists and you want to keep its content, append
 the rule to it instead of overwriting:
 
 ```bash
-printf "\n\n## nextion\n\n" >> AGENTS.md
-curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/nextion/rules/codex.md \
+printf "\n\n## notionx\n\n" >> AGENTS.md
+curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/rules/codex.md \
   >> AGENTS.md
 ```
 
@@ -103,15 +103,15 @@ and overwrite is safe.
 
 | Target | Command |
 |---|---|
-| Claude Code | `rm -rf ~/.claude/skills/nextion` |
-| Trae | `rm -rf ~/.trae/skills/nextion` |
-| Codex | Edit `~/.codex/AGENTS.md` (or `./AGENTS.md`) and remove the `## nextion` section |
+| Claude Code | `rm -rf ~/.claude/skills/notionx` |
+| Trae | `rm -rf ~/.trae/skills/notionx` |
+| Codex | Edit `~/.codex/AGENTS.md` (or `./AGENTS.md`) and remove the `## notionx` section |
 
 ## Verifying the install
 
-After installing, restart your editor and open a nextion project. The AI
+After installing, restart your editor and open a notionx project. The AI
 assistant should now recognise terms like `@notionx/core`,
-`defineContentSource`, `createNextionWorker`, and `nextion:doctor`
+`defineContentSource`, `createNotionxWorker`, and `notionx:doctor`
 automatically, and follow the conventions in `SKILL.md`.
 
 If it doesn't, the most common causes are:

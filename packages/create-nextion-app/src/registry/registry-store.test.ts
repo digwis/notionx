@@ -16,14 +16,14 @@ import {
 describe("registry-store", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await mkdtemp(path.join(os.tmpdir(), "nextion-registry-store-"));
+    dir = await mkdtemp(path.join(os.tmpdir(), "notionx-registry-store-"));
   });
   afterEach(async () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it("exposes the canonical .nextion/registry.json path", () => {
-    expect(REGISTRY_FILE).toBe(".nextion/registry.json");
+  it("exposes the canonical .notionx/registry.json path", () => {
+    expect(REGISTRY_FILE).toBe(".notionx/registry.json");
   });
 
   it("returns null when registry.json does not exist", async () => {
@@ -38,10 +38,10 @@ describe("registry-store", () => {
     // to violate the type.
     const manifest = {
       $schema: "https://example.com/wrong-schema.json",
-      projectKind: "nextion" as const,
+      projectKind: "notionx" as const,
       projectName: "demo",
       scaffoldVersion: "1.0.0",
-      nextionCore: "^2.0.0",
+      notionxCore: "^2.0.0",
       defaultLocale: "en",
       supportedLocales: ["en"],
       enableSiteSettings: true,
@@ -60,7 +60,7 @@ describe("registry-store", () => {
       installed: [],
       managedFiles: { platform: [], bridge: [], user: [] },
     } as unknown as RegistryManifest;
-    await mkdir(path.join(dir, ".nextion"), { recursive: true });
+    await mkdir(path.join(dir, ".notionx"), { recursive: true });
     await writeFile(
       path.join(dir, REGISTRY_FILE),
       JSON.stringify(manifest),
@@ -73,10 +73,10 @@ describe("registry-store", () => {
   it("round-trips a valid manifest through write + read", async () => {
     const manifest: RegistryManifest = {
       $schema: REGISTRY_SCHEMA_V2,
-      projectKind: "nextion",
+      projectKind: "notionx",
       projectName: "demo",
       scaffoldVersion: "1.0.0",
-      nextionCore: "^2.0.0",
+      notionxCore: "^2.0.0",
       defaultLocale: "en",
       supportedLocales: ["en"],
       enableSiteSettings: true,
@@ -93,7 +93,7 @@ describe("registry-store", () => {
       compat: { mode: "v2-native" },
       registries: {
         "@notionx/official": {
-          url: "https://registry.nextion.dev/official.json",
+          url: "https://registry.notionx.dev/official.json",
         },
       },
       installed: [
@@ -121,10 +121,10 @@ describe("registry-store", () => {
   it("uses an atomic write (write to .tmp, then rename)", async () => {
     const manifest: RegistryManifest = {
       $schema: REGISTRY_SCHEMA_V2,
-      projectKind: "nextion",
+      projectKind: "notionx",
       projectName: "demo",
       scaffoldVersion: "1.0.0",
-      nextionCore: "^2.0.0",
+      notionxCore: "^2.0.0",
       defaultLocale: "en",
       supportedLocales: ["en"],
       enableSiteSettings: true,

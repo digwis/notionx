@@ -1029,14 +1029,14 @@ function plainText(parts: unknown): string {
     .trim();
 }
 
-const SCAFFOLD_MARKER_PREFIX = "[nextion-scaffold] key=";
+const SCAFFOLD_MARKER_PREFIX = "[notionx-scaffold] key=";
 
 function buildScaffoldMarker(stableKey: string): string {
   return `${SCAFFOLD_MARKER_PREFIX}${stableKey.trim()}`;
 }
 
 function extractScaffoldKey(description: string): string | null {
-  const match = description.match(/\[nextion-scaffold\] key=([^\n\r]+)/);
+  const match = description.match(/\[notionx-scaffold\] key=([^\n\r]+)/);
   return match?.[1]?.trim() || null;
 }
 

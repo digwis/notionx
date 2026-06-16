@@ -1,4 +1,4 @@
-# Development — `@notionx/create-nextion-app`
+# Development — `@notionx/create-notionx-app`
 
 This file is for **monorepo maintainers**. End-user documentation lives in
 [`README.md`](./README.md) (which is what npmjs.com shows).
@@ -9,20 +9,20 @@ From the vinext monorepo root:
 
 ```bash
 # Build
-pnpm --filter @notionx/create-nextion-app build
+pnpm --filter @notionx/create-notionx-app build
 
 # Run from source (no build needed)
-pnpm --filter @notionx/create-nextion-app dev -- /tmp/my-app
+pnpm --filter @notionx/create-notionx-app dev -- /tmp/my-app
 
 # After changing templates, re-run the build to copy them into dist/
-pnpm --filter @notionx/create-nextion-app build
+pnpm --filter @notionx/create-notionx-app build
 ```
 
 ## Smoke test
 
 ```bash
 # Build, then scaffold into a temp dir
-pnpm --filter @notionx/create-nextion-app build
+pnpm --filter @notionx/create-notionx-app build
 node packages/create-nextion-app/dist/index.js /tmp/cna-smoke --yes \
   --nextion-source "^0.1.0"
 cd /tmp/cna-smoke
@@ -59,7 +59,7 @@ copied verbatim.
 1. Drop the file under `src/templates/` (use `.tmpl` for interpolated files).
 2. If you need new tokens, extend the `TokenMap` and the `buildTokenMap`
    helper in `render.ts`.
-3. Rebuild with `pnpm --filter @notionx/create-nextion-app build` so
+3. Rebuild with `pnpm --filter @notionx/create-notionx-app build` so
    `copy-templates.mjs` copies the new file into `dist/templates/`.
 
 ## Publishing a new version
@@ -68,7 +68,7 @@ copied verbatim.
 # Bump version in packages/create-nextion-app/package.json
 # Major bump only if the prompt UX or template shape changes.
 
-pnpm --filter @notionx/create-nextion-app build
+pnpm --filter @notionx/create-notionx-app build
 cd packages/create-nextion-app
 npm publish --access public
 ```

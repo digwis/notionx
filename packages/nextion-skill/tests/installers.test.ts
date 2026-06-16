@@ -23,7 +23,7 @@ function fakeBundle(): SkillBundle {
     },
     rules: {
       claude: "",
-      codex: "# Codex rule\n\nnextion conventions go here.",
+      codex: "# Codex rule\n\nnotionx conventions go here.",
       trae: "",
     },
     version: "0.0.0-test",
@@ -34,7 +34,7 @@ let tmpRoot: string;
 let cwd: string;
 
 beforeEach(async () => {
-  tmpRoot = await mkdtemp(join(tmpdir(), "nextion-skill-target-"));
+  tmpRoot = await mkdtemp(join(tmpdir(), "notionx-skill-target-"));
   cwd = tmpRoot;
 });
 
@@ -47,7 +47,7 @@ describe("installClaude", () => {
     const result = await installClaude(fakeBundle(), { scope: "project", cwd });
     expect(result.target).toBe("claude");
     expect(result.scope).toBe("project");
-    const baseDir = resolve(cwd, ".claude", "skills", "nextion");
+    const baseDir = resolve(cwd, ".claude", "skills", "notionx");
     expect(existsSync(join(baseDir, "SKILL.md"))).toBe(true);
     expect(existsSync(join(baseDir, "INSTALL.md"))).toBe(true);
     expect(existsSync(join(baseDir, "references", "architecture.md"))).toBe(true);
@@ -59,7 +59,7 @@ describe("installClaude", () => {
 
   it("skips existing files unless force is set", async () => {
     await installClaude(fakeBundle(), { scope: "project", cwd });
-    const baseDir = resolve(cwd, ".claude", "skills", "nextion");
+    const baseDir = resolve(cwd, ".claude", "skills", "notionx");
     const skillPath = join(baseDir, "SKILL.md");
     await writeFile(skillPath, "ORIGINAL", "utf8");
 
@@ -88,7 +88,7 @@ describe("installClaude", () => {
       dryRun: true,
     });
     expect(result.filesWritten.length).toBeGreaterThan(0);
-    const baseDir = resolve(cwd, ".claude", "skills", "nextion");
+    const baseDir = resolve(cwd, ".claude", "skills", "notionx");
     expect(existsSync(baseDir)).toBe(false);
   });
 });
@@ -97,7 +97,7 @@ describe("installTrae", () => {
   it("writes SKILL.md and references/ in project scope", async () => {
     const result = await installTrae(fakeBundle(), { scope: "project", cwd });
     expect(result.target).toBe("trae");
-    const baseDir = resolve(cwd, ".trae", "skills", "nextion");
+    const baseDir = resolve(cwd, ".trae", "skills", "notionx");
     expect(existsSync(join(baseDir, "SKILL.md"))).toBe(true);
     expect(existsSync(join(baseDir, "references", "architecture.md"))).toBe(true);
   });
@@ -115,7 +115,7 @@ describe("installCodex", () => {
     expect(content).toContain("Codex rule");
   });
 
-  it("appends a ## nextion section when AGENTS.md already exists", async () => {
+  it("appends a ## notionx section when AGENTS.md already exists", async () => {
     const file = resolve(cwd, "AGENTS.md");
     await writeFile(file, "# Existing project conventions\n\nSome stuff.\n", "utf8");
     const result = await installCodex(fakeBundle(), { scope: "project", cwd });
@@ -123,15 +123,15 @@ describe("installCodex", () => {
     const after = await readFile(file, "utf8");
     expect(after).toContain("Existing project conventions");
     expect(after).toContain("Some stuff.");
-    expect(after).toContain("## nextion");
+    expect(after).toContain("## notionx");
     expect(after).toContain("Codex rule");
   });
 
-  it("skips when a ## nextion section is already present", async () => {
+  it("skips when a ## notionx section is already present", async () => {
     const file = resolve(cwd, "AGENTS.md");
     await writeFile(
       file,
-      "# Project\n\n## nextion\n\nAlready installed.\n",
+      "# Project\n\n## notionx\n\nAlready installed.\n",
       "utf8",
     );
     const result = await installCodex(fakeBundle(), { scope: "project", cwd });

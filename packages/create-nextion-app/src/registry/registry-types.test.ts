@@ -17,10 +17,10 @@ import {
 function fixture(overrides: Partial<RegistryManifest> = {}): RegistryManifest {
   return {
     $schema: REGISTRY_SCHEMA_V2,
-    projectKind: "nextion",
+    projectKind: "notionx",
     projectName: "demo",
     scaffoldVersion: "1.0.0",
-    nextionCore: "^2.0.0",
+    notionxCore: "^2.0.0",
     defaultLocale: "en",
     supportedLocales: ["en"],
     enableSiteSettings: true,
@@ -46,21 +46,21 @@ describe("RegistryManifest", () => {
   it("uses the v2 schema URL", () => {
     const manifest = fixture({
       registries: {
-        "@notionx/official": { url: "https://registry.nextion.dev/official.json" },
+        "@notionx/official": { url: "https://registry.notionx.dev/official.json" },
       },
     });
 
-    expect(manifest.$schema).toBe("https://nextion.dev/schemas/registry.v2.json");
+    expect(manifest.$schema).toBe("https://notionx.dev/schemas/registry.v2.json");
   });
 
   it("supports the legacy-vinext compatibility marker", () => {
     const manifest = fixture({
-      nextionCore: "workspace:*",
+      notionxCore: "workspace:*",
       compat: { mode: "legacy-vinext" },
     });
 
     expect(manifest.compat.mode).toBe("legacy-vinext");
-    expect(manifest.nextionCore).toBe("workspace:*");
+    expect(manifest.notionxCore).toBe("workspace:*");
   });
 
   it("preserves extras through the round-trip", () => {

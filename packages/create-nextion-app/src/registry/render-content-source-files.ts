@@ -49,7 +49,7 @@ export interface RenderContentSourceFilesInput {
     targetDir: string;
     defaultLocale: string;
     supportedLocales: readonly string[];
-    nextionSource: string;
+    notionxSource: string;
     adminEmail: string;
     adminPassword: string;
     scaffoldVersion: string;
@@ -108,7 +108,7 @@ export async function renderContentSourceFiles(
     defaultLocale: input.project.defaultLocale,
     supportedLocales: input.project.supportedLocales.join(", "),
     supportedLocalesJson: JSON.stringify(input.project.supportedLocales),
-    nextionSource: input.project.nextionSource,
+    notionxSource: input.project.notionxSource,
   };
 
   // For content-source items, add per-item tokens so the template

@@ -17,7 +17,7 @@
 // lives in the tier-7 `middleware.ts` module which the bootstrap
 // delegates to.
 
-import { nextionMiddleware, type NextionMiddlewareOptions } from "../middleware";
+import { notionxMiddleware, type NotionxMiddlewareOptions } from "../middleware";
 import type {
   AdminNavItem,
   AuthConfig,
@@ -58,14 +58,14 @@ export interface FoundationWorkerOptions {
   };
   /**
    * Optional session resolver passed straight through to
-   * `nextionMiddleware`. When omitted the middleware still runs
+   * `notionxMiddleware`. When omitted the middleware still runs
    * the admin gate but always reports no viewer.
    */
-  sessionLookup?: NextionMiddlewareOptions["sessionLookup"];
+  sessionLookup?: NotionxMiddlewareOptions["sessionLookup"];
   /**
    * Search adapter. When present, the worker registers `/api/search`
    * automatically. Omit when the project was scaffolded with
-   * `--no-search` or after `nextion remove search`.
+   * `--no-search` or after `notionx remove search`.
    */
   searchAdapter?: SearchAdapter;
   /**
@@ -140,13 +140,13 @@ function buildStaticRoutes(): RouteEntry[] {
  * Build a foundation Cloudflare Worker.
  *
  * The returned object exposes a `fetch` method that:
- *   1. Runs `nextionMiddleware` (admin gate + viewer attachment).
+ *   1. Runs `notionxMiddleware` (admin gate + viewer attachment).
  *   2. Tries the first-party route table.
  *   3. Tries any project-injected `extraRoutes`.
  *   4. Returns `null` if nothing matched, so the starter wrapper can
  *      delegate to vinext.
  */
-export function createNextionWorker(
+export function createNotionxWorker(
   options: FoundationWorkerOptions
 ): FoundationWorker {
   const sources: ContentSource[] = options.sources;
@@ -158,7 +158,7 @@ export function createNextionWorker(
 
   // Register the search route only when a SearchAdapter is provided.
   // This keeps `/api/search` absent in projects scaffolded with
-  // `--no-search` or after `nextion remove search`.
+  // `--no-search` or after `notionx remove search`.
   if (options.searchAdapter) {
     const handleSearch = createSearchRouteHandler({
       adapter: options.searchAdapter,
@@ -182,7 +182,7 @@ export function createNextionWorker(
     }
   }
 
-  const middlewareOptions: NextionMiddlewareOptions = {
+  const middlewareOptions: NotionxMiddlewareOptions = {
     authConfig: options.authConfig,
     sessionLookup: options.sessionLookup,
   };
@@ -192,7 +192,7 @@ export function createNextionWorker(
       void ctx;
 
       // 1. Admin gate. A 401 short-circuits the route table.
-      const gateResponse = await nextionMiddleware(
+      const gateResponse = await notionxMiddleware(
         request,
         env,
         middlewareOptions

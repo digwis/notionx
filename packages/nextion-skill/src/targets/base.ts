@@ -20,9 +20,9 @@ export function resolveBaseDir(target: Target, scope: Scope, cwd: string): strin
     const home = homedir();
     switch (target) {
       case "claude":
-        return join(home, ".claude", "skills", "nextion");
+        return join(home, ".claude", "skills", "notionx");
       case "trae":
-        return join(home, ".trae", "skills", "nextion");
+        return join(home, ".trae", "skills", "notionx");
       case "codex":
         return join(home, ".codex");
     }
@@ -30,9 +30,9 @@ export function resolveBaseDir(target: Target, scope: Scope, cwd: string): strin
   // scope === "project"
   switch (target) {
     case "claude":
-      return join(cwd, ".claude", "skills", "nextion");
+      return join(cwd, ".claude", "skills", "notionx");
     case "trae":
-      return join(cwd, ".trae", "skills", "nextion");
+      return join(cwd, ".trae", "skills", "notionx");
     case "codex":
       // AGENTS.md lives at the repo root.
       return cwd;

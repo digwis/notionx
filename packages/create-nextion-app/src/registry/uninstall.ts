@@ -1,9 +1,9 @@
 // packages/create-nextion-app/src/registry/uninstall.ts
 //
-// Core `nextion remove <id>` logic.
+// Core `notionx remove <id>` logic.
 //
 // Contract (mirrors `install.ts`):
-//   1. Read `.nextion/registry.json`.
+//   1. Read `.notionx/registry.json`.
 //   2. Reject if the item is not installed.
 //   3. Refuse to remove an item that other items still depend on
 //      (e.g. can't remove `docs` if `search` requires it).
@@ -52,7 +52,7 @@ export interface UninstallInput {
   purge?: boolean;
   /**
    * `false` makes the function a pure planner. Used by
-   * `nextion remove --dry-run`.
+   * `notionx remove --dry-run`.
    */
   dryRun?: boolean;
 }
@@ -61,7 +61,7 @@ export interface UninstallSummary {
   removedItem: InstalledItem;
   /** Whether `models.ts` was re-rendered. */
   rerenderedModels: boolean;
-  /** Whether `.nextion/registry.json` was written. */
+  /** Whether `.notionx/registry.json` was written. */
   wroteManifest: boolean;
   /** Files that were deleted (only non-empty when `purge` is true). */
   deletedFiles: string[];
@@ -106,7 +106,7 @@ export async function uninstallItem(
   if (!installed) {
     throw new UninstallError(
       `"${itemId}" is not installed in this project. ` +
-        `Run \`nextion add ${itemId}\` to install it.`,
+        `Run \`notionx add ${itemId}\` to install it.`,
       "not-installed",
     );
   }
@@ -118,8 +118,8 @@ export async function uninstallItem(
 
   // Refuse to remove an item that is `requires`d by something
   // else still installed. The user must remove the dependent
-  // items first (e.g. `nextion remove search` before
-  // `nextion remove docs`). The `requires` list lives on the
+  // items first (e.g. `notionx remove search` before
+  // `notionx remove docs`). The `requires` list lives on the
   // catalog's `RegistryItem`, not on `InstalledItem` — we look
   // it up by id at check time.
   const blockers = manifest.installed.filter((i) => {
@@ -306,7 +306,7 @@ function buildFallbackTokens(project: {
   projectName: string;
   defaultLocale: string;
   supportedLocales: readonly string[];
-  nextionSource: string;
+  notionxSource: string;
 }): Record<string, string> {
   return {
     projectName: project.projectName,
@@ -314,7 +314,7 @@ function buildFallbackTokens(project: {
     defaultLocale: project.defaultLocale,
     supportedLocales: project.supportedLocales.join(", "),
     supportedLocalesJson: JSON.stringify(project.supportedLocales),
-    nextionSource: project.nextionSource,
+    notionxSource: project.notionxSource,
   };
 }
 
@@ -343,18 +343,18 @@ function buildFollowupTasks(
   if (isFeatureModule) {
     out.push(
       `The fallback version of "${item.id}" is now active. ` +
-        `Re-add with \`nextion add ${item.id}\` to restore the Notion-backed version.`,
+        `Re-add with \`notionx add ${item.id}\` to restore the Notion-backed version.`,
     );
   } else {
     out.push(
       `The data source for "${item.id}" in Notion is untouched. ` +
-        `Re-add with \`nextion add ${item.id}\` to wire it back, or ` +
+        `Re-add with \`notionx add ${item.id}\` to wire it back, or ` +
         `manually archive the Notion data source.`,
     );
   }
   if (!purged && blockers.length === 0) {
     out.push(
-      `Run \`nextion remove --purge ${item.id}\` to also delete the generated files.`,
+      `Run \`notionx remove --purge ${item.id}\` to also delete the generated files.`,
     );
   }
   return out;

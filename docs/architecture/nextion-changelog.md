@@ -1,4 +1,4 @@
-# Nextion Changelog
+# Notionx Changelog
 
 > `@notionx/core` 的发布说明。完整的 GitHub Packages release notes 见
 > [https://github.com/OWNER/vinext/packages](https://github.com/OWNER/vinext/packages)
@@ -9,7 +9,7 @@
 
 ## 1.0.0 — 初始发布
 
-首次将 Nextion 从 `apps/moviebluebook` 拆出，独立发布为 `@notionx/core`。
+首次将 Notionx 从 `apps/moviebluebook` 拆出，独立发布为 `@notionx/core`。
 本节为占位说明：1.0.0 没有迁移 callout，**没有**消费方需要做额外动作。
 
 ### 包含
@@ -20,15 +20,15 @@
 - 4 个边界契约：`ContentSource`、`AuthConfig`、`AdminExtension`、
   `WorkerOptions`。
 - 工厂函数：`defineContentSource` / `createAuth` / `createAdminNav` /
-  `createNextionWorker`。
+  `createNotionxWorker`。
 - Cloudflare-only 运行时：Workers + D1 + R2 + Cloudflare Images +
   `caches.default` + vinext CDN 适配。
 - D1 认证（注册 / 验证 / 登录 / 找回 / Reset / 退出 / Turnstile /
   Resend / Google OAuth）。
 - Admin 外壳 + 用户管理 + 设置 + content-models 状态页 + account 页。
 - Notion 工具链：client、mappers、block 渲染、媒体代理、webhook、内容缓存。
-- `nextion:doctor` 离线诊断 CLI。
-- `pnpm create nextion-app` 脚手架（位于 `packages/create-nextion-app/`）。
+- `notionx:doctor` 离线诊断 CLI。
+- `pnpm create notionx-app` 脚手架（位于 `packages/create-nextion-app/`）。
 
 ### 升级指引
 

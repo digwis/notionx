@@ -1,5 +1,5 @@
 /**
- * Shared types for nextion-skill.
+ * Shared types for notionx-skill.
  */
 
 /** Platforms we can install the skill into. */

@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 
-import "@notionx/create-nextion-app/dist/index.js";
+import "@notionx/create-notionx-app/dist/index.js";

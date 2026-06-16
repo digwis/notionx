@@ -1,14 +1,14 @@
 import type { Answers } from "./prompt.js";
 
-export const SCAFFOLD_METADATA_FILE = ".nextion/scaffold.json";
+export const SCAFFOLD_METADATA_FILE = ".notionx/scaffold.json";
 
 export interface ScaffoldMetadata {
-  projectKind: "nextion";
+  projectKind: "notionx";
   projectName: string;
   scaffoldVersion: string;
   defaultLocale: string;
   supportedLocales: string[];
-  nextionSource: string;
+  notionxSource: string;
   enableSiteSettings: boolean;
   contentSource: {
     id: string;
@@ -45,7 +45,7 @@ export interface ScaffoldMetadata {
    * Maps a built-in translation source name (or content source id)
    * to the Notion data source that holds its locale-specific rows.
    * The scaffolder never writes or rewrites this block on a normal
-   * update run; the `nextion locale add` command manages it.
+   * update run; the `notionx locale add` command manages it.
    */
   translationSources?: Record<string, TranslationSourceRef>;
 }
@@ -60,12 +60,12 @@ export function buildScaffoldMetadata(
   scaffoldVersion: string
 ): ScaffoldMetadata {
   return {
-    projectKind: "nextion",
+    projectKind: "notionx",
     projectName: answers.projectName,
     scaffoldVersion,
     defaultLocale: answers.defaultLocale,
     supportedLocales: [...answers.supportedLocales],
-    nextionSource: answers.nextionSource,
+    notionxSource: answers.notionxSource,
     enableSiteSettings: answers.enableSiteSettings,
     contentSource: {
       id: answers.contentSource.id,
@@ -82,12 +82,12 @@ export function buildScaffoldMetadata(
 export function parseScaffoldMetadata(raw: string): ScaffoldMetadata {
   const parsed = JSON.parse(raw) as Partial<ScaffoldMetadata>;
   if (
-    parsed.projectKind !== "nextion" ||
+    parsed.projectKind !== "notionx" ||
     typeof parsed.projectName !== "string" ||
     typeof parsed.scaffoldVersion !== "string" ||
     typeof parsed.defaultLocale !== "string" ||
     !Array.isArray(parsed.supportedLocales) ||
-    typeof parsed.nextionSource !== "string" ||
+    typeof parsed.notionxSource !== "string" ||
     !parsed.contentSource ||
     typeof parsed.contentSource.id !== "string" ||
     typeof parsed.contentSource.title !== "string" ||
@@ -99,7 +99,7 @@ export function parseScaffoldMetadata(raw: string): ScaffoldMetadata {
         typeof field.notionName !== "string"
     )
   ) {
-    throw new Error("Invalid Nextion metadata payload");
+    throw new Error("Invalid Notionx metadata payload");
   }
 
   return parsed as ScaffoldMetadata;

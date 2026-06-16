@@ -1,6 +1,6 @@
 /**
  * Claude Code installer: writes SKILL.md + INSTALL.md + references/ to
- * `~/.claude/skills/nextion/` (user scope) or `./.claude/skills/nextion/`
+ * `~/.claude/skills/notionx/` (user scope) or `./.claude/skills/notionx/`
  * (project scope).
  */
 import type { InstallResult, Scope, SkillBundle } from "../types.js";

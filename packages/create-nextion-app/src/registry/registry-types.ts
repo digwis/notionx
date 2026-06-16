@@ -16,7 +16,7 @@
  * "this manifest uses an older or newer protocol version".
  */
 export const REGISTRY_SCHEMA_V2 =
-  "https://nextion.dev/schemas/registry.v2.json" as const;
+  "https://notionx.dev/schemas/registry.v2.json" as const;
 
 /**
  * Where a `RegistryItem` came from. Resolved at install time; not
@@ -26,7 +26,7 @@ export type RegistrySourceRef =
   | { kind: "official"; name: string } // e.g. "@notionx/official"
   | { kind: "url"; url: string } // e.g. https://acme.com/registry.json
   | { kind: "git"; repo: string; ref?: string } // e.g. github.com/team/reg
-  | { kind: "local"; path: string }; // file:./.nextion/local-registry.json
+  | { kind: "local"; path: string }; // file:./.notionx/local-registry.json
 
 /**
  * Three classes of "ability" a project can have. Mirrors Astro's
@@ -39,7 +39,7 @@ export type RegistryItemKind =
 
 /**
  * Three-layer file ownership. The platform layer is fully managed
- * by nextion (overwritten on update); bridge files are regenerated
+ * by notionx (overwritten on update); bridge files are regenerated
  * from templates but may be touched by the user; user files are
  * never overwritten once installed.
  */
@@ -63,15 +63,15 @@ export interface RegistryFile {
    * content-source / platform-extension items.
    */
   fallbackTemplate?: string;
-  /** Optional: when set, `nextion remove` will keep this file by default. */
+  /** Optional: when set, `notionx remove` will keep this file by default. */
   retainOnRemove?: boolean;
 }
 
 /**
  * Capabilities a `RegistryItem` exposes once installed. Used by:
- * - `nextion add` to wire up the worker / admin nav
- * - `nextion doctor` to validate env vars and bindings
- * - `nextion diff` to print a human-readable summary
+ * - `notionx add` to wire up the worker / admin nav
+ * - `notionx doctor` to validate env vars and bindings
+ * - `notionx diff` to print a human-readable summary
  */
 export interface RegistryCapabilities {
   publicRoutes?: string[];
@@ -101,7 +101,7 @@ export type MigrationStep =
 
 /**
  * One migration: from `<id>@<fromVersion>` to `<id>@<toVersion>`.
- * `nextion update` picks the migration whose `from` matches the
+ * `notionx update` picks the migration whose `from` matches the
  * currently installed version (or the closest chain in between).
  */
 export interface RegistryMigration {
@@ -168,7 +168,7 @@ export interface InstalledItem {
   installRecordSha?: string; // sha256 of the resolved RegistryItem JSON
   /**
    * Project-relative paths of all files rendered during install.
-   * Used by `nextion remove --purge` to delete the exact file set
+   * Used by `notionx remove --purge` to delete the exact file set
    * that was written. Optional for backward compatibility with
    * manifests created before this field existed.
    */
@@ -176,21 +176,21 @@ export interface InstalledItem {
 }
 
 /**
- * The full contents of a project's `.nextion/registry.json`.
+ * The full contents of a project's `.notionx/registry.json`.
  *
  * This is the **single source of truth** for:
  *   - which abilities are installed
  *   - which registry they came from
  *   - what core runtime version this project targets
- *   - per-item file ownership (for `nextion update` risk classification)
+ *   - per-item file ownership (for `notionx update` risk classification)
  *   - the primary content source the user picked at scaffold time
  */
 export interface RegistryManifest {
   $schema: typeof REGISTRY_SCHEMA_V2;
-  projectKind: "nextion";
+  projectKind: "notionx";
   projectName: string;
   scaffoldVersion: string;
-  nextionCore: string; // semver range, e.g. "^2.0.0"
+  notionxCore: string; // semver range, e.g. "^2.0.0"
   defaultLocale: string;
   supportedLocales: string[];
   enableSiteSettings: boolean;
@@ -228,9 +228,9 @@ export interface RegistryManifest {
   enableSearch: boolean;
   /**
    * The "primary" content source — the one the user picked during
-   * `create-nextion-app`. v2 supports multiple content sources via
+   * `create-notionx-app`. v2 supports multiple content sources via
    * `installed`, but the scaffold flow still needs to remember
-   * which one was the original (for `nextion update` re-rendering
+   * which one was the original (for `notionx update` re-rendering
    * and for `provision` to know which Notion database to seed).
    */
   contentSource: {
@@ -242,7 +242,7 @@ export interface RegistryManifest {
     /**
      * Compatibility marker for projects that need special handling.
      * Today only `"legacy-vinext"` is recognised — it marks projects
-     * where `nextionCore` is `workspace:*` (e.g. during monorepo
+     * where `notionxCore` is `workspace:*` (e.g. during monorepo
      * development) so the update flow doesn't try to resolve a real
      * semver. Absent or `"v2-native"` means normal consumer mode.
      */
@@ -268,7 +268,7 @@ export interface RegistryManifest {
   };
   /**
    * Optional project-specific hints, never written or rewritten by
-   * nextion itself. Survives `update` / `add` / `remove` runs.
+   * notionx itself. Survives `update` / `add` / `remove` runs.
    */
   extras?: Record<string, unknown>;
 }

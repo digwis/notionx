@@ -40,7 +40,7 @@ lib/content/models.ts
   Append it to contentSources.
 
 worker/index.ts
-  Include the source in createNextionWorker({ sources: [...] }) if needed.
+  Include the source in createNotionxWorker({ sources: [...] }) if needed.
 
 app/<domain>/page.tsx
   Public list/search page, usually using @notionx/core/notion helpers.
@@ -121,4 +121,4 @@ After replacement, verify:
 - Notion media uses stable package media routes where needed.
 - Search/filter behavior matches the public page and API.
 - Env examples and docs match required Notion fields.
-- `pnpm test`, `pnpm build`, and `pnpm nextion:doctor` pass when local config is present.
+- `pnpm test`, `pnpm build`, and `pnpm notionx:doctor` pass when local config is present.

@@ -1,7 +1,7 @@
 /**
- * Load the nextion skill content from one of three sources:
+ * Load the notionx skill content from one of three sources:
  *
- * - `local`:  read from the monorepo's `skills/nextion/` (dev / CI)
+ * - `local`:  read from the monorepo's `skills/notionx/` (dev / CI)
  * - `npm`:    read from the package's bundled `skill/` directory (production)
  * - `github`: fetch raw files from `digwis/nextion` on GitHub
  *
@@ -76,8 +76,8 @@ function bundledSkillDir(): string {
 /** Resolve the local monorepo skill directory (used during development). */
 function localSkillDir(): string {
   // dist/skill-source.js -> packages/nextion-skill/src/skill-source.ts
-  // Walk up to repo root, then into skills/nextion.
-  return resolve(__dirname, "..", "..", "..", "skills", "nextion");
+  // Walk up to repo root, then into skills/notionx.
+  return resolve(__dirname, "..", "..", "..", "skills", "notionx");
 }
 
 /** Load the skill from a local directory (monorepo dev mode). */
@@ -86,7 +86,7 @@ export async function loadLocal(version: string): Promise<SkillBundle> {
   if (!existsSync(resolve(dir, "SKILL.md"))) {
     throw new Error(
       `Local skill source not found at ${dir}. ` +
-        `Run from inside the nextion monorepo, or use --source=npm.`,
+        `Run from inside the notionx monorepo, or use --source=npm.`,
     );
   }
   return await loadFromDir(dir, version);
@@ -106,14 +106,14 @@ export async function loadBundled(version: string): Promise<SkillBundle> {
 }
 
 /**
- * Load the skill by fetching raw files from the nextion GitHub repository.
+ * Load the skill by fetching raw files from the notionx GitHub repository.
  * Useful when a user wants the latest unreleased skill content.
  */
 export async function loadFromGithub(
   ref: string = "main",
   version: string = `github:${ref}`,
 ): Promise<SkillBundle> {
-  const base = `https://raw.githubusercontent.com/digwis/nextion/${ref}/skills/nextion`;
+  const base = `https://raw.githubusercontent.com/digwis/nextion/${ref}/skills/notionx`;
   const fetchText = async (path: string): Promise<string> => {
     const res = await fetch(`${base}/${path}`);
     if (!res.ok) {

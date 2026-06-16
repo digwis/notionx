@@ -1,18 +1,18 @@
 // packages/create-nextion-app/src/registry/update.ts
 //
-// `nextion update` entry point. v2 protocol.
+// `notionx update` entry point. v2 protocol.
 //
 // What this does:
-//   1. Read `.nextion/registry.json`.
+//   1. Read `.notionx/registry.json`.
 //   2. Walk the installed manifest, compare versions to the
 //      catalog.
 //   3. For each upgradable item, build a `UpdatePlan` (pure) and
 //      write **one set of payload files** per chain hop:
-//        - `.nextion/migrations/NNNN_<item>_<from>_<to>.notion-diff.json`
-//        - `.nextion/migrations/NNNN_<item>_<from>_<to>.d1.sql`
-//        - `.nextion/migrations/_meta.json` (always rewritten)
+//        - `.notionx/migrations/NNNN_<item>_<from>_<to>.notion-diff.json`
+//        - `.notionx/migrations/NNNN_<item>_<from>_<to>.d1.sql`
+//        - `.notionx/migrations/_meta.json` (always rewritten)
 //   4. **Never** touch Notion or D1 directly. The user runs the
-//      migration by hand (or via the future `nextion migrate`
+//      migration by hand (or via the future `notionx migrate`
 //      command).
 //   5. Re-render `lib/content/models.ts` so the registry stays
 //      in sync with the new catalog shape.
@@ -314,9 +314,9 @@ export async function applyUpdate(
   // The registry's `installed[].version` field is **never** bumped
   // by `applyUpdate`. The bump only happens after the user
   // confirms they applied the migration by running
-  // `nextion migrate --mark-applied <seq>`. This is what
+  // `notionx migrate --mark-applied <seq>`. This is what
   // guarantees the migration is safe to retry: if the user
-  // aborts mid-way, the next `nextion update` will detect
+  // aborts mid-way, the next `notionx update` will detect
   // they're still on the old version and re-emit the same plan.
   //
   // We still re-render the bridge files (worker/index.ts,

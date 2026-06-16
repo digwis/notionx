@@ -1,4 +1,4 @@
-# @notionx/create-nextion-app
+# @notionx/create-notionx-app
 
 Scaffold a new [vinext](https://github.com/digwis/nextion) project that consumes
 [`@notionx/core`](https://www.npmjs.com/package/@notionx/core). The generated
@@ -8,7 +8,7 @@ health routes — all from one command.
 
 > **TL;DR**
 > ```bash
-> npx @notionx/create-nextion-app my-app
+> npx @notionx/create-notionx-app my-app
 > cd my-app
 > pnpm install
 > pnpm dev
@@ -21,7 +21,7 @@ health routes — all from one command.
 ### One command, one question
 
 ```bash
-npx @notionx/create-nextion-app my-app
+npx @notionx/create-notionx-app my-app
 ```
 
 The CLI asks exactly two things — your **project name** and a final
@@ -31,23 +31,23 @@ sensible defaults that you can edit in the generated project.
 ### Skip prompts entirely
 
 ```bash
-npx @notionx/create-nextion-app my-app --yes
+npx @notionx/create-notionx-app my-app --yes
 ```
 
 ### Custom install location
 
 ```bash
-npx @notionx/create-nextion-app ./projects/my-app
+npx @notionx/create-notionx-app ./projects/my-app
 ```
 
 ### Pin a specific `@notionx/core` version
 
 ```bash
 # In a published project (no monorepo workspace):
-npx @notionx/create-nextion-app my-app --nextion-source "^0.1.0"
+npx @notionx/create-notionx-app my-app --nextion-source "^0.1.0"
 
 # In a monorepo that also hosts the @notionx/core source:
-npx @notionx/create-nextion-app my-app \
+npx @notionx/create-notionx-app my-app \
   --nextion-source "link:../vinext-monorepo/packages/nextion"
 ```
 
@@ -59,7 +59,7 @@ my-app/
 │   ├── page.tsx                # landing page
 │   ├── login/page.tsx          # email/password login
 │   └── api/                    # health + auth endpoints
-├── worker/index.ts             # createNextionWorker + vinext fallthrough
+├── worker/index.ts             # createNotionxWorker + vinext fallthrough
 ├── lib/                        # site/auth/admin/content config
 ├── components/ui/              # shadcn/ui primitives
 ├── migrations/0001_init.sql    # auth schema
@@ -92,10 +92,10 @@ pattern in Notion). To enable an additional locale on an existing
 project, see the `Multilingual foundation` section in the generated
 project README for the full flow:
 
-- `npx nextion locale add <locale>` — dry run
-- `npx nextion locale add <locale> --apply` — writes scaffold metadata
+- `npx notionx locale add <locale>` — dry run
+- `npx notionx locale add <locale> --apply` — writes scaffold metadata
   and the locale config (no Notion calls)
-- `npx nextion locale add <locale> --with-notion --apply [--copy-from <locale>]`
+- `npx notionx locale add <locale> --with-notion --apply [--copy-from <locale>]`
   — provisions the four translation data sources in Notion and pushes
   the resulting data source ids as worker secrets
 
@@ -126,7 +126,7 @@ with the same locale is a no-op (the validator returns
 The runtime framework. New projects get it as a dependency; the generated
 code uses:
 
-- `createNextionWorker(...)` — the Cloudflare Worker entry
+- `createNotionxWorker(...)` — the Cloudflare Worker entry
 - `defineContentSource(...)` — a Notion-backed content source
 - `createAuth(authConfig)` — email/password + OAuth login
 - `AdminExtension` — server-rendered admin shell

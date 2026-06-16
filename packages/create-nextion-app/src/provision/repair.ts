@@ -13,7 +13,7 @@ export function buildRepairAnswers(registry: LoadedRegistry): Answers {
     targetDir: process.cwd(),
     defaultLocale: m.defaultLocale,
     supportedLocales: [...m.supportedLocales],
-    nextionSource: m.nextionCore,
+    notionxSource: m.notionxCore,
     enableSiteSettings: m.enableSiteSettings,
     enableBlocks: m.enableBlocks,
     enableAuth: m.enableAuth,

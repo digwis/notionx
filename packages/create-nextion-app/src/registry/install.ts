@@ -1,12 +1,12 @@
 // packages/create-nextion-app/src/registry/install.ts
 //
-// Core `nextion add <id>` logic. v1 of this module wires the
-// minimal subset needed to make `nextion add docs` a working
+// Core `notionx add <id>` logic. v1 of this module wires the
+// minimal subset needed to make `notionx add docs` a working
 // command; richer behaviour (Notion schema sync, codemods,
 // file-content merge for `user`-owned files) lives in PR 4.
 //
 // The contract:
-//   1. Read `.nextion/registry.json`.
+//   1. Read `.notionx/registry.json`.
 //   2. Reject if the item is already installed, or if a
 //      `requires` dependency is missing.
 //   3. Render the new item's files (using the project templates
@@ -50,7 +50,7 @@ export interface InstallInput {
   params?: Record<string, string>;
   /**
    * `false` makes `installItem()` a pure planner — no file writes,
-   * no manifest updates. Used by `nextion add --dry-run`.
+   * no manifest updates. Used by `notionx add --dry-run`.
    */
   dryRun?: boolean;
 }
@@ -66,7 +66,7 @@ export interface InstallSummary {
   }>;
   /** Whether `models.ts` was re-rendered. */
   rerenderedModels: boolean;
-  /** Whether `.nextion/registry.json` was written. */
+  /** Whether `.notionx/registry.json` was written. */
   wroteManifest: boolean;
   /** Human-readable followup tasks (printed by the CLI). */
   followup: string[];
@@ -97,7 +97,7 @@ export async function installItem(input: InstallInput): Promise<InstallSummary> 
   const item = getOfficialItem(itemId);
   if (!item) {
     throw new InstallError(
-      `Unknown registry item "${itemId}". Run \`nextion add --list\` to see available items.`,
+      `Unknown registry item "${itemId}". Run \`notionx add --list\` to see available items.`,
       "unknown-item",
     );
   }
@@ -109,13 +109,13 @@ export async function installItem(input: InstallInput): Promise<InstallSummary> 
   const loaded = await loadRegistry(projectDir);
   const manifest = loaded.manifest;
 
-  // Idempotency: reject re-installing the same id. `nextion update`
-  // handles version upgrades; `nextion add` is for new items.
+  // Idempotency: reject re-installing the same id. `notionx update`
+  // handles version upgrades; `notionx add` is for new items.
   if (manifest.installed.some((i) => i.id === finalItem.id)) {
     throw new InstallError(
       `"${finalItem.id}" is already installed in this project. ` +
-        `Use \`nextion update ${finalItem.id}\` to upgrade it, ` +
-        `or \`nextion remove ${finalItem.id}\` to uninstall.`,
+        `Use \`notionx update ${finalItem.id}\` to upgrade it, ` +
+        `or \`notionx remove ${finalItem.id}\` to uninstall.`,
       "already-installed",
     );
   }
@@ -129,14 +129,14 @@ export async function installItem(input: InstallInput): Promise<InstallSummary> 
     if (!dep) {
       throw new InstallError(
         `"${finalItem.id}" requires "${req.id}" to be installed first. ` +
-          `Run \`nextion add ${req.id}\` and try again.`,
+          `Run \`notionx add ${req.id}\` and try again.`,
         "missing-requirement",
       );
     }
   }
 
   // Compute the new installed record. We snapshot the rendered
-  // file paths so `nextion remove --purge` can delete the exact
+  // file paths so `notionx remove --purge` can delete the exact
   // set that was written (no heuristic path matching).
   const installed: InstalledItem = {
     id: finalItem.id,
@@ -187,7 +187,7 @@ export async function installItem(input: InstallInput): Promise<InstallSummary> 
   });
 
   // Snapshot the rendered file paths on the InstalledItem so
-  // `nextion remove --purge` can delete the exact set later.
+  // `notionx remove --purge` can delete the exact set later.
   installed.files = rendered.map((f) => f.projectRelativePath);
 
   const followup: string[] = buildFollowupTasks(finalItem, manifest);

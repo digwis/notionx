@@ -1,13 +1,13 @@
 # {{projectName}}
 
 A [vinext](https://github.com/digwis/nextion) project scaffolded with
-[`@notionx/create-nextion-app`](https://www.npmjs.com/package/@notionx/create-nextion-app),
+[`@notionx/create-notionx-app`](https://www.npmjs.com/package/@notionx/create-notionx-app),
 powered by [`@notionx/core`](https://www.npmjs.com/package/@notionx/core) on
 Cloudflare Workers + D1 + R2 + Cloudflare Images.
 
 ## Quick start
 
-When you ran `@notionx/create-nextion-app` interactively and answered "yes" to
+When you ran `@notionx/create-notionx-app` interactively and answered "yes" to
 the provisioning prompt, this project is already wired with:
 
 - A real Cloudflare D1 database (id written into `wrangler.jsonc` + `.dev.vars`)
@@ -67,7 +67,7 @@ Fallback rules per model:
 - `blocks` — missing translations fall back to the default-locale copy
 - `site settings` — missing translations fall back to the default-locale copy
 
-The header renders a `LocaleSwitcher` automatically when more than one locale is configured. Adding a new locale to an existing project is a separate `nextion locale add <locale>` workflow.
+The header renders a `LocaleSwitcher` automatically when more than one locale is configured. Adding a new locale to an existing project is a separate `notionx locale add <locale>` workflow.
 
 ## Custom content models
 
@@ -76,23 +76,23 @@ To add a new content model to the locale foundation (for example a `products` so
 ## Inspecting current locales
 
 ```bash
-npx nextion locale list
+npx notionx locale list
 ```
 
-Prints the current supported locales plus the status of each built-in translation data source (`configured` or `missing`). Use the output to confirm a `nextion locale add` ran cleanly.
+Prints the current supported locales plus the status of each built-in translation data source (`configured` or `missing`). Use the output to confirm a `notionx locale add` ran cleanly.
 
 ## Adding a locale to an existing project
 
 ```bash
 # 1. Dry run — see exactly what would change, no Notion calls.
-npx nextion locale add zh-CN
+npx notionx locale add zh-CN
 
 # 2. Apply the local changes (metadata + i18n config + site config).
-npx nextion locale add zh-CN --apply
+npx notionx locale add zh-CN --apply
 
 # 3. (Optional) Provision the four translation data sources in
 #    Notion and sync the new ids as worker secrets.
-npx nextion locale add zh-CN --with-notion --apply \
+npx notionx locale add zh-CN --with-notion --apply \
   --copy-from en
 ```
 
@@ -194,8 +194,8 @@ pnpm exec wrangler r2 bucket create {{projectNameLower}}-assets
 
 - `app/page.tsx` — homepage rendered from the Notion-backed Pages model
 - `app/[slug]/page.tsx` — generic Notion-backed pages such as `/about` and `/privacy`
-- `app/api/health/route.ts` — `GET /api/health` from nextion
-- `app/api/auth/*` — Google OAuth, email verify, viewer endpoints from nextion
+- `app/api/health/route.ts` — `GET /api/health` from notionx
+- `app/api/auth/*` — Google OAuth, email verify, viewer endpoints from notionx
 - `app/login/page.tsx` — email/password login wired to `authConfig`
 - `lib/auth.config.ts` — `AuthConfig` consumed by `createAuth`
 - `lib/admin/nav.ts` — sidebar items for `/admin/*`
@@ -210,8 +210,8 @@ pnpm exec wrangler r2 bucket create {{projectNameLower}}-assets
 - `lib/pages/*` — Notion-backed Pages model, mapper, navigation, and footer helpers
 - `lib/content/models.ts` — Notion-backed content sources: `{{contentSourceId}}` + `site-settings` (singleton)
 - `components/site/locale-switcher.tsx` — default `LocaleSwitcher` UI
-- `worker/index.ts` — `createNextionWorker` + vinext fallthrough
-- `migrations/0001_init.sql` — nextion auth schema (users, app_settings, auth_rate_limits)
+- `worker/index.ts` — `createNotionxWorker` + vinext fallthrough
+- `migrations/0001_init.sql` — notionx auth schema (users, app_settings, auth_rate_limits)
 - `wrangler.jsonc` — D1 + KV + R2 + Images + Assets bindings
 
 ## Tests
@@ -222,12 +222,12 @@ pnpm test
 
 The single sanity test under `tests/smoke.test.ts` confirms that
 `defineContentSource` registered the `{{contentSourceId}}` source with the
-nextion registry and that re-registration is idempotent on `id`.
+notionx registry and that re-registration is idempotent on `id`.
 
 ## Keeping The Project Updated
 
 ```bash
-npx nextion update
+npx notionx update
 ```
 
 The update command upgrades `@notionx/core`, syncs scaffold-managed files, and
@@ -247,7 +247,7 @@ pnpm exec vinext deploy
 
 ## Wiring up the @notionx/core package
 
-The dependency is `"@notionx/core": "{{nextionSource}}"` — by default
+The dependency is `"@notionx/core": "{{notionxSource}}"` — by default
 `^0.1.2` (the version published to npm). This works for any host
 machine with no extra setup.
 

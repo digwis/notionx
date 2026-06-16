@@ -20,7 +20,7 @@ let tmpRoot: string;
 let cwd: string;
 
 beforeEach(async () => {
-  tmpRoot = await mkdtemp(join(tmpdir(), "nextion-skill-base-"));
+  tmpRoot = await mkdtemp(join(tmpdir(), "notionx-skill-base-"));
   cwd = tmpRoot;
 });
 
@@ -29,14 +29,14 @@ afterEach(async () => {
 });
 
 describe("resolveBaseDir", () => {
-  it("user scope: claude -> ~/.claude/skills/nextion", () => {
+  it("user scope: claude -> ~/.claude/skills/notionx", () => {
     const dir = resolveBaseDir("claude", "user", cwd);
-    expect(dir).toMatch(/\.claude[\\/]skills[\\/]nextion$/);
+    expect(dir).toMatch(/\.claude[\\/]skills[\\/]notionx$/);
   });
 
-  it("user scope: trae -> ~/.trae/skills/nextion", () => {
+  it("user scope: trae -> ~/.trae/skills/notionx", () => {
     const dir = resolveBaseDir("trae", "user", cwd);
-    expect(dir).toMatch(/\.trae[\\/]skills[\\/]nextion$/);
+    expect(dir).toMatch(/\.trae[\\/]skills[\\/]notionx$/);
   });
 
   it("user scope: codex -> ~/.codex", () => {
@@ -44,9 +44,9 @@ describe("resolveBaseDir", () => {
     expect(dir).toMatch(/\.codex$/);
   });
 
-  it("project scope: claude -> <cwd>/.claude/skills/nextion", () => {
+  it("project scope: claude -> <cwd>/.claude/skills/notionx", () => {
     const dir = resolveBaseDir("claude", "project", cwd);
-    expect(dir).toBe(resolve(cwd, ".claude", "skills", "nextion"));
+    expect(dir).toBe(resolve(cwd, ".claude", "skills", "notionx"));
   });
 
   it("project scope: codex -> <cwd> (AGENTS.md lives at repo root)", () => {

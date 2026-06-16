@@ -1,10 +1,10 @@
 # Troubleshooting
 
-Always start with `pnpm nextion:doctor` before guessing. It is offline and
+Always start with `pnpm notionx:doctor` before guessing. It is offline and
 never prints secrets.
 
 ```bash
-pnpm nextion:doctor
+pnpm notionx:doctor
 ```
 
 If doctor is clean but the symptom persists, work through the recipes below.
@@ -99,12 +99,12 @@ update the public site.
 
 ## "Build fails with type errors after upgrading `@notionx/core`"
 
-1. Read the [Nextion Changelog](https://github.com/digwis/nextion/blob/main/docs/architecture/nextion-changelog.md)
+1. Read the [Notionx Changelog](https://github.com/digwis/nextion/blob/main/docs/architecture/notionx-changelog.md)
    for the new version. Major versions include migration notes.
 2. The most common cause is that a subpath got renamed. Check the
    `exports` field of `node_modules/@notionx/core/package.json` for the
    current list of public subpaths.
-3. Run `npx nextion update` to sync any scaffolder-owned files (config,
+3. Run `npx notionx update` to sync any scaffolder-owned files (config,
    README, etc.).
 
 ## "Deploy fails with 'binding not found'"
@@ -127,7 +127,7 @@ lives in the lower layer.
 
 ## Still stuck?
 
-1. `pnpm nextion:doctor` — output verbatim.
+1. `pnpm notionx:doctor` — output verbatim.
 2. Output of `pnpm --filter @notionx/core test` (or `pnpm test` in the
    consumer).
 3. Relevant log lines from `pnpm exec wrangler tail` (for prod) or the dev

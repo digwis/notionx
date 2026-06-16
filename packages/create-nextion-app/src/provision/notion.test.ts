@@ -15,14 +15,14 @@ import { _internal, ensureNotionDatabase, ensureSiteSettingsDatabase } from "./n
 describe("stable scaffold markers", () => {
   it("builds the expected scaffold marker for a stable key", () => {
     expect(_internal.buildScaffoldMarker("content:blog")).toBe(
-      "[nextion-scaffold] key=content:blog"
+      "[notionx-scaffold] key=content:blog"
     );
   });
 
   it("extracts a stable key from description text", () => {
     expect(
       _internal.extractScaffoldKey(
-        "Editorial notes\n[nextion-scaffold] key=pages:default"
+        "Editorial notes\n[notionx-scaffold] key=pages:default"
       )
     ).toBe("pages:default");
   });
@@ -33,7 +33,7 @@ describe("stable scaffold markers", () => {
         "Editorial notes",
         "content:blog"
       )
-    ).toBe("Editorial notes\n[nextion-scaffold] key=content:blog");
+    ).toBe("Editorial notes\n[notionx-scaffold] key=content:blog");
   });
 });
 
@@ -350,7 +350,7 @@ describe("stable database reuse", () => {
             object: "database",
             id: "db-stable",
             title: [{ plain_text: "Renamed Blog" }],
-            description: [{ plain_text: "[nextion-scaffold] key=content:blog" }],
+            description: [{ plain_text: "[notionx-scaffold] key=content:blog" }],
             parent: { page_id: "page-1234-page-1234-page-1234page1234" },
             data_sources: [{ id: "ds-stable" }],
             url: "https://www.notion.so/db-stable",
@@ -427,7 +427,7 @@ describe("stable database reuse", () => {
             object: "database",
             id: "db-older",
             title: [{ plain_text: "Older" }],
-            description: [{ plain_text: "[nextion-scaffold] key=content:blog" }],
+            description: [{ plain_text: "[notionx-scaffold] key=content:blog" }],
             parent: { page_id: "page-1234-page-1234-page-1234page1234" },
             data_sources: [{ id: "ds-older" }],
             last_edited_time: "2026-06-01T00:00:00.000Z",
@@ -436,7 +436,7 @@ describe("stable database reuse", () => {
             object: "database",
             id: "db-newer",
             title: [{ plain_text: "Newer" }],
-            description: [{ plain_text: "[nextion-scaffold] key=content:blog" }],
+            description: [{ plain_text: "[notionx-scaffold] key=content:blog" }],
             parent: { page_id: "page-1234-page-1234-page-1234page1234" },
             data_sources: [{ id: "ds-newer" }],
             last_edited_time: "2026-06-12T00:00:00.000Z",
@@ -487,7 +487,7 @@ describe("site-settings reuse", () => {
             object: "data_source",
             id: "ds-stable",
             title: [{ plain_text: "digwis Site Settings" }],
-            description: [{ plain_text: "[nextion-scaffold] key=site-settings" }],
+            description: [{ plain_text: "[notionx-scaffold] key=site-settings" }],
             parent: { database_id: "db-stable" },
             data_sources: [{ id: "ds-stable" }],
             url: "https://www.notion.so/db-stable",
@@ -648,7 +648,7 @@ describe("site-settings reuse", () => {
       text: { content: string };
     }>;
     expect(description[0].text.content).toContain(
-      "[nextion-scaffold] key=site-settings"
+      "[notionx-scaffold] key=site-settings"
     );
   });
 });

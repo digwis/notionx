@@ -4,12 +4,12 @@ import { buildLocaleAddPlan } from "../../src/locale-add/plan";
 import type { ScaffoldMetadata } from "../../src/metadata";
 
 const baseMetadata: ScaffoldMetadata = {
-  projectKind: "nextion",
+  projectKind: "notionx",
   projectName: "demo",
   scaffoldVersion: "1.0.0",
   defaultLocale: "en",
   supportedLocales: ["en"],
-  nextionSource: "1.0.0",
+  notionxSource: "1.0.0",
   enableSiteSettings: true,
   contentSource: { id: "blog", title: "Blog", fields: [] },
   translationSources: {},

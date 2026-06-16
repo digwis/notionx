@@ -51,7 +51,7 @@ export async function runProjectDoctor(input: RunDoctorInput): Promise<DoctorRep
       id: "registry.missing",
       severity: "error",
       message: `No ${REGISTRY_FILE} found in ${projectDir}.`,
-      hint: "This directory is not a v2 nextion project. Run `npm create nextion-app` to scaffold one.",
+      hint: "This directory is not a v2 notionx project. Run `npm create notionx-app` to scaffold one.",
     });
     return finalize(projectDir, checks);
   }
@@ -73,14 +73,14 @@ export async function runProjectDoctor(input: RunDoctorInput): Promise<DoctorRep
   checks.push({
     id: "registry.present",
     severity: "ok",
-    message: `Found ${REGISTRY_FILE} (scaffold ${manifest.scaffoldVersion}, nextionCore ${manifest.nextionCore}).`,
+    message: `Found ${REGISTRY_FILE} (scaffold ${manifest.scaffoldVersion}, notionxCore ${manifest.notionxCore}).`,
   });
 
   if (manifest.compat?.mode === "legacy-vinext") {
     checks.push({
       id: "registry.legacy-mode",
       severity: "info",
-      message: "Project is in legacy-vinext compat mode (nextionCore is workspace:*).",
+      message: "Project is in legacy-vinext compat mode (notionxCore is workspace:*).",
     });
   }
 
@@ -92,7 +92,7 @@ export async function runProjectDoctor(input: RunDoctorInput): Promise<DoctorRep
       checks.push({
         id: "migrations.pending",
         severity: "warn",
-        message: `${pending.length} pending migration(s) in .nextion/migrations/ (${pending.map((m) => m.sequence).join(", ")}).`,
+        message: `${pending.length} pending migration(s) in .notionx/migrations/ (${pending.map((m) => m.sequence).join(", ")}).`,
         hint: "Run the SQL / notion-diff payloads, then `notionx migrate --mark-applied <seq>`.",
       });
     } else {
@@ -167,18 +167,18 @@ export async function runProjectDoctor(input: RunDoctorInput): Promise<DoctorRep
       const raw = await readFile(pkgPath, "utf8");
       const pkg = JSON.parse(raw) as { dependencies?: Record<string, string> };
       const coreDep = pkg.dependencies?.["@notionx/core"];
-      if (coreDep && coreDep !== manifest.nextionCore) {
+      if (coreDep && coreDep !== manifest.notionxCore) {
         checks.push({
           id: "core.drift",
           severity: "info",
-          message: `package.json declares @notionx/core at ${coreDep}; manifest.nextionCore is ${manifest.nextionCore}.`,
+          message: `package.json declares @notionx/core at ${coreDep}; manifest.notionxCore is ${manifest.notionxCore}.`,
           hint: "These should usually match; run `pnpm update @notionx/core` to align, or `notionx update` to regenerate.",
         });
       } else {
         checks.push({
           id: "core.aligned",
           severity: "ok",
-          message: `@notionx/core dep (${coreDep ?? "absent"}) matches manifest.nextionCore (${manifest.nextionCore}).`,
+          message: `@notionx/core dep (${coreDep ?? "absent"}) matches manifest.notionxCore (${manifest.notionxCore}).`,
         });
       }
     } catch {

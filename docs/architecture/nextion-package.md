@@ -1,7 +1,7 @@
-# Nextion Package
+# Notionx Package
 
 > 本文档是 `@notionx/core` 的架构概览。详细的设计动机与权衡分析见
-> [`docs/superpowers/specs/2026-06-10-nextion-package-design.md`](../../superpowers/specs/2026-06-10-nextion-package-design.md)；
+> [`docs/superpowers/specs/2026-06-10-notionx-package-design.md`](../../superpowers/specs/2026-06-10-notionx-package-design.md)；
 > 分阶段迁移历史见同名实现计划。如果只是想用，最短路径是
 > [创建新项目](./creating-new-project.md)。
 
@@ -46,8 +46,8 @@ vinext-monorepo/
 │       │   ├── media/     # Notion 媒体代理、public-image
 │       │   ├── cache/     # cache-keys、公共缓存失效
 │       │   ├── email/     # Resend 封装
-│       │   ├── worker/    # createNextionWorker + middleware
-│       │   ├── doctor/    # nextion:doctor
+│       │   ├── worker/    # createNotionxWorker + middleware
+│       │   ├── doctor/    # notionx:doctor
 │       │   ├── i18n/      # config + 默认 messages
 │       │   ├── util/      # env、site-url、request-ip、utils
 │       │   ├── hooks/     # useAuthViewer、useMobile
@@ -71,7 +71,7 @@ vinext-monorepo/
 │       ├── next.config.ts
 │       └── package.json   # "@notionx/core": "workspace:*"
 ├── tools/
-│   └── create-nextion-app/ # `pnpm create nextion-app` 脚手架（私有 workspace）
+│   └── create-notionx-app/ # `pnpm create notionx-app` 脚手架（私有 workspace）
 ├── pnpm-workspace.yaml
 ├── package.json           # 根脚本：pnpm -r build、pnpm -r test
 ├── .changeset/            # 版本管理
@@ -98,7 +98,7 @@ vinext-monorepo/
 | 5 | `auth` | D1 认证、session、role | content |
 | 5.5 | `email`, `storage`, `media` | 横切服务 | platform / cache |
 | 6 | `admin` | Admin 外壳、sidebar、用户管理、设置、content-models | auth / content |
-| 7 | `worker` | 入口：`createNextionWorker` | admin 及以下 |
+| 7 | `worker` | 入口：`createNotionxWorker` | admin 及以下 |
 
 禁止的导入：
 
@@ -121,16 +121,16 @@ vinext-monorepo/
 | `ContentSource` | `src/content/models.ts` | 声明一个 Notion 内容域；包用它自动接入 list/detail 路由、cache key、revalidation 路径、webhook 路由、search index。 |
 | `AuthConfig` | `src/types.ts` | 声明 D1 绑定名、表名、cookie 配置、Turnstile、邮件、OAuth、角色；包实现完整认证流，项目只配。 |
 | `AdminExtension` | `src/types.ts` | 通过 `AdminNavItem` 数组在 Admin sidebar 注册项目自有页面；额外组件通过 `extraShellComponents` 槽位注入。 |
-| `WorkerOptions` | `src/types.ts` | 传给 `createNextionWorker()` 的总配置对象，聚合 `ContentSource[]`、`adminNav`、`authConfig`、`siteConfig`、`extraRoutes`。 |
+| `WorkerOptions` | `src/types.ts` | 传给 `createNotionxWorker()` 的总配置对象，聚合 `ContentSource[]`、`adminNav`、`authConfig`、`siteConfig`、`extraRoutes`。 |
 
 四个契约都遵循"包提供实现 + 项目提供配置"的统一模式。`ContentSource` 通过
 `defineContentSource(...)` 工厂注册；`AuthConfig` 通过 `createAuth(config)` 实例
 化；Admin 通过 `createAdminNav(items, { roles })` 过滤；Worker 通过
-`createNextionWorker(options)` 装配。
+`createNotionxWorker(options)` 装配。
 
 ## 分发模型
 
-包发布到 **GitHub Packages**，scope 为 `@nextion`。
+包发布到 **GitHub Packages**，scope 为 `@notionx`。
 
 - **版本管理**：changesets。任何影响 `packages/nextion/**` 的 PR 都必须携带
   一个 changeset 文件，描述变更内容与 semver bump 类型。
@@ -140,7 +140,7 @@ vinext-monorepo/
   凭据使用具备 `packages: write` 权限的 `GITHUB_TOKEN`。
 - **消费方升级**：每个消费项目（脚手架新建的独立项目）的
   `.github/dependabot.yml` 会在 `@notionx/core` 出现 minor/patch 升级时打开
-  PR。详见 [升级 Foundation](./upgrading-nextion.md)。
+  PR。详见 [升级 Foundation](./upgrading-notionx.md)。
 - **私有预览**：canary 通过 `pnpm changeset publish --tag=next` 走 GitHub
   Packages；不需要自建 Verdaccio。
 
@@ -152,16 +152,16 @@ vinext-monorepo/
 
 - **单元测试**：包用 vitest（`packages/nextion/vitest.config.ts`），覆盖
   `getEnv`、runtime 探测、`createAdminNav`、`mapPageToRecord`、
-  `buildCacheKey`、`getRevalidationPaths`、`runNextionDoctor`、
-  `createNextionWorker` 等关键边界。
+  `buildCacheKey`、`getRevalidationPaths`、`runNotionxDoctor`、
+  `createNotionxWorker` 等关键边界。
 - **Starter 回归**：Starter 自身的 `node:test` 套件覆盖路由、Webhook、内容模型
-  与 admin 行为；在 monorepo 内的 `pnpm --filter @nextion/moviebluebook test` 必须保持
+  与 admin 行为；在 monorepo 内的 `pnpm --filter @notionx/moviebluebook test` 必须保持
   绿色。
 - **CI 工作流** (`.github/workflows/ci.yml`)：在 push 与 PR 上运行
   `pnpm -r build`、`pnpm -r lint`、`pnpm -r typecheck`、`pnpm -r test`。
 - **pre-commit hook** (`.husky/pre-commit`)：对暂存文件运行 `pnpm -r lint` 与
   `pnpm -r typecheck`，阻止越层导入被合入。
-- **Doctor**：`pnpm --filter @notionx/core nextion:doctor` 离线诊断
+- **Doctor**：`pnpm --filter @notionx/core notionx:doctor` 离线诊断
   Cloudflare 绑定、Notion 配置、已注册的内容源。它只读取本地配置和
   `process.env`，从不连接 Notion 或 Cloudflare 账户，永远不会打印密钥。
 
@@ -192,5 +192,5 @@ vinext-monorepo/
 
 - 想要新建项目：[创建新项目](./creating-new-project.md)
 - 想要添加/修改一个内容域：[自定义内容源](./customizing-content-source.md)
-- 想要升级 `@notionx/core`：[升级 Foundation](./upgrading-nextion.md)
-- 想要查阅历史变更：[Foundation Changelog](./nextion-changelog.md)
+- 想要升级 `@notionx/core`：[升级 Foundation](./upgrading-notionx.md)
+- 想要查阅历史变更：[Foundation Changelog](./notionx-changelog.md)

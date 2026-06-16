@@ -9,12 +9,12 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const here = resolve(__dirname, "..");
 const root = resolve(here, "..", "..");
-const src = resolve(root, "skills", "nextion");
+const src = resolve(root, "skills", "notionx");
 const dest = resolve(here, "skill");
 const tmp = resolve(here, `.skill-tmp-${process.pid}-${Date.now()}`);
 
 if (!existsSync(src)) {
-  console.error(`[nextion-skill] skill source not found at ${src}`);
+  console.error(`[notionx-skill] skill source not found at ${src}`);
   process.exit(1);
 }
 
@@ -30,4 +30,4 @@ try {
   await rename(tmp, dest);
 }
 await rm(tmp, { recursive: true, force: true });
-console.log(`[nextion-skill] synced ${src} -> ${dest}`);
+console.log(`[notionx-skill] synced ${src} -> ${dest}`);

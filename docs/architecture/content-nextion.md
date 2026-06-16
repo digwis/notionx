@@ -2,7 +2,7 @@
 
 > **此文档已不再作为权威来源。** 它描述的是 Foundation 包拆分**之前**的
 > 内容基础结构。新的架构文档已经迁移到
-> [`nextion-package.md`](./nextion-package.md)。位于 `apps/moviebluebook/`
+> [`notionx-package.md`](./notionx-package.md)。位于 `apps/moviebluebook/`
 > 的 starter 应用同时遵循两份文档：本文件（针对其内容域），以及新文档
 > （针对 starter 与 package 之间的边界）。
 
@@ -124,9 +124,9 @@ revalidation path. Revalidation deletes public HTML/API cache, Notion content
 KV, and affected search-index rows so Notion changes become visible as soon as
 the webhook event is delivered.
 
-## Nextion Doctor
+## Notionx Doctor
 
-`npm run nextion:doctor` summarizes the Cloudflare nextion:
+`npm run notionx:doctor` summarizes the Cloudflare notionx:
 
 - Cloudflare runtime and adapter status.
 - D1, R2, Images, cache, and observability setup.

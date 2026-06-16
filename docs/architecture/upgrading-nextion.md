@@ -1,6 +1,6 @@
-# 升级 Nextion
+# 升级 Notionx
 
-> 范围：消费项目统一通过 `nextion update` 升级。
+> 范围：消费项目统一通过 `notionx update` 升级。
 > 命令会自动升级 `@notionx/core`、同步脚手架模板，并检查 Notion /
 > Cloudflare 资源漂移。
 
@@ -8,7 +8,7 @@
 
 | 场景 | 命令 | 默认是否改云资源 | 默认是否 deploy |
 |---|---|---:|---:|
-| 统一升级 Nextion 项目 | `nextion update` | 是，仅自动应用安全项；冲突项统一确认 | 否 |
+| 统一升级 Notionx 项目 | `notionx update` | 是，仅自动应用安全项；冲突项统一确认 | 否 |
 
 ## 1. Dependabot 配置（推荐）
 
@@ -31,9 +31,9 @@ updates:
     # patch/minor 自动合入；major 必须人工 review
     labels:
       - "dependencies"
-      - "nextion"
+      - "notionx"
     groups:
-      nextion-patch:
+      notionx-patch:
         applies-to: version-updates
         update-types:
           - "minor"
@@ -75,17 +75,17 @@ updates:
    ```
 
 `version-update:semver-major` 不会触发此 job；major 升级必须人工 review 并
-阅读 [Nextion Changelog](./nextion-changelog.md) 中的迁移说明。
+阅读 [Notionx Changelog](./notionx-changelog.md) 中的迁移说明。
 
 ## 3. 升级前的金丝雀测试
 
-Nextion 仓库内的 `apps/moviebluebook` 是所有消费项目的**金丝雀**：它跑的是仓库
+Notionx 仓库内的 `apps/moviebluebook` 是所有消费项目的**金丝雀**：它跑的是仓库
 当前 head 的代码，而不是已发布的版本。在合入一个会影响 starter 的 PR 之前：
 
 ```bash
 # 在 monorepo 根
 pnpm --filter @notionx/core test
-pnpm --filter @nextion/moviebluebook test
+pnpm --filter @notionx/moviebluebook test
 pnpm --filter @notionx/core lint
 pnpm --filter @notionx/core typecheck
 ```
@@ -93,9 +93,9 @@ pnpm --filter @notionx/core typecheck
 要点：
 
 - `pnpm --filter @notionx/core test` 验证包内的单元测试（vitest）；
-- `pnpm --filter @nextion/moviebluebook test` 验证 moviebluebook 的 node:test 回归（路由、
+- `pnpm --filter @notionx/moviebluebook test` 验证 moviebluebook 的 node:test 回归（路由、
   Webhook、内容模型、admin 行为）；
-- `pnpm --filter @notionx/core nextion:doctor` 在 dev 环境跑一次，确
+- `pnpm --filter @notionx/core notionx:doctor` 在 dev 环境跑一次，确
   认 bindings / env 配置没有漂移。
 
 外部消费项目在收到 major Dependabot PR 后，可以临时把
@@ -108,7 +108,7 @@ pnpm --filter @notionx/core typecheck
 任何时候都可以直接运行：
 
 ```bash
-npx nextion update
+npx notionx update
 ```
 
 这个命令会：
@@ -129,7 +129,7 @@ pnpm exec wrangler d1 migrations apply <db-name> --remote   # 仅当 release not
 
 ## 5. 收尾
 
-合入升级后，请把 [Nextion Changelog](./nextion-changelog.md) 里那段
+合入升级后，请把 [Notionx Changelog](./notionx-changelog.md) 里那段
 release notes 链接到项目的 release notes / changelog，方便 reviewer 看到本
 次升级涵盖什么。
 
@@ -137,7 +137,7 @@ release notes 链接到项目的 release notes / changelog，方便 reviewer 看
 
 当脚手架和 `@notionx/core` 都在快速变化时，推荐按下面顺序判断：
 
-1. 运行 `nextion update`
+1. 运行 `notionx update`
 2. 命令自动检测项目元数据、依赖版本、Notion 资源和 Cloudflare bindings
 3. 安全项自动执行
 4. 冲突项统一确认

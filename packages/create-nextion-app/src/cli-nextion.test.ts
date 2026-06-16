@@ -60,11 +60,11 @@ const baseUpdateSummary = {
 
 const baseRegistry = {
   manifest: {
-    $schema: "https://nextion.dev/schemas/registry.v2.json",
-    projectKind: "nextion" as const,
+    $schema: "https://notionx.dev/schemas/registry.v2.json",
+    projectKind: "notionx" as const,
     projectName: "demo",
     scaffoldVersion: "0.6.1",
-    nextionCore: "^1.0.0",
+    notionxCore: "^1.0.0",
     defaultLocale: "en",
     supportedLocales: ["en"],
     enableSiteSettings: true,
@@ -127,10 +127,10 @@ describe("cli notionx update (v2 path)", () => {
     );
     expect(infoMock).toHaveBeenCalledWith("Next migration sequence: 0001");
     expect(infoMock).toHaveBeenCalledWith(
-      "  wrote .nextion/migrations/blog_1_to_2.notion-diff.json",
+      "  wrote .notionx/migrations/blog_1_to_2.notion-diff.json",
     );
     expect(infoMock).toHaveBeenCalledWith(
-      "  wrote .nextion/migrations/_meta.json",
+      "  wrote .notionx/migrations/_meta.json",
     );
   });
 
@@ -308,7 +308,7 @@ describe("cli notionx update --core (v2 P0 informational)", () => {
         {
           id: "core.aligned",
           severity: "ok",
-          message: "@notionx/core dep (^1.0.0) matches manifest.nextionCore (^1.0.0).",
+          message: "@notionx/core dep (^1.0.0) matches manifest.notionxCore (^1.0.0).",
         },
       ],
     });

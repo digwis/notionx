@@ -29,7 +29,7 @@ const DEFAULT_PROJECT = {
   targetDir: "./demo",
   defaultLocale: "en",
   supportedLocales: ["en"],
-  nextionSource: "^2.0.0",
+  notionxSource: "^2.0.0",
   adminEmail: "admin@example.com",
   adminPassword: "Password123",
   scaffoldVersion: "0.7.2",

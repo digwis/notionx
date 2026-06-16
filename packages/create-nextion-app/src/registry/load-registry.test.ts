@@ -13,8 +13,8 @@ import { REGISTRY_SCHEMA_V2 } from "./registry-types.js";
 describe("loadRegistry", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await mkdtemp(path.join(os.tmpdir(), "nextion-load-"));
-    await mkdir(path.join(dir, ".nextion"), { recursive: true });
+    dir = await mkdtemp(path.join(os.tmpdir(), "notionx-load-"));
+    await mkdir(path.join(dir, ".notionx"), { recursive: true });
   });
   afterEach(async () => {
     await rm(dir, { recursive: true, force: true });
@@ -29,10 +29,10 @@ describe("loadRegistry", () => {
       path.join(dir, REGISTRY_FILE),
       JSON.stringify({
         $schema: REGISTRY_SCHEMA_V2,
-        projectKind: "nextion",
+        projectKind: "notionx",
         projectName: "demo",
         scaffoldVersion: "1.0.0",
-        nextionCore: "^2.0.0",
+        notionxCore: "^2.0.0",
         defaultLocale: "en",
         supportedLocales: ["en"],
         enableSiteSettings: true,
@@ -65,7 +65,7 @@ describe("loadRegistry", () => {
       path.join(dir, REGISTRY_FILE),
       JSON.stringify({
         $schema: "https://example.com/wrong.json",
-        projectKind: "nextion",
+        projectKind: "notionx",
       }),
       "utf8",
     );

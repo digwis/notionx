@@ -1,7 +1,7 @@
 // packages/create-nextion-app/src/locale-add/list.ts
 //
 // Read-only helper that turns the scaffold metadata into a printable
-// `nextion locale list` view. The view is plain data so it can be
+// `notionx locale list` view. The view is plain data so it can be
 // rendered as a table, a JSON dump, or a Markdown summary.
 
 import type { ScaffoldMetadata, TranslationSourceRef } from "../metadata.js";

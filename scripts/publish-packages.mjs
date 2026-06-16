@@ -15,11 +15,11 @@ export const RELEASE_PACKAGES = [
     directory: "packages/nextion",
   },
   {
-    name: "@notionx/create-nextion-app",
+    name: "@notionx/create-notionx-app",
     directory: "packages/create-nextion-app",
   },
   {
-    name: "create-nextion",
+    name: "create-notionx",
     directory: "packages/create-nextion-app-shim",
   },
   {

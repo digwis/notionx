@@ -19,14 +19,14 @@ import {
 describe("migrations-store", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await mkdtemp(path.join(os.tmpdir(), "nextion-mig-"));
+    dir = await mkdtemp(path.join(os.tmpdir(), "notionx-mig-"));
   });
   afterEach(async () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it("exposes the canonical .nextion/migrations/ path", () => {
-    expect(MIGRATIONS_DIR).toBe(".nextion/migrations");
+  it("exposes the canonical .notionx/migrations/ path", () => {
+    expect(MIGRATIONS_DIR).toBe(".notionx/migrations");
   });
 
   it("returns null when _meta.json does not exist", async () => {
@@ -162,17 +162,17 @@ describe("migrations-store", () => {
 describe("migrations-store: dir layout", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await mkdtemp(path.join(os.tmpdir(), "nextion-mig-dir-"));
+    dir = await mkdtemp(path.join(os.tmpdir(), "notionx-mig-dir-"));
   });
   afterEach(async () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  it("creates .nextion/migrations/ if missing", async () => {
+  it("creates .notionx/migrations/ if missing", async () => {
     await writeMigrationsMeta(dir, emptyMeta());
     await writeMigrationPayload(dir, "0001_x.sql", "SELECT 1;");
 
-    const sub = path.join(dir, ".nextion/migrations");
+    const sub = path.join(dir, ".notionx/migrations");
     const metaRaw = await readFile(path.join(sub, "_meta.json"), "utf8");
     const payload = await readFile(path.join(sub, "0001_x.sql"), "utf8");
     expect(metaRaw).toContain("nextSequence");

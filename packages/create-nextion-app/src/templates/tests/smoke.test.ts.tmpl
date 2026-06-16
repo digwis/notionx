@@ -19,7 +19,7 @@ describe("content source registration", () => {
     expect({{contentSourceVarName}}.id).toBe("{{contentSourceId}}");
   });
 
-  it("is visible in nextion's registry", () => {
+  it("is visible in notionx's registry", () => {
     const ids = getRegisteredSources().map((s: ContentSource) => s.id);
     expect(ids).toContain("{{contentSourceId}}");
   });

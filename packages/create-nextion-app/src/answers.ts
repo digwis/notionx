@@ -7,7 +7,7 @@
 import * as p from "@clack/prompts";
 import type { Answers, AnswersContentField } from "./prompt.js";
 import { generateRandomPassword } from "./password.js";
-import { FALLBACK_NEXTION_SOURCE, resolveNextionSource } from "./nextion-source.js";
+import { FALLBACK_NOTIONX_SOURCE, resolveNotionxSource } from "./nextion-source.js";
 
 interface CliOverrides {
   projectName?: string;
@@ -17,7 +17,7 @@ interface CliOverrides {
   contentId?: string;
   contentTitle?: string;
   fields?: string;
-  nextionSource?: string;
+  notionxSource?: string;
   adminEmail?: string;
   adminPassword?: string;
   /**
@@ -75,7 +75,7 @@ const DEFAULT_FIELDS = "Name, Slug, Description, Published, Date, Tags, Cover";
 
 /**
  * Resolve a boolean feature flag from CLI overrides or a
- * `CREATE_NEXTION_NO_*` env var. Defaults to `true` (feature on).
+ * `CREATE_NOTIONX_NO_*` env var. Defaults to `true` (feature on).
  */
 function resolveFlag(
   override: boolean | undefined,
@@ -178,7 +178,7 @@ function parseArgs(argv: string[]): CliOverrides {
           out.fields = takeNext(next);
           break;
         case "--nextion-source":
-          out.nextionSource = takeNext(next);
+          out.notionxSource = takeNext(next);
           break;
         case "--admin-email":
           out.adminEmail = takeNext(next);
@@ -217,10 +217,10 @@ function parseArgs(argv: string[]): CliOverrides {
 }
 
 function printHelp(): void {
-  console.log(`@notionx/create-nextion-app — scaffold a new vinext project
+  console.log(`@notionx/create-notionx-app — scaffold a new vinext project
 
 Usage:
-  @notionx/create-nextion-app [target-dir] [flags]
+  @notionx/create-notionx-app [target-dir] [flags]
 
 Flags:
   --project-name <name>        Project name (kebab/lower case).
@@ -277,16 +277,16 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
 
   // Admin email/password resolution for the non-interactive path:
   //   1. CLI flag                              (--admin-email / --admin-password)
-  //   2. Env var                               (CREATE_NEXTION_ADMIN_EMAIL / _PASSWORD)
+  //   2. Env var                               (CREATE_NOTIONX_ADMIN_EMAIL / _PASSWORD)
   //   3. Sensible placeholder + random password (printed at the end)
   const adminEmail =
     overrides.adminEmail ??
-    process.env.CREATE_NEXTION_ADMIN_EMAIL ??
+    process.env.CREATE_NOTIONX_ADMIN_EMAIL ??
     "admin@example.com";
   const generatedPassword = generateRandomPassword();
   const adminPassword =
     overrides.adminPassword ??
-    process.env.CREATE_NEXTION_ADMIN_PASSWORD ??
+    process.env.CREATE_NOTIONX_ADMIN_PASSWORD ??
     generatedPassword;
   const generatedAdminPassword =
     adminPassword === generatedPassword ? generatedPassword : undefined;
@@ -296,22 +296,22 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
   // can pass to skip seeding.
   const notionParentPage =
     overrides.notionParentPage ??
-    process.env.CREATE_NEXTION_NOTION_PARENT_PAGE ??
+    process.env.CREATE_NOTIONX_NOTION_PARENT_PAGE ??
     "";
   const notionSeedCount =
     overrides.notionSeedCount ??
-    (process.env.CREATE_NEXTION_NOTION_SEED_COUNT !== undefined
-      ? Number(process.env.CREATE_NEXTION_NOTION_SEED_COUNT)
+    (process.env.CREATE_NOTIONX_NOTION_SEED_COUNT !== undefined
+      ? Number(process.env.CREATE_NOTIONX_NOTION_SEED_COUNT)
       : 3);
 
-  // `enableSiteSettings` defaults to true. `CREATE_NEXTION_NO_SITE_SETTINGS`
+  // `enableSiteSettings` defaults to true. `CREATE_NOTIONX_NO_SITE_SETTINGS`
   // is the env-var mirror of `--no-site-settings`; truthy values
   // (1/true/yes) opt out, anything else falls through to the default.
   let enableSiteSettings: boolean = true;
   if (overrides.enableSiteSettings !== undefined) {
     enableSiteSettings = overrides.enableSiteSettings;
-  } else if (process.env.CREATE_NEXTION_NO_SITE_SETTINGS) {
-    const v = process.env.CREATE_NEXTION_NO_SITE_SETTINGS.toLowerCase();
+  } else if (process.env.CREATE_NOTIONX_NO_SITE_SETTINGS) {
+    const v = process.env.CREATE_NOTIONX_NO_SITE_SETTINGS.toLowerCase();
     if (v === "1" || v === "true" || v === "yes") {
       enableSiteSettings = false;
     }
@@ -322,31 +322,31 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
   let enableBlocks: boolean = true;
   if (overrides.enableBlocks !== undefined) {
     enableBlocks = overrides.enableBlocks;
-  } else if (process.env.CREATE_NEXTION_NO_BLOCKS) {
-    const v = process.env.CREATE_NEXTION_NO_BLOCKS.toLowerCase();
+  } else if (process.env.CREATE_NOTIONX_NO_BLOCKS) {
+    const v = process.env.CREATE_NOTIONX_NO_BLOCKS.toLowerCase();
     if (v === "1" || v === "true" || v === "yes") {
       enableBlocks = false;
     }
   }
 
   // `enableAuth` / `enableAdmin` / `enablePages` follow the same
-  // pattern. Each defaults to true; the `CREATE_NEXTION_NO_*` env
+  // pattern. Each defaults to true; the `CREATE_NOTIONX_NO_*` env
   // var (or the `--no-*` CLI flag via overrides) opts out.
   const enableAuth = resolveFlag(
     overrides.enableAuth,
-    "CREATE_NEXTION_NO_AUTH",
+    "CREATE_NOTIONX_NO_AUTH",
   );
   let enableAdmin = resolveFlag(
     overrides.enableAdmin,
-    "CREATE_NEXTION_NO_ADMIN",
+    "CREATE_NOTIONX_NO_ADMIN",
   );
   let enablePages = resolveFlag(
     overrides.enablePages,
-    "CREATE_NEXTION_NO_PAGES",
+    "CREATE_NOTIONX_NO_PAGES",
   );
   const enableSearch = resolveFlag(
     overrides.enableSearch,
-    "CREATE_NEXTION_NO_SEARCH",
+    "CREATE_NOTIONX_NO_SEARCH",
   );
 
   // Enforce dependency constraints: admin requires auth, pages
@@ -366,7 +366,7 @@ function applyDefaults(overrides: CliOverrides, argv: string[]): Answers {
     supportedLocales: supportedLocales.length
       ? Array.from(new Set([defaultLocale, ...supportedLocales]))
       : [defaultLocale],
-    nextionSource: overrides.nextionSource ?? FALLBACK_NEXTION_SOURCE,
+    notionxSource: overrides.notionxSource ?? FALLBACK_NOTIONX_SOURCE,
     contentSource: {
       id: contentId,
       title: contentTitle,
@@ -406,12 +406,12 @@ export async function gatherAnswers(
 ): Promise<Answers & ExtendedAnswers> {
   const cli = parseArgs(argv);
 
-  // Resolve the `nextionSource` semver *before* handing the overrides
+  // Resolve the `notionxSource` semver *before* handing the overrides
   // off to `applyDefaults`. The default reads the live version from
   // the npm registry (so freshly-installed scaffolds always match the
   // latest published package without the user passing
-  // `--nextion-source`). When the target lives inside the `nextion`
-  // monorepo (e.g. `nextion/apps/<name>`), we short-circuit to
+  // `--nextion-source`). When the target lives inside the `notionx`
+  // monorepo (e.g. `notionx/apps/<name>`), we short-circuit to
   // `workspace:*` so the generated project links against the local
   // `packages/nextion` checkout via pnpm workspace symlinks — this
   // is the scaffolder author's fast path for iterating on `core`.
@@ -421,9 +421,9 @@ export async function gatherAnswers(
   const positionalTargetDir =
     argv[2] && !argv[2].startsWith("-") ? argv[2] : undefined;
   const probeTargetDir =
-    cli.targetDir ?? positionalTargetDir ?? `./${cli.projectName ?? "nextion-app"}`;
-  const nextionSource = await resolveNextionSource(
-    cli.nextionSource,
+    cli.targetDir ?? positionalTargetDir ?? `./${cli.projectName ?? "notionx-app"}`;
+  const notionxSource = await resolveNotionxSource(
+    cli.notionxSource,
     probeTargetDir
   );
 
@@ -431,7 +431,7 @@ export async function gatherAnswers(
   // name (everything else has sensible defaults), build answers
   // without ever invoking the prompt.
   if (cli.yes || cli.projectName) {
-    return applyDefaults({ ...cli, nextionSource }, argv);
+    return applyDefaults({ ...cli, notionxSource }, argv);
   }
 
   // Otherwise run the interactive prompt. If the env says we're a
@@ -445,7 +445,7 @@ export async function gatherAnswers(
   }
   // Re-export the prompt function lazily to keep this module small.
   const { prompt } = await import("./prompt.js");
-  return prompt(argv, { nextionSource });
+  return prompt(argv, { notionxSource });
 }
 
 export { applyDefaults, parseArgs, parseLocales, buildFields, toCamelCase };

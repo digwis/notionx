@@ -1,9 +1,9 @@
 // packages/create-nextion-app/src/registry/registry-store.ts
 //
-// Read / write `.nextion/registry.json` atomically.
+// Read / write `.notionx/registry.json` atomically.
 //
 // Why atomic: a partial write would leave the project un-loadable on
-// the next `nextion` command. We write to `<file>.tmp` first, then
+// the next `notionx` command. We write to `<file>.tmp` first, then
 // `rename` into place — `rename` is atomic on POSIX filesystems.
 
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
@@ -20,10 +20,10 @@ import {
  * Canonical location of the v2 manifest, relative to a project root.
  * Kept as a constant so the CLI and the doctor agree on the path.
  */
-export const REGISTRY_FILE = ".nextion/registry.json" as const;
+export const REGISTRY_FILE = ".notionx/registry.json" as const;
 
 /**
- * Read `registry.json` from `<projectDir>/.nextion/registry.json`.
+ * Read `registry.json` from `<projectDir>/.notionx/registry.json`.
  *
  * Returns `null` when the file does not exist. Throws on parse errors
  * or schema mismatches — we never want to silently load garbage.
@@ -79,7 +79,7 @@ function isENOENT(err: unknown): boolean {
 
 /**
  * Build the initial `RegistryManifest` for a freshly scaffolded
- * project. Called by `render.ts` at the end of `create-nextion-app`.
+ * project. Called by `render.ts` at the end of `create-notionx-app`.
  *
  * The manifest records:
  *   - the scaffold version + core dependency range
@@ -87,13 +87,13 @@ function isENOENT(err: unknown): boolean {
  *   - the default managed-files ownership map
  *   - a single `InstalledItem` for the primary content source
  *
- * `nextion add` will append to `installed`; `nextion update` will
+ * `notionx add` will append to `installed`; `notionx update` will
  * bump `scaffoldVersion` and rewrite `managedFiles` as needed.
  */
 export function buildInitialRegistryManifest(input: {
   projectName: string;
   scaffoldVersion: string;
-  nextionCore: string;
+  notionxCore: string;
   defaultLocale: string;
   supportedLocales: string[];
   enableSiteSettings: boolean;
@@ -134,7 +134,7 @@ export function buildInitialRegistryManifest(input: {
   };
 
   // When the scaffold enables site-settings / blocks, register
-  // them as InstalledItem entries so `nextion remove` can find
+  // them as InstalledItem entries so `notionx remove` can find
   // them. The file paths mirror the catalog declarations in
   // `registry-items.ts` — kept in sync manually (the catalog is
   // the source of truth; this is a snapshot for the manifest).
@@ -248,10 +248,10 @@ export function buildInitialRegistryManifest(input: {
 
   return {
     $schema: REGISTRY_SCHEMA_V2,
-    projectKind: "nextion",
+    projectKind: "notionx",
     projectName: input.projectName,
     scaffoldVersion: input.scaffoldVersion,
-    nextionCore: input.nextionCore,
+    notionxCore: input.notionxCore,
     defaultLocale: input.defaultLocale,
     supportedLocales: [...input.supportedLocales],
     enableSiteSettings: input.enableSiteSettings,
@@ -273,7 +273,7 @@ export function buildInitialRegistryManifest(input: {
       "@notionx/official": {
         url:
           input.officialRegistryUrl ??
-          "https://registry.nextion.dev/official.json",
+          "https://registry.notionx.dev/official.json",
       },
     },
     installed,

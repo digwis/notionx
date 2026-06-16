@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildNextionDoctorReport } from "../../src/doctor/doctor";
+import { buildNotionxDoctorReport } from "../../src/doctor/doctor";
 
 const baseWrangler = {
   d1_databases: [{ binding: "DB" }],
@@ -40,7 +40,7 @@ const baseModel = {
 
 describe("translation source checks", () => {
   it("flags missing translation sources for each model in supportedLocales", () => {
-    const report = buildNextionDoctorReport({
+    const report = buildNotionxDoctorReport({
       env: { NOTION_TOKEN: "secret" },
       wranglerConfig: baseWrangler,
       models: [baseModel],
@@ -56,7 +56,7 @@ describe("translation source checks", () => {
   });
 
   it("passes when translation sources are configured for every model", () => {
-    const report = buildNextionDoctorReport({
+    const report = buildNotionxDoctorReport({
       env: { NOTION_TOKEN: "secret" },
       wranglerConfig: baseWrangler,
       models: [baseModel],
@@ -72,7 +72,7 @@ describe("translation source checks", () => {
   });
 
   it("does not emit translation-source checks when only one locale is configured", () => {
-    const report = buildNextionDoctorReport({
+    const report = buildNotionxDoctorReport({
       env: { NOTION_TOKEN: "secret" },
       wranglerConfig: baseWrangler,
       models: [baseModel],
@@ -85,8 +85,8 @@ describe("translation source checks", () => {
     );
   });
 
-  it("suggests `nextion locale add` in nextSteps when a translation source is missing", () => {
-    const report = buildNextionDoctorReport({
+  it("suggests `notionx locale add` in nextSteps when a translation source is missing", () => {
+    const report = buildNotionxDoctorReport({
       env: { NOTION_TOKEN: "secret" },
       wranglerConfig: baseWrangler,
       models: [baseModel],
@@ -94,7 +94,7 @@ describe("translation source checks", () => {
       translationSources: {},
     });
     expect(
-      report.nextSteps.some((step) => step.includes("nextion locale add"))
+      report.nextSteps.some((step) => step.includes("notionx locale add"))
     ).toBe(true);
   });
 });

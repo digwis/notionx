@@ -40,7 +40,7 @@ export function formatDiffSummary(summary: DiffSummary): string[] {
 
 /**
  * Kept for callers that still want the upgrade-preview shape.
- * v2's `nextion update --dry-run` is the canonical preview path;
+ * v2's `notionx update --dry-run` is the canonical preview path;
  * this helper only formats a summary of what would happen.
  */
 export interface UpgradePreviewSummary {

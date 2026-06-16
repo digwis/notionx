@@ -5,7 +5,7 @@ import {
 } from "../platform/capabilities";
 import { currentRuntimeId, type RuntimeId } from "../platform/selection";
 
-export type NextionDoctorStatus = "ok" | "warn" | "missing";
+export type NotionxDoctorStatus = "ok" | "warn" | "missing";
 
 export type EnvLike = Record<string, string | undefined>;
 
@@ -17,16 +17,16 @@ export type WranglerConfigLike = {
   observability?: { enabled?: boolean };
 };
 
-export type NextionDoctorCheck = {
+export type NotionxDoctorCheck = {
   id: string;
   label: string;
-  status: NextionDoctorStatus;
+  status: NotionxDoctorStatus;
   required: boolean;
   detail: string;
   action?: string;
 };
 
-export type NextionDoctorModel = {
+export type NotionxDoctorModel = {
   id: string;
   public: boolean;
   admin: boolean;
@@ -34,13 +34,13 @@ export type NextionDoctorModel = {
   detailPath: string;
   publicApiPath?: string;
   dataSourceEnv: string;
-  dataSourceStatus: NextionDoctorStatus;
+  dataSourceStatus: NotionxDoctorStatus;
   dataSourceSource: "env" | "default" | "missing";
 };
 
-export type NextionDoctorReport = {
+export type NotionxDoctorReport = {
   overall: {
-    status: NextionDoctorStatus;
+    status: NotionxDoctorStatus;
     summary: string;
   };
   runtime: {
@@ -48,12 +48,12 @@ export type NextionDoctorReport = {
     label: string;
     adapterStatus: RuntimeAdapterDefinition["status"];
   };
-  checks: NextionDoctorCheck[];
-  models: NextionDoctorModel[];
+  checks: NotionxDoctorCheck[];
+  models: NotionxDoctorModel[];
   nextSteps: string[];
 };
 
-type BuildNextionDoctorReportOptions = {
+type BuildNotionxDoctorReportOptions = {
   env?: EnvLike;
   runtimeId?: RuntimeId;
   wranglerConfig?: WranglerConfigLike | null;
@@ -97,16 +97,16 @@ function hasImagesBinding(
   return images?.binding === binding;
 }
 
-function statusSummary(status: NextionDoctorStatus) {
+function statusSummary(status: NotionxDoctorStatus) {
   if (status === "ok") return "ready";
   if (status === "warn") return "usable with warnings";
   return "missing required configuration";
 }
 
 function overallStatus(
-  checks: readonly NextionDoctorCheck[],
-  models: readonly NextionDoctorModel[]
-): NextionDoctorStatus {
+  checks: readonly NotionxDoctorCheck[],
+  models: readonly NotionxDoctorModel[]
+): NotionxDoctorStatus {
   if (
     checks.some((check) => check.status === "missing") ||
     models.some((model) => model.dataSourceStatus === "missing")
@@ -126,7 +126,7 @@ function overallStatus(
 
 function cloudflareChecks(
   config: WranglerConfigLike | null | undefined
-): NextionDoctorCheck[] {
+): NotionxDoctorCheck[] {
   return [
     {
       id: "runtime.database",
@@ -178,7 +178,7 @@ function cloudflareChecks(
   ];
 }
 
-function notionChecks(env: EnvLike): NextionDoctorCheck[] {
+function notionChecks(env: EnvLike): NotionxDoctorCheck[] {
   return [
     {
       id: "notion.token",
@@ -209,21 +209,21 @@ function translationSourceChecks(
   supportedLocales: readonly string[] | undefined,
   translationSources: Record<string, { envVar: string }> | undefined,
   models: readonly ContentModelDefinition<NotionFieldMap>[]
-): NextionDoctorCheck[] {
+): NotionxDoctorCheck[] {
   // No point surfacing translation-source checks when the project
   // hasn't enabled multilingualism: a single locale never needs a
   // translation data source.
   if (!supportedLocales || supportedLocales.length < 2) return [];
   if (models.length === 0) return [];
 
-  const checks: NextionDoctorCheck[] = [];
+  const checks: NotionxDoctorCheck[] = [];
   for (const model of models) {
     const names = model.source.translationSources;
     if (!names || names.length === 0) continue;
     for (const name of names) {
       const ref = translationSources?.[name];
       // A translation source is considered "present" once the project
-      // metadata declares it (via `nextion locale add --with-notion`).
+      // metadata declares it (via `notionx locale add --with-notion`).
       // The doctor is reporting project configuration, not whether
       // the deploy environment has the secret uploaded.
       const present = Boolean(ref);
@@ -238,7 +238,7 @@ function translationSourceChecks(
           : `${name} is missing for ${model.id}`,
         action: present
           ? undefined
-          : `Run \`npx nextion locale add <locale> --with-notion --apply\` to provision ${name}.`,
+          : `Run \`npx notionx locale add <locale> --with-notion --apply\` to provision ${name}.`,
       });
     }
   }
@@ -248,7 +248,7 @@ function translationSourceChecks(
 function modelDoctorStatus(
   env: EnvLike,
   model: ContentModelDefinition<NotionFieldMap>
-): Pick<NextionDoctorModel, "dataSourceStatus" | "dataSourceSource"> {
+): Pick<NotionxDoctorModel, "dataSourceStatus" | "dataSourceSource"> {
   const hasConfiguredEnv = hasEnv(env, model.source.dataSourceEnv);
   const hasDefault = Boolean(model.source.defaultDataSourceId);
   const dataSourceSource = hasConfiguredEnv
@@ -267,7 +267,7 @@ function modelDoctorStatus(
 function modelChecks(
   env: EnvLike,
   models: readonly ContentModelDefinition<NotionFieldMap>[]
-): NextionDoctorModel[] {
+): NotionxDoctorModel[] {
   return models.map((model) => ({
     id: model.id,
     public: model.visibility.public,
@@ -280,7 +280,7 @@ function modelChecks(
   }));
 }
 
-function uniqueActions(checks: readonly NextionDoctorCheck[]) {
+function uniqueActions(checks: readonly NotionxDoctorCheck[]) {
   return Array.from(
     new Set(
       checks
@@ -290,7 +290,7 @@ function uniqueActions(checks: readonly NextionDoctorCheck[]) {
   );
 }
 
-function omitResolvedActions(check: NextionDoctorCheck): NextionDoctorCheck {
+function omitResolvedActions(check: NotionxDoctorCheck): NotionxDoctorCheck {
   if (check.status !== "ok") return check;
   return {
     ...check,
@@ -298,9 +298,9 @@ function omitResolvedActions(check: NextionDoctorCheck): NextionDoctorCheck {
   };
 }
 
-export function buildNextionDoctorReport(
-  options: BuildNextionDoctorReportOptions = {}
-): NextionDoctorReport {
+export function buildNotionxDoctorReport(
+  options: BuildNotionxDoctorReportOptions = {}
+): NotionxDoctorReport {
   const env = options.env ?? process.env;
   const runtimeId = options.runtimeId ?? currentRuntimeId();
   const adapter = getRuntimeAdapter(runtimeId);
@@ -351,12 +351,12 @@ export function buildNextionDoctorReport(
   };
 }
 
-function formatCheck(check: NextionDoctorCheck) {
+function formatCheck(check: NotionxDoctorCheck) {
   const required = check.required ? "required" : "optional";
   return `  [${check.status}] ${check.label} (${required}) - ${check.detail}`;
 }
 
-function formatModel(model: NextionDoctorModel) {
+function formatModel(model: NotionxDoctorModel) {
   const visibility = [
     model.public ? "public" : "",
     model.admin ? "admin" : "",
@@ -377,9 +377,9 @@ function formatModel(model: NextionDoctorModel) {
   ].join("\n");
 }
 
-export function formatNextionDoctorReport(report: NextionDoctorReport) {
+export function formatNotionxDoctorReport(report: NotionxDoctorReport) {
   const lines = [
-    "vinext nextion doctor",
+    "vinext notionx doctor",
     "",
     `Overall: [${report.overall.status}] ${report.overall.summary}`,
     `Runtime: ${report.runtime.label} (${report.runtime.id}, ${report.runtime.adapterStatus})`,

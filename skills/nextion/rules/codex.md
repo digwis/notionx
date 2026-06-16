@@ -1,16 +1,16 @@
-# nextion — Codex (AGENTS.md) rule
+# notionx — Codex (AGENTS.md) rule
 
 > Designed for OpenAI Codex CLI / IDE. Drop this content into `AGENTS.md`
 > (project root for project-scope, `~/.codex/AGENTS.md` for user-scope).
 > The official installer does this for you: `npx @notionx/skill install
 > --target codex --scope project`.
 
-This project is a **nextion** site: a Next.js App Router app running on
+This project is a **notionx** site: a Next.js App Router app running on
 Cloudflare Workers, with Notion as the CMS. The reusable platform lives in
-`@notionx/core`; the scaffolder is `@notionx/create-nextion-app`.
+`@notionx/core`; the scaffolder is `@notionx/create-notionx-app`.
 
-Older prompts may say **vinext**. Treat that as nextion when the project imports
-`@notionx/core` or calls `createNextionWorker`. "Domain" means a content module
+Older prompts may say **vinext**. Treat that as notionx when the project imports
+`@notionx/core` or calls `createNotionxWorker`. "Domain" means a content module
 such as blog, movies, courses, or books, not DNS domain.
 
 You are NOT working on a plain Next.js app. `@notionx/core` is a package
@@ -19,10 +19,10 @@ doctor. This project declares configuration; the package provides behavior.
 
 ## Required reading (in order)
 
-1. `.nextion/scaffold.json` if present — scaffold version, initial content
+1. `.notionx/scaffold.json` if present — scaffold version, initial content
    source, UI preset, locales, and `@notionx/core` dependency spec.
 2. `package.json` — scripts, Node >= 22, `@notionx/core`, vinext.
-3. `worker/index.ts` — the `createNextionWorker({...})` call. Tells you which
+3. `worker/index.ts` — the `createNotionxWorker({...})` call. Tells you which
    `sources`, `adminNav`, `authConfig`, `siteConfig` are wired.
 4. `lib/content/models.ts` — `defineContentSource(...)` calls and exported
    `contentSources` registry.
@@ -38,27 +38,27 @@ doctor. This project declares configuration; the package provides behavior.
 
 | Goal | Command |
 |---|---|
-| Create a new project | `pnpm create nextion-app my-new-site` |
+| Create a new project | `pnpm create notionx-app my-new-site` |
 | Dev server | `pnpm dev` |
 | Build | `pnpm build` |
 | Tests | `pnpm test` |
-| Offline diagnostics | `pnpm nextion:doctor` |
-| Sync scaffold-owned files | `npx nextion update` |
-| Repair Notion / CF resources | `npx nextion provision repair` |
+| Offline diagnostics | `pnpm notionx:doctor` |
+| Sync scaffold-owned files | `npx notionx update` |
+| Repair Notion / CF resources | `npx notionx provision repair` |
 | Apply D1 migrations (prod) | `pnpm exec wrangler d1 migrations apply <db> --remote` |
 | Deploy | `pnpm exec vinext deploy` |
 
-## Four contracts (the heart of every nextion project)
+## Four contracts (the heart of every notionx project)
 
 Every consumer of `@notionx/core` interacts with it through four TypeScript
-contracts. Once you can read them, you can read any nextion project.
+contracts. Once you can read them, you can read any notionx project.
 
 | Contract | File | Built with |
 |---|---|---|
 | `ContentSource` | `src/content/models.ts` | `defineContentSource({ id, kind, visibility, source, routes, ui, capabilities })` |
 | `AuthConfig` | `src/types.ts` | D1 binding, auth tables, cookie, Turnstile, email, OAuth, roles |
 | `AdminNavItem[]` | `admin/nav.ts` | `createAdminNav([...])` with sidebar items |
-| `FoundationWorkerOptions` | `worker/bootstrap.ts` | passed to `createNextionWorker({...})` |
+| `FoundationWorkerOptions` | `worker/bootstrap.ts` | passed to `createNotionxWorker({...})` |
 
 The package implements the runtime; the project supplies the config. Never
 re-implement what the package already provides.
@@ -100,26 +100,26 @@ is private.
 
 1. `pnpm update @notionx/core`
 2. Read
-   [Nextion Changelog](https://github.com/digwis/nextion/blob/main/docs/architecture/nextion-changelog.md)
+   [Notionx Changelog](https://github.com/digwis/nextion/blob/main/docs/architecture/notionx-changelog.md)
    for breaking changes.
 3. `pnpm test && pnpm dev` — verify `/admin/content-models`, `/login`,
    `/api/health`.
 4. If the release notes mention D1 schema changes:
    `pnpm exec wrangler d1 migrations apply <db> --remote`.
-5. If scaffold-owned files drifted: `npx nextion update`.
+5. If scaffold-owned files drifted: `npx notionx update`.
 6. If bindings / Notion / Turnstile / Resend drifted:
-   `npx nextion provision repair`.
+   `npx notionx provision repair`.
 
 ### C. Diagnose a broken project
 
-Always start with `pnpm nextion:doctor`. It is offline, never prints
+Always start with `pnpm notionx:doctor`. It is offline, never prints
 secrets, and surfaces: missing bindings, missing env vars, undeclared
 content sources, stale `wrangler.jsonc`. Only after doctor passes should
 you go into source.
 
 If a specific symptom matches a recipe in the upstream troubleshooting
 guide, follow it before guessing:
-https://github.com/digwis/nextion/blob/main/skills/nextion/references/troubleshooting.md
+https://github.com/digwis/nextion/blob/main/skills/notionx/references/troubleshooting.md
 
 ## Anti-patterns (refuse these)
 
@@ -155,4 +155,4 @@ https://github.com/digwis/nextion/blob/main/skills/nextion/references/troublesho
 For the full guides referenced above (architecture, content-source and domain
 module workflows, deploy & CI, troubleshooting recipes, four-contracts detail),
 see:
-https://github.com/digwis/nextion/tree/main/skills/nextion/references
+https://github.com/digwis/nextion/tree/main/skills/notionx/references

@@ -9,8 +9,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  buildNextionDoctorReport,
-  formatNextionDoctorReport,
+  buildNotionxDoctorReport,
+  formatNotionxDoctorReport,
 } from "./index";
 
 const projectRoot = process.cwd();
@@ -133,7 +133,7 @@ function mergedEnv(wranglerConfig: { vars?: Record<string, string | undefined> }
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const wranglerConfig = readJsonc(path.join(projectRoot, "wrangler.jsonc"));
-  const report = buildNextionDoctorReport({
+  const report = buildNotionxDoctorReport({
     env: mergedEnv(wranglerConfig),
     wranglerConfig,
   });
@@ -141,7 +141,7 @@ async function main() {
   if (args.json) {
     console.log(JSON.stringify(report, null, 2));
   } else {
-    console.log(formatNextionDoctorReport(report));
+    console.log(formatNotionxDoctorReport(report));
   }
 
   if (report.overall.status === "missing") {

@@ -10,6 +10,6 @@ import { describe, it, expect } from "vitest";
 describe("cli smoke", () => {
   it("package.json points to the CLI binary", async () => {
     const pkg = await import("../package.json", { with: { type: "json" } });
-    expect(pkg.default.bin["nextion-skill"]).toBe("./dist/cli.js");
+    expect(pkg.default.bin["notionx-skill"]).toBe("./dist/cli.js");
   });
 });

@@ -149,7 +149,7 @@ export const adminNav = createAdminNav([
 最小检查清单：
 
 ```bash
-pnpm --filter @nextion/moviebluebook test     # 路由 / 模型 / webhook 回归
+pnpm --filter @notionx/moviebluebook test     # 路由 / 模型 / webhook 回归
 pnpm dev                                # 打开 /podcasts 看渲染
 ```
 

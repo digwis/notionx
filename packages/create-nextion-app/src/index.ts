@@ -36,9 +36,9 @@ async function main(): Promise<void> {
     // non-TTY mode we still try — every step is wrapped in its own
     // try/catch and best-effort, so the worst case is a status card
     // that says "Deploy skipped" and instructions to retry.
-    // Set NEXTION_PROVISION_DISABLED=1 to skip entirely.
+    // Set NOTIONX_PROVISION_DISABLED=1 to skip entirely.
     const projectDir = path.resolve(process.cwd(), answers.targetDir);
-    const provisioningEnabled = !process.env.NEXTION_PROVISION_DISABLED;
+    const provisioningEnabled = !process.env.NOTIONX_PROVISION_DISABLED;
     if (provisioningEnabled) {
       try {
         // `interactive: true` is only safe when stdin is a real TTY.
@@ -57,7 +57,7 @@ async function main(): Promise<void> {
       }
     } else {
       p.log.info(
-        "Provisioning disabled (NEXTION_PROVISION_DISABLED=1). Run \`pnpm dev\` to start; see README for manual setup."
+        "Provisioning disabled (NOTIONX_PROVISION_DISABLED=1). Run \`pnpm dev\` to start; see README for manual setup."
       );
     }
 
