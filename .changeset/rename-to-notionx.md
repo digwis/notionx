@@ -16,6 +16,5 @@ Breaking change: all user-visible `nextion` references renamed to `notionx`.
 - API: `createNextionWorker` → `createNotionxWorker`, `runNextionDoctor` → `runNotionxDoctor`
 - User command: `npm create notionx@latest`
 
-Physical directory names (packages/notionx/, packages/create-notionx-app/) and
-internal file names (cli-notionx.ts, notionx-source.ts) are unchanged — they
-don't affect users.
+Physical directory names and internal file names also renamed to match
+(packages/notionx/, packages/create-notionx-app/, cli-notionx.ts, etc.).
