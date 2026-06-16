@@ -49,3 +49,16 @@ export {
   type LocaleSwitcherLink,
   type LocaleSwitcherTranslation,
 } from "./locale-contract/locale-switcher";
+export {
+  listGenericNotionContentForLocale,
+  getGenericNotionContentBySlugForLocale,
+  createLocalizedGenericNotionContentSource,
+  type LocalizedGenericContentSourceDeps,
+} from "./content/localized-source";
+export {
+  localizeContentList,
+  mapNotionPageToLocalizedContentTranslation,
+  getAlternateLocalizedContentLinks,
+  type LocalizedContentTranslation,
+  type LocalizedContentFields,
+} from "./content/localized";

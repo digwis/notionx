@@ -40,6 +40,7 @@
     "./content/search": "./dist/content/search.js",
     "./content/search-index": "./dist/content/search-index.js",
     "./content/localized": "./dist/content/localized.js",
+    "./content/localized-source": "./dist/content/localized-source.js",
     "./content/prewarm": "./dist/content/prewarm.js",
     "./content/admin-summary": "./dist/content/admin-summary.js",
     "./search": "./dist/search/index.js",
