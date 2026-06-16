@@ -55,7 +55,7 @@ importers:
   packages/create-nextion-app-shim:
     dependencies:
       '@notionx/create-nextion-app':
-        specifier: ^0.7.1
+        specifier: ^0.8.0
         version: link:../create-nextion-app
 
   packages/nextion:

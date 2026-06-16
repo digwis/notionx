@@ -10,10 +10,10 @@ to publish those packages to npm.
 
 - `@notionx/core`: the runtime and framework primitives for Cloudflare Workers
 - `@notionx/create-nextion-app`: the scaffolder and `nextion` maintenance CLI
-- `create-nextion-app`: the unscoped shim behind `npm create nextion-app`
+- `create-nextion`: the unscoped shim behind `npm create nextion`
 - `@notionx/skill`: the packaged nextion skill installer
 
-End users should create a separate app repository with `npm create nextion-app`
+End users should create a separate app repository with `npm create nextion`
 and deploy that generated project to Cloudflare. This monorepo stays focused on
 framework and release work.
 

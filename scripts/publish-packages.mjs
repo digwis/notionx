@@ -19,7 +19,7 @@ export const RELEASE_PACKAGES = [
     directory: "packages/create-nextion-app",
   },
   {
-    name: "create-nextion-app",
+    name: "create-nextion",
     directory: "packages/create-nextion-app-shim",
   },
   {

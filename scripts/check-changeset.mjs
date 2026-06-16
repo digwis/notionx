@@ -93,7 +93,7 @@ function listChangedFiles(diffBase) {
 const PACKAGE_DIR_TO_NAME = {
   nextion: "@notionx/core",
   "create-nextion-app": "@notionx/create-nextion-app",
-  "create-nextion-app-shim": "create-nextion-app",
+  "create-nextion-app-shim": "create-nextion",
   "nextion-skill": "@notionx/skill",
 };
 
