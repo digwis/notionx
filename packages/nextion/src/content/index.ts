@@ -22,7 +22,9 @@ export {
   readContentRevalidateRequest,
   readContentRevalidateRequestFromUrl,
   type ContentRevalidateRequest,
+  type ContentRevalidateResult,
   type InvalidationKind,
+  type RevalidateContentModelFn,
   type RevalidatePathFn,
 } from "./revalidate";
 

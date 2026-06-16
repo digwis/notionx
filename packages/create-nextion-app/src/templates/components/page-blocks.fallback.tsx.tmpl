@@ -1,0 +1,17 @@
+// Fallback page-blocks renderer — used when the project opts out
+// of the Notion-backed `blocks` data source
+// (`--no-blocks` / `CREATE_NEXTION_NO_BLOCKS=1`).
+//
+// `PageBlocks` is a no-op: it accepts the same `StructuredBlock[]`
+// prop but renders nothing. Pages that reference `<PageBlocks />`
+// keep compiling; their `structuredBlocks` field is always empty
+// because `lib/pages/source.ts` only populates it when
+// `blocksSource` is registered.
+
+import type { SitePage } from "@/lib/pages/source";
+
+type StructuredBlock = SitePage["structuredBlocks"][number];
+
+export function PageBlocks({ blocks: _blocks }: { blocks: StructuredBlock[] }) {
+  return null;
+}

@@ -76,8 +76,6 @@ export type {
 } from "./content/models";
 
 // ----- Admin / Worker -----
-export type AdminExtension = unknown;
-
 /**
  * A single entry in the admin sidebar nav. `labelKey` is resolved at
  * render time against the i18n message catalog; `icon` is the lucide
@@ -92,6 +90,3 @@ export interface AdminNavItem {
   requireRole?: string;
   external?: boolean;
 }
-
-export type WorkerOptions = unknown;
-export type FoundationConfig = unknown;

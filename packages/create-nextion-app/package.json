@@ -5,7 +5,7 @@
   "type": "module",
   "bin": {
     "create-nextion-app": "./dist/index.js",
-    "nextion": "./dist/cli-nextion.js"
+    "notionx": "./dist/cli-nextion.js"
   },
   "files": [
     "dist",
@@ -20,6 +20,7 @@
   "keywords": [
     "vinext",
     "nextion",
+    "notionx",
     "nextjs",
     "cloudflare",
     "workers",

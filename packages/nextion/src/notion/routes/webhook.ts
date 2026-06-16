@@ -7,14 +7,6 @@
 // caller-supplied (`revalidateContentModel`) so the package does not
 // reach into the starter's content model registry. The parser is also
 // caller-supplied so the starter can inject its content models.
-//
-// The `RevalidateContentModelFromWebhookFn` type intentionally matches
-// the shape consumed by the package's content revalidate route
-// factory. Tier restrictions prevent us from importing the worker
-// route type directly, so the shape is duplicated here; both the
-// `createNotionWebhookRoute` factory and the
-// `createContentRevalidateRoute` factory agree on this contract
-// because callers wire them together.
 
 import { NextResponse } from "next/server";
 
@@ -33,12 +25,19 @@ import type {
   SqlDatabaseAdapter,
 } from "../../platform/runtime";
 
-export type NotionWebhookParserFn = (
-  payload: unknown,
-  options?: { retrievePage?: NotionPageRetriever; lookupPages?: boolean }
-) => Promise<NotionWebhookParseResult>;
+/**
+ * Mirror of `RevalidateContentModelFn` from `../../content/revalidate`.
+ * Defined locally to avoid a notion→content cross-tier import
+ * (forbidden by `import/no-restricted-paths`). The return type is
+ * widened to `unknown` because this route handler forwards the
+ * result verbatim without inspecting its shape.
+ */
+type RevalidatePathFn = (
+  path: string,
+  type?: "page" | "layout"
+) => void | Promise<void>;
 
-export type RevalidateContentModelFromWebhookFn = (input: {
+type RevalidateContentModelFn = (input: {
   request: {
     modelId: string;
     pageId?: string;
@@ -47,34 +46,26 @@ export type RevalidateContentModelFromWebhookFn = (input: {
     locale?: string;
     kind?: "publish" | "update" | "delete";
     includeApi?: boolean;
-  };
+  } | null;
   tokenAuthorized: boolean;
-  revalidatePath: (
-    path: string,
-    type?: "page" | "layout"
-  ) => void | Promise<void>;
+  revalidatePath: RevalidatePathFn;
   contentCache?: KeyValueCacheAdapter;
   getContentCache?: () => KeyValueCacheAdapter | null;
   database?: SqlDatabaseAdapter;
   getDatabase?: () => SqlDatabaseAdapter | null;
-}) => Promise<
-  | {
-      ok: true;
-      model: {
-        id: string;
-        routes: { listPath: string; detailPath: string; publicApiPath?: string };
-      };
-      routeId?: string;
-      revalidatedPaths: string[];
-      contentCache: unknown;
-      searchIndex: unknown;
-    }
-  | {
-      ok: false;
-      status: 400 | 401 | 404;
-      error: string;
-    }
->;
+}) => Promise<unknown>;
+
+export type NotionWebhookParserFn = (
+  payload: unknown,
+  options?: { retrievePage?: NotionPageRetriever; lookupPages?: boolean }
+) => Promise<NotionWebhookParseResult>;
+
+/**
+ * Backward-compatible alias. The original export duplicated the
+ * `RevalidateContentModelFn` shape inline; it is now a type alias
+ * for the canonical definition in `@notionx/core/content`.
+ */
+export type RevalidateContentModelFromWebhookFn = RevalidateContentModelFn;
 
 export type CreateNotionWebhookRouteOptions = {
   revalidatePath: (

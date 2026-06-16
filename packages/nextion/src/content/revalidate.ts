@@ -2,9 +2,17 @@
 //
 // Generic content revalidation helpers. Projects can layer domain-specific
 // path expansion (for example localized routes) through `expandPagePaths`.
+//
+// This file is the single authoritative source for the revalidate
+// request/result/function types. `notion/` and `worker/` (higher
+// tiers) import from here instead of duplicating the shapes.
 
 import type { ContentModelDefinition } from "./models";
 import { getRegisteredSource } from "./models";
+import type {
+  KeyValueCacheAdapter,
+  SqlDatabaseAdapter,
+} from "../platform/runtime";
 
 type RevalidatePathFn = (
   path: string,
@@ -24,6 +32,50 @@ export type ContentRevalidateRequest = {
   kind?: InvalidationKind;
   includeApi?: boolean;
 };
+
+/**
+ * Result of a revalidation call. The `ok: true` branch carries the
+ * model descriptor, expanded paths, and opaque cache/search snapshots
+ * for logging. The `ok: false` branch carries an HTTP-ish status and
+ * a human-readable error.
+ */
+export type ContentRevalidateResult =
+  | {
+      ok: true;
+      model: {
+        id: string;
+        routes: {
+          listPath: string;
+          detailPath: string;
+          publicApiPath?: string;
+        };
+      };
+      routeId?: string;
+      revalidatedPaths: string[];
+      contentCache: unknown;
+      searchIndex: unknown;
+    }
+  | {
+      ok: false;
+      status: 400 | 401 | 404;
+      error: string;
+    };
+
+/**
+ * Caller-supplied revalidation implementation. The package's route
+ * factories (`createContentRevalidateRoute`, `createNotionWebhookRoute`)
+ * accept this shape so the package never reaches into the starter's
+ * content model registry.
+ */
+export type RevalidateContentModelFn = (input: {
+  request: ContentRevalidateRequest | null;
+  tokenAuthorized: boolean;
+  revalidatePath: RevalidatePathFn;
+  contentCache?: KeyValueCacheAdapter;
+  getContentCache?: () => KeyValueCacheAdapter | null;
+  database?: SqlDatabaseAdapter;
+  getDatabase?: () => SqlDatabaseAdapter | null;
+}) => Promise<ContentRevalidateResult>;
 
 function asObject(input: unknown): Record<string, unknown> | null {
   return input && typeof input === "object" && !Array.isArray(input)

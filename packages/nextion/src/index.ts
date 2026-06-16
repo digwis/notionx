@@ -2,10 +2,7 @@
 export type {
   ContentSource,
   AuthConfig,
-  AdminExtension,
   AdminNavItem,
-  WorkerOptions,
-  FoundationConfig,
 } from "./types";
 
 export { defineContentSource } from "./content/models";

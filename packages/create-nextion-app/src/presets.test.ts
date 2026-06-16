@@ -1,18 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  UI_PRESET_DEFINITIONS,
-  presetComponentNames,
-  presetDependencyEntries,
+  SITE_COMPONENTS,
+  siteComponentNames,
+  siteDependencyEntries,
 } from "./presets.js";
 
-describe("site preset", () => {
-  it("is the only preset the scaffolder ships", () => {
-    expect(Object.keys(UI_PRESET_DEFINITIONS)).toEqual(["site"]);
-  });
-
+describe("site components", () => {
   it("includes the page-builder component set", () => {
-    const names = presetComponentNames("site");
+    const names = siteComponentNames();
     for (const expected of [
       "accordion",
       "alert",
@@ -36,15 +32,17 @@ describe("site preset", () => {
   });
 
   it("returns a stable, alphabetised list (no ordering flakiness)", () => {
-    expect(presetComponentNames("site")).toEqual(
-      [...presetComponentNames("site")].sort()
-    );
+    expect(siteComponentNames()).toEqual([...siteComponentNames()].sort());
+  });
+
+  it("SITE_COMPONENTS matches siteComponentNames()", () => {
+    expect([...SITE_COMPONENTS].sort()).toEqual(siteComponentNames());
   });
 });
 
-describe("preset dependency entries", () => {
+describe("site dependency entries", () => {
   it("deduplicates Radix packages that appear via multiple components", () => {
-    const deps = presetDependencyEntries("site");
+    const deps = siteDependencyEntries();
     const seen = new Set<string>();
     for (const dep of deps) {
       expect(seen.has(dep.name)).toBe(false);
@@ -54,7 +52,7 @@ describe("preset dependency entries", () => {
 
   it("respects the exclusion list (caller already covered these)", () => {
     const exclude = new Set(["@radix-ui/react-slot"]);
-    const deps = presetDependencyEntries("site", exclude);
+    const deps = siteDependencyEntries(exclude);
     expect(deps.find((d) => d.name === "@radix-ui/react-slot")).toBeUndefined();
     expect(deps.find((d) => d.name === "@radix-ui/react-accordion")).toBeDefined();
   });

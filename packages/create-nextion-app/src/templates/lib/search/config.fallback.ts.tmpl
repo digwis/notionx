@@ -1,0 +1,11 @@
+// Search is disabled in this project (scaffolded with `--no-search`
+// or `nextion remove search`). This stub exports `undefined` so the
+// worker entry point can skip passing `searchAdapter` to
+// `createNextionWorker`, which in turn skips registering the
+// `/api/search` route.
+
+import type { SearchAdapter } from "@notionx/core/search";
+
+export const searchAdapter: SearchAdapter | undefined = undefined;
+
+export default searchAdapter;

@@ -1,0 +1,27 @@
+// Public API: get a single {{contentSourceTitle}} item by slug.
+// Returns 404 if the slug doesn't match a published item.
+
+import { NextResponse } from "next/server";
+import { getGenericNotionContentBySlug } from "@notionx/core/notion";
+import { {{contentSourceVarName}} } from "@/lib/content/models";
+
+export const dynamic = "force-dynamic";
+
+type Params = { slug: string };
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<Params> },
+) {
+  const { slug } = await params;
+  try {
+    const item = await getGenericNotionContentBySlug({{contentSourceVarName}}, slug);
+    if (!item) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    return NextResponse.json({ item });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

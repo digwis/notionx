@@ -20,6 +20,24 @@ type StoredWebhookVerificationToken = {
   updatedAt: string;
 };
 
+/**
+ * Mirror of `ContentRevalidateRequest` from `../content/revalidate`.
+ * Defined locally to avoid a notion→content cross-tier import
+ * (forbidden by `import/no-restricted-paths`). The shapes are kept
+ * in sync structurally — TypeScript treats them as interchangeable.
+ */
+type InvalidationKind = "publish" | "update" | "delete";
+
+type ContentRevalidateRequest = {
+  modelId: string;
+  pageId?: string;
+  routeId?: string;
+  previousRouteId?: string;
+  locale?: string;
+  kind?: InvalidationKind;
+  includeApi?: boolean;
+};
+
 const WEBHOOK_VERIFICATION_TOKEN_CACHE_KEY =
   "notion:webhook:verification-token:v1";
 
@@ -68,23 +86,6 @@ export type NotionWebhookParseOptions<
    * to `process.env[model.source.dataSourceEnv] ?? model.source.defaultDataSourceId`.
    */
   getModelDataSourceId?: (model: NotionWebhookModelRegistration<TFields>) => string | null;
-};
-
-export type InvalidationKind = "publish" | "update" | "delete";
-
-/**
- * Request shape consumed by the revalidation pipeline. Mirrors the starter's
- * `ContentRevalidateRequest`; duplicated here so the package does not need
- * a runtime dependency on the starter.
- */
-export type NotionWebhookRevalidateRequest = {
-  modelId: string;
-  pageId?: string;
-  routeId?: string;
-  previousRouteId?: string;
-  locale?: string;
-  kind?: InvalidationKind;
-  includeApi?: boolean;
 };
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -450,7 +451,7 @@ export async function parseNotionWebhookPayloadWithPageLookup<
 
 export function notionWebhookEventToRevalidateRequest(
   event: NotionWebhookEvent
-): NotionWebhookRevalidateRequest {
+): ContentRevalidateRequest {
   return {
     modelId: event.modelId,
     pageId: event.pageId,

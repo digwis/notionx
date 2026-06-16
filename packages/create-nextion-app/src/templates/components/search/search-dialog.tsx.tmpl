@@ -1,0 +1,171 @@
+"use client";
+
+// Search dialog component. Provides a client-side search UI that
+// queries the `/api/search` endpoint (registered by the worker when
+// a SearchAdapter is present).
+//
+// Usage: place <SearchDialog /> anywhere in your layout (e.g. inside
+// the site header). The component renders a trigger button and a
+// modal dialog with a search input and result list.
+//
+// This is a user-owned file — customize freely to match your design.
+
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Search, X, FileText } from "lucide-react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+
+interface SearchResult {
+  modelId: string;
+  routeId: string;
+  title: string;
+  summary: string;
+}
+
+interface SearchResponse {
+  results: SearchResult[];
+  query: string;
+  count: number;
+}
+
+export function SearchDialog() {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const performSearch = useCallback(async (q: string) => {
+    if (!q.trim()) {
+      setResults([]);
+      setError(null);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=20`);
+      if (!res.ok) throw new Error(`Search failed (${res.status})`);
+      const data: SearchResponse = await res.json();
+      setResults(data.results ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Search failed");
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleQueryChange = useCallback(
+    (value: string) => {
+      setQuery(value);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => performSearch(value), 300);
+    },
+    [performSearch],
+  );
+
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    } else {
+      setQuery("");
+      setResults([]);
+      setError(null);
+    }
+  }, [open]);
+
+  const handleResultClick = (result: SearchResult) => {
+    const path = result.routeId.startsWith("/")
+      ? result.routeId
+      : `/${result.modelId}/${result.routeId}`;
+    window.location.href = path;
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Search">
+          <Search className="h-5 w-5" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Search</DialogTitle>
+        </DialogHeader>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              ref={inputRef}
+              value={query}
+              onChange={(e) => handleQueryChange(e.target.value)}
+              placeholder="Search content..."
+              className="pl-9 pr-9"
+            />
+            {query && (
+              <button
+                onClick={() => handleQueryChange("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Clear"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="mt-4 max-h-[400px] overflow-y-auto">
+          {loading && (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Searching...
+            </p>
+          )}
+          {error && (
+            <p className="py-8 text-center text-sm text-destructive">{error}</p>
+          )}
+          {!loading && !error && query && results.length === 0 && (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              No results found for &ldquo;{query}&rdquo;
+            </p>
+          )}
+          {!loading && !error && !query && (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Type to search across all content.
+            </p>
+          )}
+          {!loading && !error && results.length > 0 && (
+            <ul className="space-y-1">
+              {results.map((result) => (
+                <li key={`${result.modelId}-${result.routeId}`}>
+                  <button
+                    onClick={() => handleResultClick(result)}
+                    className="flex w-full items-start gap-3 rounded-md p-3 text-left hover:bg-accent transition-colors"
+                  >
+                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{result.title}</p>
+                      {result.summary && (
+                        <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
+                          {result.summary}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

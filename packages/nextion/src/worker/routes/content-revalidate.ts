@@ -12,34 +12,21 @@
 import { NextResponse } from "next/server";
 
 import type { KeyValueCacheAdapter, SqlDatabaseAdapter } from "../../platform/runtime";
+import type {
+  ContentRevalidateRequest,
+  ContentRevalidateResult,
+  RevalidateContentModelFn as RevalidateContentModelFnCanonical,
+} from "../../content/revalidate";
 
-export type ContentRevalidateRequestShape = {
-  modelId: string;
-  pageId?: string;
-  routeId?: string;
-  previousRouteId?: string;
-  locale?: string;
-  kind?: "publish" | "update" | "delete";
-  includeApi?: boolean;
-};
-
-export type ContentRevalidateResultShape =
-  | {
-      ok: true;
-      model: {
-        id: string;
-        routes: { listPath: string; detailPath: string; publicApiPath?: string };
-      };
-      routeId?: string;
-      revalidatedPaths: string[];
-      contentCache: unknown;
-      searchIndex: unknown;
-    }
-  | {
-      ok: false;
-      status: 400 | 401 | 404;
-      error: string;
-    };
+/**
+ * Backward-compatible aliases. The `*Shape` names were the original
+ * exports; they are kept as type aliases so existing imports from
+ * `@notionx/core/worker/routes` keep compiling. New code should
+ * import the canonical names from `@notionx/core/content`.
+ */
+export type ContentRevalidateRequestShape = ContentRevalidateRequest;
+export type ContentRevalidateResultShape = ContentRevalidateResult;
+export type RevalidateContentModelFn = RevalidateContentModelFnCanonical;
 
 export type AuthorizeRevalidateFn = (
   request: Request,
@@ -48,24 +35,11 @@ export type AuthorizeRevalidateFn = (
 
 export type ReadRevalidateRequestFn = (
   request: Request
-) => Promise<ContentRevalidateRequestShape | null>;
+) => Promise<ContentRevalidateRequest | null>;
 
 export type ReadRevalidateRequestFromUrlFn = (
   url: URL
-) => ContentRevalidateRequestShape | null;
-
-export type RevalidateContentModelFn = (input: {
-  request: ContentRevalidateRequestShape | null;
-  tokenAuthorized: boolean;
-  revalidatePath: (
-    path: string,
-    type?: "page" | "layout"
-  ) => void | Promise<void>;
-  contentCache?: KeyValueCacheAdapter;
-  getContentCache?: () => KeyValueCacheAdapter | null;
-  database?: SqlDatabaseAdapter;
-  getDatabase?: () => SqlDatabaseAdapter | null;
-}) => Promise<ContentRevalidateResultShape>;
+) => ContentRevalidateRequest | null;
 
 export type CreateContentRevalidateRouteOptions = {
   revalidatePath: (
@@ -86,7 +60,7 @@ export function createContentRevalidateRoute(
 ) {
   async function revalidate(
     request: Request,
-    body: ContentRevalidateRequestShape | null
+    body: ContentRevalidateRequest | null
   ) {
     const token = await options.getVerificationToken().catch(() => null);
     const authorized = options.authorizeContentRevalidate(request, token);

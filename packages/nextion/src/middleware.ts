@@ -45,7 +45,13 @@ export type SessionLookup = (
  * block and an optional viewer lookup.
  */
 export interface NextionMiddlewareOptions {
-  authConfig: AuthConfig;
+  /**
+   * Auth configuration. When omitted (e.g. the project was scaffolded
+   * with `--no-auth`), the middleware skips session cookie reading
+   * and the admin gate entirely — every request passes through as
+   * an anonymous viewer.
+   */
+  authConfig?: AuthConfig;
   /**
    * Optional session resolver. When provided, the middleware uses
    * this to look up the session row. When omitted, the middleware
@@ -108,6 +114,12 @@ export async function resolveFoundationViewer(
   request: Request,
   options: NextionMiddlewareOptions
 ): Promise<NextionMiddlewareRequestContext> {
+  // When auth is disabled (no authConfig), there is no session
+  // cookie to read and no viewer to resolve. Short-circuit.
+  if (!options.authConfig) {
+    return { viewer: null, sessionId: null };
+  }
+
   const sessionId = readSessionCookie(
     request,
     options.authConfig.sessionCookie.name
