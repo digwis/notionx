@@ -1,6 +1,6 @@
 {
   "name": "create-nextion",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "Unscoped npm create alias for @notionx/create-nextion-app.",
   "type": "module",
   "bin": {
@@ -24,7 +24,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@notionx/create-nextion-app": "^0.8.0"
+    "@notionx/create-nextion-app": "^0.9.0"
   },
   "publishConfig": {
     "access": "public",
