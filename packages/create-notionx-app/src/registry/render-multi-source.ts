@@ -64,6 +64,180 @@ export interface MultiSourceTokenMap {
    * own line in the `managedContentSources` array.
    */
   internalSourceVarNames: string;
+  /**
+   * Pre-rendered `export const *TranslationsSource` declarations for
+   * the four translation data sources. Empty string when bilingual
+   * mode is disabled.
+   */
+  translationSourceDeclarations: string;
+}
+
+/**
+ * Render the `export const *TranslationsSource` declarations for
+ * the four translation data sources (`blog-translations`,
+ * `page-translations`, `block-translations`,
+ * `site-settings-translations`).
+ *
+ * When bilingual mode is disabled, all four are exported as `null`
+ * so downstream imports don't break. When bilingual mode is enabled
+ * but a specific translation source has no data-source ref yet, that
+ * individual source is also `null`.
+ */
+function buildTranslationSourceDeclarations(
+  input: {
+    bilingual?: boolean;
+    translationSources?: Record<
+      string,
+      { dataSourceId: string; envVar: string } | undefined
+    >;
+  }
+): string {
+  if (!input.bilingual) {
+    // When not bilingual, export all four as null so imports don't break.
+    return [
+      "export const blogTranslationsSource = null;",
+      "export const pageTranslationsSource = null;",
+      "export const blockTranslationsSource = null;",
+      "export const siteSettingsTranslationsSource = null;",
+    ].join("\n");
+  }
+
+  const sources = input.translationSources ?? {};
+  const decls: string[] = [];
+
+  const blogTrans = sources["blog-translations"];
+  decls.push(
+    blogTrans
+      ? `export const blogTranslationsSource = defineContentSource({
+  id: "blog-translations",
+  kind: "directory",
+  visibility: { public: false, admin: true },
+  source: {
+    type: "notion",
+    tokenEnv: "NOTION_TOKEN",
+    dataSourceEnv: "${blogTrans.envVar}",
+    fields: { title: "Title", slug: "Slug", published: "Published" },
+    query: { pageSize: 100 },
+  },
+  routes: {
+    listPath: "/__internal/blog-translations",
+    detailPath: "/__internal/blog-translations/[slug]",
+    detailParam: "slug",
+    publicApiPath: "/api/__internal/blog-translations",
+  },
+  ui: {
+    name: "Blog Translations",
+    pluralName: "Blog Translations",
+    navLabel: "Blog Translations",
+    listTitle: "Blog Translations",
+    listDescription: "Locale-specific rows for blog posts.",
+    emptyState: "No translations yet.",
+  },
+  capabilities: { richBlocks: false, coverImages: false, gatedAssets: false },
+});`
+      : `export const blogTranslationsSource = null;`
+  );
+
+  const pageTrans = sources["page-translations"];
+  decls.push(
+    pageTrans
+      ? `export const pageTranslationsSource = defineContentSource({
+  id: "page-translations",
+  kind: "directory",
+  visibility: { public: false, admin: true },
+  source: {
+    type: "notion",
+    tokenEnv: "NOTION_TOKEN",
+    dataSourceEnv: "${pageTrans.envVar}",
+    fields: { title: "Title", slug: "Slug", published: "Published" },
+    query: { pageSize: 100 },
+  },
+  routes: {
+    listPath: "/__internal/page-translations",
+    detailPath: "/__internal/page-translations/[slug]",
+    detailParam: "slug",
+    publicApiPath: "/api/__internal/page-translations",
+  },
+  ui: {
+    name: "Page Translations",
+    pluralName: "Page Translations",
+    navLabel: "Page Translations",
+    listTitle: "Page Translations",
+    listDescription: "Locale-specific rows for site pages.",
+    emptyState: "No translations yet.",
+  },
+  capabilities: { richBlocks: false, coverImages: false, gatedAssets: false },
+});`
+      : `export const pageTranslationsSource = null;`
+  );
+
+  const blockTrans = sources["block-translations"];
+  decls.push(
+    blockTrans
+      ? `export const blockTranslationsSource = defineContentSource({
+  id: "block-translations",
+  kind: "directory",
+  visibility: { public: false, admin: true },
+  source: {
+    type: "notion",
+    tokenEnv: "NOTION_TOKEN",
+    dataSourceEnv: "${blockTrans.envVar}",
+    fields: { title: "Title", slug: "Slug", published: "Published" },
+    query: { pageSize: 100 },
+  },
+  routes: {
+    listPath: "/__internal/block-translations",
+    detailPath: "/__internal/block-translations/[slug]",
+    detailParam: "slug",
+    publicApiPath: "/api/__internal/block-translations",
+  },
+  ui: {
+    name: "Block Translations",
+    pluralName: "Block Translations",
+    navLabel: "Block Translations",
+    listTitle: "Block Translations",
+    listDescription: "Locale-specific rows for page blocks.",
+    emptyState: "No translations yet.",
+  },
+  capabilities: { richBlocks: false, coverImages: false, gatedAssets: false },
+});`
+      : `export const blockTranslationsSource = null;`
+  );
+
+  const settingsTrans = sources["site-settings-translations"];
+  decls.push(
+    settingsTrans
+      ? `export const siteSettingsTranslationsSource = defineContentSource({
+  id: "site-settings-translations",
+  kind: "directory",
+  visibility: { public: false, admin: true },
+  source: {
+    type: "notion",
+    tokenEnv: "NOTION_TOKEN",
+    dataSourceEnv: "${settingsTrans.envVar}",
+    fields: { title: "Title", slug: "Slug", published: "Published" },
+    query: { pageSize: 100 },
+  },
+  routes: {
+    listPath: "/__internal/site-settings-translations",
+    detailPath: "/__internal/site-settings-translations/[slug]",
+    detailParam: "slug",
+    publicApiPath: "/api/__internal/site-settings-translations",
+  },
+  ui: {
+    name: "Site Settings Translations",
+    pluralName: "Site Settings Translations",
+    navLabel: "Site Settings Translations",
+    listTitle: "Site Settings Translations",
+    listDescription: "Locale-specific rows for site settings.",
+    emptyState: "No translations yet.",
+  },
+  capabilities: { richBlocks: false, coverImages: false, gatedAssets: false },
+});`
+      : `export const siteSettingsTranslationsSource = null;`
+  );
+
+  return decls.join("\n\n");
 }
 
 /**
@@ -88,6 +262,13 @@ export function buildMultiSourceTokenMap(input: {
    * to match the pre-refactor behaviour (both always present).
    */
   internalSources?: { siteSettings?: boolean; blocks?: boolean };
+  /** When true, the token map includes translation source declarations. */
+  bilingual?: boolean;
+  /** Translation source refs (from scaffold metadata or provision result). */
+  translationSources?: Record<
+    string,
+    { dataSourceId: string; envVar: string } | undefined
+  >;
 }): MultiSourceTokenMap {
   const contentSources = input.installed
     .filter((i) => i.kind === "content-source")
@@ -146,6 +327,7 @@ export function buildMultiSourceTokenMap(input: {
     internalSourceVarNames: internalVars.length
       ? "\n  " + internalVars.join(",\n  ") + ","
       : "",
+    translationSourceDeclarations: buildTranslationSourceDeclarations(input),
   };
 }
 
