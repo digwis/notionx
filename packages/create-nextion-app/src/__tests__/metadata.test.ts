@@ -88,6 +88,20 @@ describe("scaffold metadata", () => {
       ),
       "utf8"
     );
+    await writeFile(
+      path.join(metadataDir, "installations.json"),
+      JSON.stringify({ templates: [], modules: [] }, null, 2),
+      "utf8"
+    );
+    await writeFile(
+      path.join(metadataDir, "managed-files.json"),
+      JSON.stringify(
+        { platformManaged: [], bridge: [], userOwned: [] },
+        null,
+        2
+      ),
+      "utf8"
+    );
 
     const context = await loadProjectContext(dir);
     expect(context.projectDir).toBe(dir);
