@@ -44,6 +44,8 @@ const context: ProjectContext = {
       fields: [{ key: "title", notionName: "Name" }],
     },
   },
+  installations: { templates: [], modules: [] },
+  managedFiles: { platformManaged: [], bridge: [], userOwned: [] },
 };
 
 describe("inspectProvisionRepair", () => {

@@ -1,4 +1,4 @@
-export type UnifiedUpdateRisk = "safe" | "conflict";
+export type UnifiedUpdateRisk = "safe" | "review" | "conflict";
 
 export type UnifiedUpdateKind = "file" | "notion" | "cloudflare";
 
@@ -12,6 +12,7 @@ export interface UnifiedUpdateEntry {
 
 export interface UnifiedUpdatePlan {
   safe: UnifiedUpdateEntry[];
+  review: UnifiedUpdateEntry[];
   conflicts: UnifiedUpdateEntry[];
   conflictGroups: {
     codeTemplate: UnifiedUpdateEntry[];
@@ -23,6 +24,7 @@ export interface UnifiedUpdatePlan {
 export interface UnifiedUpdateSummary {
   appliedSafe: UnifiedUpdateEntry[];
   appliedConflicts: UnifiedUpdateEntry[];
+  reviewRemaining: UnifiedUpdateEntry[];
   conflictsRemaining: UnifiedUpdateEntry[];
   needsInstall: boolean;
   compatibilityPreserved: boolean;

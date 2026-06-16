@@ -38,6 +38,8 @@ const unifiedContext: ProjectContext = {
       fields: [{ key: "title", notionName: "Name" }],
     },
   },
+  installations: { templates: [], modules: [] },
+  managedFiles: { platformManaged: [], bridge: [], userOwned: [] },
 };
 
 vi.mock("./template-sync.js", async () => {
@@ -94,6 +96,8 @@ describe("runUpdate", () => {
           fields: [{ key: "title", notionName: "Name" }],
         },
       },
+      installations: { templates: [], modules: [] },
+      managedFiles: { platformManaged: [], bridge: [], userOwned: [] },
     };
     buildUpdatePlanMock.mockResolvedValueOnce([
       {
@@ -218,6 +222,8 @@ describe("buildUpdateAnswers", () => {
           fields: [{ key: "title", notionName: "Name" }],
         },
       },
+      installations: { templates: [], modules: [] },
+      managedFiles: { platformManaged: [], bridge: [], userOwned: [] },
     });
 
     expect(answers.projectName).toBe("demo");
@@ -248,6 +254,8 @@ describe("buildUpdateAnswers", () => {
         },
         compatibility: "legacy-vinext",
       },
+      installations: { templates: [], modules: [] },
+      managedFiles: { platformManaged: [], bridge: [], userOwned: [] },
     });
 
     expect(answers.nextionSource).toBe("workspace:*");
@@ -270,6 +278,8 @@ describe("buildUpdateAnswers", () => {
           fields: [{ key: "title", notionName: "Name" }],
         },
       },
+      installations: { templates: [], modules: [] },
+      managedFiles: { platformManaged: [], bridge: [], userOwned: [] },
     });
 
     expect(answers.nextionSource).toBe("workspace:*");
@@ -292,6 +302,8 @@ describe("buildUpdateAnswers", () => {
           fields: [{ key: "title", notionName: "Name" }],
         },
       },
+      installations: { templates: [], modules: [] },
+      managedFiles: { platformManaged: [], bridge: [], userOwned: [] },
     });
 
     expect(answers.nextionSource).toBe("^1.0.0");
@@ -361,6 +373,8 @@ describe("formatUpdateSummary", () => {
           fields: [{ key: "title", notionName: "Name" }],
         },
       },
+      installations: { templates: [], modules: [] },
+      managedFiles: { platformManaged: [], bridge: [], userOwned: [] },
     });
 
     expect(summary.compatibilityPreserved).toBe(true);
@@ -396,6 +410,7 @@ describe("formatUnifiedUpdateSummary", () => {
         },
       ],
       appliedConflicts: [],
+      reviewRemaining: [],
       conflictsRemaining: [
         {
           label: "file:wrangler.jsonc",
@@ -469,6 +484,8 @@ describe("buildUpdatePlan", () => {
           fields: [{ key: "title", notionName: "Name" }],
         },
       },
+      installations: { templates: [], modules: [] },
+      managedFiles: { platformManaged: [], bridge: [], userOwned: [] },
     });
 
     expect(

@@ -7,6 +7,7 @@ import type {
   UnifiedUpdatePlan,
   UnifiedUpdateSummary,
 } from "./types.js";
+import { toUnifiedUpdateRisk } from "./ownership.js";
 
 function toFileEntry(
   context: ProjectContext,
@@ -19,10 +20,16 @@ function toFileEntry(
     return null;
   }
 
+  const risk = toUnifiedUpdateRisk({
+    filePath: entry.filePath,
+    status: entry.status,
+    managedFiles: context.managedFiles,
+  });
+
   return {
     label: `file:${entry.filePath}`,
     kind: "file",
-    risk: entry.status === "missing" ? "safe" : "conflict",
+    risk,
     group: "codeTemplate",
     async apply() {
       const filePath = path.join(context.projectDir, entry.filePath);
@@ -42,10 +49,12 @@ export async function buildUnifiedUpdatePlan(input: {
     .filter((entry): entry is UnifiedUpdateEntry => entry !== null);
   const allEntries = [...fileEntries, ...input.repairEntries];
   const safe = allEntries.filter((entry) => entry.risk === "safe");
+  const review = allEntries.filter((entry) => entry.risk === "review");
   const conflicts = allEntries.filter((entry) => entry.risk === "conflict");
 
   return {
     safe,
+    review,
     conflicts,
     conflictGroups: {
       codeTemplate: conflicts.filter((entry) => entry.group === "codeTemplate"),
@@ -86,6 +95,7 @@ export async function runUnifiedUpdate(
   return {
     appliedSafe: plan.safe,
     appliedConflicts,
+    reviewRemaining: plan.review,
     conflictsRemaining:
       input.conflictChoice === "apply-all" ? [] : plan.conflicts,
     needsInstall: [...plan.safe, ...appliedConflicts].some(
@@ -105,6 +115,13 @@ export function formatUnifiedUpdateSummary(
   if (summary.appliedSafe.length > 0) {
     lines.push("safe updates:");
     for (const entry of summary.appliedSafe) {
+      lines.push(`  - ${entry.label}`);
+    }
+  }
+
+  if (summary.reviewRemaining.length > 0) {
+    lines.push("review items:");
+    for (const entry of summary.reviewRemaining) {
       lines.push(`  - ${entry.label}`);
     }
   }
