@@ -7,8 +7,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getGenericNotionContentBySlug } from "@notionx/core/notion";
+import { getGenericNotionContentBySlugForLocale } from "@notionx/core";
 import { {{contentSourceVarName}} } from "@/lib/content/models";
+import { getRequestLocale } from "@/lib/site/request-env";
+import { i18n } from "@/lib/i18n";
 import { Badge } from "@/components/ui/badge";
 import { NotionBlocks } from "@/components/notion-blocks";
 import { SiteShell } from "@/components/site/site-shell";
@@ -35,7 +37,8 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const item = await getGenericNotionContentBySlug({{contentSourceVarName}}, slug);
+  const locale = getRequestLocale(i18n.defaultLocale);
+  const item = await getGenericNotionContentBySlugForLocale({{contentSourceVarName}}, slug, locale);
   if (!item) return { title: "Not found" };
   return {
     title: item.title,
@@ -52,8 +55,9 @@ export default async function {{contentSourceConstName}}DetailPage({
   params: Promise<Params>;
 }) {
   const { slug } = await params;
-  const item = await getGenericNotionContentBySlug({{contentSourceVarName}}, slug);
-  const page = await getSitePageForContentSource("{{contentSourceId}}");
+  const locale = getRequestLocale(i18n.defaultLocale);
+  const item = await getGenericNotionContentBySlugForLocale({{contentSourceVarName}}, slug, locale);
+  const page = await getSitePageForContentSource("{{contentSourceId}}", locale);
   if (!item) notFound();
 
   return (
