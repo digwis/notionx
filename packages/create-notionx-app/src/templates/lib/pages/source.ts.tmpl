@@ -1,14 +1,16 @@
 import {
-  getGenericNotionContentBySlug,
   type GenericContentDetail,
   type NotionBlock,
 } from "@notionx/core/notion";
+import { getGenericNotionContentBySlugForLocale } from "@notionx/core";
 import {
   createSitePagesApi,
   type SitePage as BaseSitePage,
   type SitePageBlockRef,
 } from "@notionx/core/pages";
 import { blocksSource, contentSources } from "@/lib/content/models";
+import { getRequestLocale } from "@/lib/site/request-env";
+import { i18n } from "@/lib/i18n";
 import { pageFields, pagesDataSourceEnv } from "./model";
 
 const pagesModel = {
@@ -426,9 +428,11 @@ function resolveBlockType(detail: GenericContentDetail, ref: SitePageBlockRef) {
 }
 
 async function resolveStructuredBlock(
-  ref: SitePageBlockRef
+  ref: SitePageBlockRef,
+  locale?: string
 ): Promise<StructuredPageBlock | null> {
-  const detail = await getGenericNotionContentBySlug(blocksSource, ref.slug);
+  const resolvedLocale = locale ?? getRequestLocale(i18n.defaultLocale);
+  const detail = await getGenericNotionContentBySlugForLocale(blocksSource, ref.slug, resolvedLocale);
   if (!detail) return fallbackPageBlock(ref);
 
   return mapGenericBlockToStructuredBlock(detail, ref);
@@ -527,34 +531,40 @@ function mapGenericBlockToStructuredBlock(
   return fallbackToLegacyNotionBlocks(detail, ref);
 }
 
-export async function getPageBlocks(page: BaseSitePage | null) {
+export async function getPageBlocks(page: BaseSitePage | null, locale?: string) {
   if (!page) return [];
   const resolved = await Promise.all(
-    (page.structuredBlocks ?? []).map((ref) => resolveStructuredBlock(ref))
+    (page.structuredBlocks ?? []).map((ref) => resolveStructuredBlock(ref, locale))
   );
   return resolved.filter((block): block is StructuredPageBlock => Boolean(block));
 }
 
-async function withStructuredBlocks(page: BaseSitePage | null): Promise<SitePage | null> {
+async function withStructuredBlocks(
+  page: BaseSitePage | null,
+  locale?: string
+): Promise<SitePage | null> {
   if (!page) return null;
   return {
     ...page,
-    structuredBlocks: await getPageBlocks(page),
+    structuredBlocks: await getPageBlocks(page, locale),
   };
 }
 
-export async function listSitePages() {
-  const pages = await pagesApi.listSitePages();
-  const resolved = await Promise.all(pages.map((page) => withStructuredBlocks(page)));
+export async function listSitePages(locale?: string) {
+  const resolvedLocale = locale ?? getRequestLocale(i18n.defaultLocale);
+  const pages = await pagesApi.listSitePages(resolvedLocale);
+  const resolved = await Promise.all(pages.map((page) => withStructuredBlocks(page, resolvedLocale)));
   return resolved.filter((page): page is SitePage => Boolean(page));
 }
 
-export async function getSitePageByKey(key: string) {
-  return withStructuredBlocks(await pagesApi.getSitePageByKey(key));
+export async function getSitePageByKey(key: string, locale?: string) {
+  const resolvedLocale = locale ?? getRequestLocale(i18n.defaultLocale);
+  return withStructuredBlocks(await pagesApi.getSitePageByKey(key, resolvedLocale), resolvedLocale);
 }
 
-export async function getSitePageBySlug(slug: string) {
-  return withStructuredBlocks(await pagesApi.getSitePageBySlug(slug));
+export async function getSitePageBySlug(slug: string, locale?: string) {
+  const resolvedLocale = locale ?? getRequestLocale(i18n.defaultLocale);
+  return withStructuredBlocks(await pagesApi.getSitePageBySlug(slug, resolvedLocale), resolvedLocale);
 }
 export const getSitePageForContentSource = pagesApi.getSitePageForContentSource;
 export const getSiteNavigation = pagesApi.getSiteNavigation;
