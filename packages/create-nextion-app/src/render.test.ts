@@ -529,3 +529,49 @@ describe("scaffolded project ships the scaffolder CLI as a devDependency", () =>
     expect(version).toBe(`^${scaffolderPackage.version}`);
   });
 });
+
+describe("template installation manifests", () => {
+  it("writes installation and managed-files manifests into .nextion", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "nextion-manifests-"));
+    const outDir = path.join(root, "app");
+    const answers = applyDefaults(
+      {
+        projectName: "manifest-app",
+        targetDir: outDir,
+        adminEmail: "admin@example.com",
+        adminPassword: "Password123",
+        yes: true,
+      },
+      ["node", "cli"]
+    );
+
+    await render(answers, templatesDir, outDir);
+
+    const installations = JSON.parse(
+      await fs.readFile(path.join(outDir, ".nextion/installations.json"), "utf8")
+    ) as {
+      templates: Array<{ name: string; kind: string; version: number }>;
+      modules: unknown[];
+    };
+    const managedFiles = JSON.parse(
+      await fs.readFile(path.join(outDir, ".nextion/managed-files.json"), "utf8")
+    ) as {
+      platformManaged: string[];
+      bridge: string[];
+      userOwned: string[];
+    };
+
+    expect(installations.templates).toEqual([
+      {
+        name: "blog",
+        kind: "site-template",
+        version: 1,
+        params: { contentSourceId: "blog" },
+      },
+    ]);
+    expect(installations.modules).toEqual([]);
+    expect(managedFiles.platformManaged).toContain("package.json");
+    expect(managedFiles.bridge).toContain("worker/index.ts");
+    expect(managedFiles.userOwned).toContain("app/blog/page.tsx");
+  });
+});

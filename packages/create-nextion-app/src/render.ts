@@ -11,6 +11,12 @@ import { buildScaffoldMetadata, SCAFFOLD_METADATA_FILE } from "./metadata.js";
 import { presetComponentNames, presetDependencyEntries } from "./presets.js";
 import type { Answers } from "./prompt.js";
 import { hashPasswordForScaffold } from "./provision/password-hash.js";
+import {
+  buildDefaultInstallationManifest,
+  buildDefaultManagedFilesManifest,
+  INSTALLATIONS_FILE,
+  MANAGED_FILES_FILE,
+} from "./template-contracts.js";
 import { uiComponentsForPreset } from "./ui-presets.js";
 
 interface TokenMap {
@@ -263,6 +269,15 @@ async function readPackageVersion(): Promise<string> {
   return parsed.version ?? "0.0.0";
 }
 
+async function writeJsonFile(filePath: string, value: unknown): Promise<void> {
+  await ensureDir(path.dirname(filePath));
+  await fs.writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+}
+
+function resolveInitialSiteTemplate(answers: Answers): string {
+  return answers.contentSource.id === "blog" ? "blog" : "blog";
+}
+
 export async function resolveTemplatesDir(): Promise<string> {
   const compiled = path.resolve(import.meta.dirname, "templates");
   const fromSource = path.resolve(import.meta.dirname, "..", "src", "templates");
@@ -310,9 +325,23 @@ export async function render(
 
   await ensureDir(absoluteOut);
   const metadata = buildScaffoldMetadata(answers, scaffoldVersion);
-  const metadataPath = path.join(absoluteOut, SCAFFOLD_METADATA_FILE);
-  await ensureDir(path.dirname(metadataPath));
-  await fs.writeFile(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`, "utf8");
+  const siteTemplate = resolveInitialSiteTemplate(answers);
+
+  await writeJsonFile(
+    path.join(absoluteOut, SCAFFOLD_METADATA_FILE),
+    metadata
+  );
+  await writeJsonFile(
+    path.join(absoluteOut, INSTALLATIONS_FILE),
+    buildDefaultInstallationManifest({
+      contentSourceId: answers.contentSource.id,
+      siteTemplate,
+    })
+  );
+  await writeJsonFile(
+    path.join(absoluteOut, MANAGED_FILES_FILE),
+    buildDefaultManagedFilesManifest({ siteTemplate })
+  );
 
   // Walk templates/ — every file is either a `.tmpl` (interpolated and
   // written without the `.tmpl` suffix) or a literal copy.

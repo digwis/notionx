@@ -10,6 +10,7 @@ export interface ScaffoldMetadata {
   supportedLocales: string[];
   nextionSource: string;
   enableSiteSettings: boolean;
+  siteTemplate?: string;
   contentSource: {
     id: string;
     title: string;
@@ -55,6 +56,7 @@ export function buildScaffoldMetadata(
     supportedLocales: [...answers.supportedLocales],
     nextionSource: answers.nextionSource,
     enableSiteSettings: answers.enableSiteSettings,
+    siteTemplate: answers.contentSource.id === "blog" ? "blog" : "blog",
     contentSource: {
       id: answers.contentSource.id,
       title: answers.contentSource.title,
