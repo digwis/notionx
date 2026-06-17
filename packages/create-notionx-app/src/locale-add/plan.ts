@@ -11,6 +11,8 @@
 // without side effects.
 
 import type { ScaffoldMetadata } from "../metadata.js";
+import { planNotionTranslationSources } from "../notion-translation-sources/plan.js";
+import { applyNotionTranslationSources } from "../notion-translation-sources/apply.js";
 
 export type LocaleAddChange =
   | {
@@ -58,6 +60,10 @@ export type BuildLocaleAddPlanInput = {
   copyFrom?: string;
   /** Pre-resolved translation data source ids, keyed by translation source name. */
   translationSourceIds?: Record<string, string>;
+  /** Notion API token. Required when `withNotion` is true. */
+  notionApiToken?: string;
+  /** Notion parent page id for new translation databases. */
+  notionParentPageId?: string;
 };
 
 const BUILT_IN_NOTION_SOURCES = [
@@ -145,20 +151,66 @@ export function buildLocaleAddPlan(
     },
   });
 
-  // 4. (optional) Notion translation data sources — declared but the
-  // actual create/reuse happens in the translation-sources runner.
+  // 4. (optional) Notion translation data sources. When the Notion
+  // api token and parent page id are available, the planner produces
+  // real create/reuse plans and the `apply` closure runs them via
+  // `applyNotionTranslationSources`. When the Notion context is
+  // missing, fall back to no-op changes so the plan still renders a
+  // dry-run summary.
   if (input.withNotion) {
-    for (const sourceName of BUILT_IN_NOTION_SOURCES) {
+    const existingSources = input.metadata.translationSources ?? {};
+    const plans =
+      input.notionApiToken && input.notionParentPageId
+        ? planNotionTranslationSources({
+            locale: input.locale,
+            parentPageId: input.notionParentPageId,
+            apiToken: input.notionApiToken,
+            copyFrom: input.copyFrom,
+            existingTranslationSources: existingSources,
+          })
+        : [];
+
+    for (const plan of plans) {
       changes.push({
         kind: "notion",
-        label: `notion:${sourceName}`,
-        description: `Ensure Notion data source "${sourceName}" exists (idempotent: create or reuse).`,
+        label: `notion:${plan.modelId}`,
+        description: `Ensure Notion data source "${plan.modelId}" exists (idempotent: create or reuse).`,
         risk: "safe",
-        modelId: sourceName,
+        modelId: plan.modelId,
         async apply() {
-          return null;
+          const result = await applyNotionTranslationSources([plan]);
+          const resolved = result.resolved[plan.modelId];
+          if (!resolved) {
+            const failure = result.failures.find(
+              (f) => f.modelId === plan.modelId
+            );
+            if (failure) {
+              throw new Error(
+                `Failed to create translation source ${plan.modelId}: ${failure.error}`
+              );
+            }
+            return null;
+          }
+          return { dataSourceId: resolved.dataSourceId };
         },
       });
+    }
+
+    // When notion context is missing, fall back to no-op changes
+    // so the plan still renders a dry-run summary.
+    if (plans.length === 0) {
+      for (const sourceName of BUILT_IN_NOTION_SOURCES) {
+        changes.push({
+          kind: "notion",
+          label: `notion:${sourceName}`,
+          description: `Ensure Notion data source "${sourceName}" exists (skipped: no Notion api token or parent page id).`,
+          risk: "safe",
+          modelId: sourceName,
+          async apply() {
+            return null;
+          },
+        });
+      }
     }
   }
 
