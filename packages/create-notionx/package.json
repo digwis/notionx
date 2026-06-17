@@ -23,9 +23,7 @@
   "engines": {
     "node": ">=22"
   },
-  "dependencies": {
-    "@notionx/create-notionx-app": "^2.0.0"
-  },
+  "dependencies": {},
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
