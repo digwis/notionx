@@ -8,29 +8,33 @@ import {
 } from "../notion.js";
 
 describe("translation property builders", () => {
-  it("buildBlogTranslationProperties includes Source relation, Locale select, Title, Slug, Body", () => {
+  it("buildBlogTranslationProperties includes Source relation, Locale select, Title, Slug (no Body field)", () => {
     const props = buildBlogTranslationProperties();
     expect(props.Source).toEqual({ relation: { database_property: {} } });
     expect(props.Locale).toEqual({ select: {} });
     expect(props.Title).toEqual({ title: {} });
     expect(props.Slug).toEqual({ rich_text: {} });
-    expect(props.Body).toEqual({ rich_text: {} });
+    // Body content lives in the translation page's children blocks,
+    // not a rich_text field — assert the property is absent.
+    expect(props.Body).toBeUndefined();
     expect(props.Published).toEqual({ checkbox: {} });
     expect(props.Description).toEqual({ rich_text: {} });
   });
 
-  it("buildPageTranslationProperties includes Nav Label and Footer Label", () => {
+  it("buildPageTranslationProperties includes Nav Label and Footer Label (no Body field)", () => {
     const props = buildPageTranslationProperties();
     expect(props["Nav Label"]).toEqual({ rich_text: {} });
     expect(props["Footer Label"]).toEqual({ rich_text: {} });
+    expect(props.Body).toBeUndefined();
   });
 
-  it("buildBlockTranslationProperties includes Eyebrow, Headline, Subheadline, CTAs", () => {
+  it("buildBlockTranslationProperties includes Eyebrow, Headline, Subheadline, CTAs (no Body field)", () => {
     const props = buildBlockTranslationProperties();
     expect(props.Eyebrow).toEqual({ rich_text: {} });
     expect(props.Headline).toEqual({ rich_text: {} });
     expect(props["Primary CTA Label"]).toEqual({ rich_text: {} });
     expect(props["Primary CTA Href"]).toEqual({ url: {} });
+    expect(props.Body).toBeUndefined();
   });
 
   it("buildSiteSettingsTranslationProperties includes Tagline, Nav Labels, Footer Labels", () => {

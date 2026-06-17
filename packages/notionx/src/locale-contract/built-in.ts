@@ -24,7 +24,8 @@ export const blogTranslationFields = {
   description: "Description",
   seoTitle: "SEO Title",
   seoDescription: "SEO Description",
-  body: "Body",
+  // Body content is read from the translation page's children blocks,
+  // not a Notion property — see createLocalizedGenericNotionContentSource.
   published: "Published",
 } as const;
 
@@ -54,7 +55,8 @@ export const pagesTranslationFields = {
   seoDescription: "SEO Description",
   navLabel: "Nav Label",
   footerLabel: "Footer Label",
-  body: "Body",
+  // Body content is read from the translation page's children blocks,
+  // not a Notion property — see createLocalizedGenericNotionContentSource.
   published: "Published",
 } as const;
 
@@ -76,7 +78,8 @@ export const blocksTranslationFields = {
   eyebrow: "Eyebrow",
   headline: "Headline",
   subheadline: "Subheadline",
-  body: "Body",
+  // Body content is read from the translation page's children blocks,
+  // not a Notion property — see createLocalizedGenericNotionContentSource.
   quote: "Quote",
   quoteAttribution: "Quote Attribution",
   primaryCtaLabel: "Primary CTA Label",

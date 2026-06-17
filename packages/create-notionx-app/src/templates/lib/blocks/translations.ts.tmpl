@@ -22,7 +22,8 @@ export type BlockTranslation = {
   eyebrow: string;
   headline: string;
   subheadline: string;
-  body: string;
+  // Body content is read from the translation page's children blocks
+  // (via getPageBlocks(translationPageId)), not a Notion property.
   quote: string;
   quoteAttribution: string;
   primaryCtaLabel: string;

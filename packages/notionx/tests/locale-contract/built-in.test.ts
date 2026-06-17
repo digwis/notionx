@@ -22,7 +22,12 @@ describe("built-in locale contracts", () => {
       expect.arrayContaining(["locale", "slug", "title", "navLabel"])
     );
     expect(Object.keys(blocksContract.translationFields)).toEqual(
-      expect.arrayContaining(["eyebrow", "headline", "body"])
+      // Body content is read from the translation page's children
+      // blocks, not a Notion property — assert it is absent.
+      expect.not.arrayContaining(["body"])
+    );
+    expect(Object.keys(blocksContract.translationFields)).toEqual(
+      expect.arrayContaining(["eyebrow", "headline", "subheadline"])
     );
     expect(
       Object.keys(siteSettingsContract.translationFields)

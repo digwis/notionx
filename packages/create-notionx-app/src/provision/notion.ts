@@ -2512,7 +2512,8 @@ export function buildBlogTranslationProperties(
     Description: { rich_text: {} },
     "SEO Title": { rich_text: {} },
     "SEO Description": { rich_text: {} },
-    Body: { rich_text: {} },
+    // Body content lives in the translation page's children blocks,
+    // not a rich_text field — removes the 2000-char limit.
     Published: { checkbox: {} },
   };
 }
@@ -2532,7 +2533,8 @@ export function buildPageTranslationProperties(
     "SEO Description": { rich_text: {} },
     "Nav Label": { rich_text: {} },
     "Footer Label": { rich_text: {} },
-    Body: { rich_text: {} },
+    // Body content lives in the translation page's children blocks,
+    // not a rich_text field — removes the 2000-char limit.
     Published: { checkbox: {} },
   };
 }
@@ -2550,7 +2552,8 @@ export function buildBlockTranslationProperties(
     Eyebrow: { rich_text: {} },
     Headline: { rich_text: {} },
     Subheadline: { rich_text: {} },
-    Body: { rich_text: {} },
+    // Body content lives in the translation page's children blocks,
+    // not a rich_text field — removes the 2000-char limit.
     Quote: { rich_text: {} },
     "Quote Attribution": { rich_text: {} },
     "Primary CTA Label": { rich_text: {} },

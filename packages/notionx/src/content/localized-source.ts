@@ -103,6 +103,11 @@ export function createLocalizedGenericNotionContentSource<
           getTranslationSourcePageId: (row) => row.sourcePageId,
           applyTranslation: (base, translation) => ({
             ...base,
+            // Point pageId at the translation page so getItemBySlug
+            // fetches the translation's children blocks (body content
+            // lives in page blocks, not a rich_text field).
+            pageId: translation.pageId,
+            editUrl: translation.editUrl,
             title: translation.title,
             slug: translation.slug,
             description: translation.seoDescription || base.description,
@@ -122,6 +127,11 @@ export function createLocalizedGenericNotionContentSource<
         getTranslationSourcePageId: (row) => row.sourcePageId,
         applyTranslation: (base, translation) => ({
           ...base,
+          // Point pageId at the translation page so getItemBySlug
+          // fetches the translation's children blocks (body content
+          // lives in page blocks, not a rich_text field).
+          pageId: translation.pageId,
+          editUrl: translation.editUrl,
           title: translation.title,
           slug: translation.slug,
           description: translation.seoDescription || base.description,
