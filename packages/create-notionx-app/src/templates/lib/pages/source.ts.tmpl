@@ -9,7 +9,6 @@ import {
 import {
   createSitePagesApi,
   type SitePage as BaseSitePage,
-  type SitePageBlockRef,
 } from "@notionx/core/pages";
 import { blocksSource, contentSources } from "@/lib/content/models";
 import { getRequestLocale } from "@/lib/site/request-env";
@@ -52,6 +51,10 @@ export type StructuredPageBlock = {
 export type SitePage = Omit<BaseSitePage, "structuredBlocks"> & {
   structuredBlocks: StructuredPageBlock[];
 };
+
+// `SitePageBlockRef` is not exported from `@notionx/core/pages`,
+// but it is the element type of `SitePage.structuredBlocks`.
+type SitePageBlockRef = BaseSitePage["structuredBlocks"][number];
 
 const fallbackStructuredBlocks: Record<string, StructuredPageBlock> = {
   "home-hero": {

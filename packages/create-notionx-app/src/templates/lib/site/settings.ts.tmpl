@@ -50,9 +50,12 @@ function readKv(): KVNamespace | null {
   return getRequestEnv()?.CONTENT_CACHE ?? null;
 }
 
+// Mirrors `SiteConfig["navigation"]["main"]`: the JSON stored in
+// Notion's "Nav" field should include `modelId` for each item.
 type RawNavItem = {
   label: string;
   href: string;
+  modelId: string;
   children?: RawNavItem[];
 };
 

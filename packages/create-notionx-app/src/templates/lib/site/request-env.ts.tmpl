@@ -40,12 +40,14 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 /**
  * Shape of the Cloudflare `env` parameter as far as this project
- * is concerned. The KV binding is the only one we read at
- * runtime; other bindings (D1, R2, secrets) are accessed by the
- * foundation worker directly and don't need ALS propagation.
+ * is concerned. Bindings read outside the worker entry (e.g. D1
+ * from the search adapter, KV from site settings) are propagated
+ * through ALS; others are accessed by the foundation worker
+ * directly and don't need to be listed here.
  */
 export interface RequestEnv {
   CONTENT_CACHE?: KVNamespace;
+  DB?: D1Database;
   /**
    * Locale resolved by the middleware from the `/{locale}` path
    * prefix. Server components and data loaders read this via

@@ -9,15 +9,28 @@
 
 import { createD1SearchAdapter } from "@notionx/core/search";
 import type { SearchAdapter } from "@notionx/core/search";
+import type { SqlDatabaseAdapter } from "@notionx/core/platform";
 import { getRequestEnv } from "../site/request-env";
 
 /**
- * Lazily resolve the D1 database binding from the request environment.
- * The adapter is created once and reused across requests.
+ * Lazily resolve the D1 database binding from the request environment
+ * and wrap it in the `SqlDatabaseAdapter` shape expected by
+ * `@notionx/core/search`. The adapter is created once and reused
+ * across requests.
  */
-function getDatabase() {
+function getDatabase(): SqlDatabaseAdapter {
   const env = getRequestEnv();
-  return env.DB;
+  if (!env?.DB) {
+    throw new Error(
+      "D1 database binding DB is not available in the request environment."
+    );
+  }
+  return {
+    kind: "d1",
+    prepare: (query) => env.DB!.prepare(query),
+    batch: (statements) =>
+      env.DB!.batch(statements as D1PreparedStatement[]),
+  };
 }
 
 export const searchAdapter: SearchAdapter = createD1SearchAdapter(getDatabase);
