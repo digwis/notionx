@@ -13,6 +13,10 @@
 import type { ScaffoldMetadata } from "../metadata.js";
 import { planNotionTranslationSources } from "../notion-translation-sources/plan.js";
 import { applyNotionTranslationSources } from "../notion-translation-sources/apply.js";
+import {
+  readRegistryManifest,
+  writeRegistryManifest,
+} from "../registry/registry-store.js";
 
 export type LocaleAddChange =
   | {
@@ -80,26 +84,20 @@ export function buildLocaleAddPlan(
   const { projectDir, metadata, locale } = input;
   const i18nPath = "lib/i18n/config.ts";
   const siteConfigPath = "lib/site/config.ts";
-  const metadataPath = ".notionx/scaffold.json";
 
-  // 1. metadata: append locale to supportedLocales.
-  const nextMetadata: ScaffoldMetadata = {
-    ...metadata,
-    supportedLocales: [...metadata.supportedLocales, locale],
-  };
+  // 1. metadata: append locale to supportedLocales in registry.json.
   changes.push({
     kind: "metadata",
     label: "metadata:supportedLocales",
-    description: `Append "${locale}" to .notionx/scaffold.json supportedLocales.`,
+    description: `Add "${locale}" to supportedLocales in registry.json.`,
     risk: metadata.supportedLocales.includes(locale) ? "conflict" : "safe",
     async apply() {
-      const fs = await import("node:fs/promises");
-      const full = `${projectDir}/${metadataPath}`;
-      await fs.writeFile(
-        full,
-        JSON.stringify(nextMetadata, null, 2) + "\n",
-        "utf8"
-      );
+      const manifest = await readRegistryManifest(projectDir);
+      if (!manifest) return;
+      if (!manifest.supportedLocales.includes(locale)) {
+        manifest.supportedLocales = [...manifest.supportedLocales, locale];
+      }
+      await writeRegistryManifest(projectDir, manifest);
     },
   });
 

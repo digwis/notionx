@@ -46,6 +46,9 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       logLocaleAddDryRun,
       logLocaleAddSummary,
     } = await import("./locale-add/format.js");
+    const { resolveNotionCredentials } = await import(
+      "./provision/credentials.js"
+    );
 
     const registry = await loadRegistry(process.cwd());
     const validation = validateLocaleAdd({
@@ -55,6 +58,20 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
     });
     if (!validation.ok) {
       throw new Error(validation.reason);
+    }
+
+    let notionApiToken: string | undefined;
+    let notionParentPageId: string | undefined;
+    if (withNotion) {
+      const creds = await resolveNotionCredentials({ nonInteractive: false });
+      if (creds) {
+        notionApiToken = creds.apiToken;
+        notionParentPageId = creds.parentPageId;
+      } else {
+        p.log.warn(
+          "Could not resolve Notion credentials. Translation sources will not be created.",
+        );
+      }
     }
 
     const plan = buildLocaleAddPlan({
@@ -67,6 +84,8 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       locale: validation.locale,
       withNotion,
       copyFrom,
+      notionApiToken,
+      notionParentPageId,
     });
     logLocaleAddDryRun(plan);
 
