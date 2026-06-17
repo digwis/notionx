@@ -41,12 +41,13 @@ describe("site pages", () => {
         "Footer Label": richText("About"),
         "Footer Group": { type: "select", select: { name: "Site" } },
         "Footer Order": { type: "number", number: 10 },
-        Blocks: richText(
-          JSON.stringify([
-            { slug: "about-hero", variant: "hero", order: 1 },
-            "about-story",
-          ])
-        ),
+        Blocks: {
+          type: "relation",
+          relation: [
+            { id: "block-page-id-1" },
+            { id: "block-page-id-2" },
+          ],
+        },
       },
     };
 
@@ -58,8 +59,8 @@ describe("site pages", () => {
     expect(mapped?.showFooter).toBe(true);
     expect(mapped?.navOrder).toBe(20);
     expect(mapped?.structuredBlocks).toEqual([
-      { slug: "about-hero", variant: "hero", order: 1 },
-      { slug: "about-story", order: 1 },
+      { pageId: "block-page-id-1" },
+      { pageId: "block-page-id-2" },
     ]);
   });
 

@@ -7,5 +7,8 @@ describe("public exports", () => {
     expect(typeof notionx.getGenericNotionContentBySlugForLocale).toBe(
       "function"
     );
+    expect(typeof notionx.getGenericNotionContentByIdForLocale).toBe(
+      "function"
+    );
   });
 });

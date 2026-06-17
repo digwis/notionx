@@ -343,7 +343,7 @@ describe("template token substitution", () => {
     expect(source).toContain('slug: "home-hero"');
     expect(source).toContain('slug: "home-feature-grid"');
     expect(source).toContain('slug: "home-latest-posts"');
-    expect(source).toContain('{ slug: "home-latest-posts", order: 30 }');
+    expect(source).toContain('{ slug: "home-latest-posts" }');
     // Fallback blocks carry content as Notion page body blocks.
     expect(source).toContain("Start with a homepage you can keep editing");
   });

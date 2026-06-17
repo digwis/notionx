@@ -143,7 +143,9 @@ describe("sample page builders", () => {
     const properties = _internal.buildPageProperties();
     expect(properties.Name).toEqual({ title: {} });
     expect(properties.Key).toEqual({ rich_text: {} });
-    expect(properties.Blocks).toEqual({ rich_text: {} });
+    // Blocks is a Notion relation to the Blocks database (unlinked
+    // when no blocksDatabaseId is provided).
+    expect(properties.Blocks).toEqual({ relation: { database_property: {} } });
     expect(properties["Show in Nav"]).toEqual({ checkbox: {} });
     expect(properties["Nav Order"]).toEqual({ number: {} });
 
@@ -164,17 +166,46 @@ describe("sample page builders", () => {
     const pageProperties = payload.properties as unknown as {
       Key: { rich_text: Array<{ text: { content: string } }> };
       Layout: { select: { name: string } };
-      Blocks: { rich_text: Array<{ text: { content: string } }> };
       "Show Header": { checkbox: boolean };
+      Blocks?: { relation: Array<{ id: string }> };
     };
 
     expect(pageProperties.Key.rich_text[0].text.content).toBe("home");
     expect(pageProperties.Layout.select.name).toBe("home");
-    const blocks = pageProperties.Blocks as {
-      rich_text: Array<{ text: { content: string } }>;
-    };
-    expect(blocks.rich_text[0].text.content).toContain('"slug":"home-hero"');
+    // Without blockPageIdsBySlug, the Blocks relation is omitted
+    // (no relation to set on the page).
+    expect(pageProperties.Blocks).toBeUndefined();
     expect(pageProperties["Show Header"].checkbox).toBe(true);
+  });
+
+  it("sets Blocks relation when blockPageIdsBySlug is provided", () => {
+    const [home] = _internal.sampleSitePages({
+      apiToken: "token",
+      parentPageId: "page",
+      projectName: "Demo",
+      contentSourceId: "blog",
+      contentSourceTitle: "Blog",
+      contentSourceListPath: "/blog",
+      locale: "en",
+    });
+    const payload = _internal.buildSitePagePayload({
+      databaseId: "db-id",
+      projectName: "Demo",
+      page: home,
+      blockPageIdsBySlug: {
+        "home-hero": "block-id-1",
+        "home-feature-grid": "block-id-2",
+        "home-latest-posts": "block-id-3",
+      },
+    });
+    const pageProperties = payload.properties as unknown as {
+      Blocks: { relation: Array<{ id: string }> };
+    };
+    expect(pageProperties.Blocks.relation).toEqual([
+      { id: "block-id-1" },
+      { id: "block-id-2" },
+      { id: "block-id-3" },
+    ]);
   });
 
   it("seeds a semantic homepage with three homepage blocks", () => {

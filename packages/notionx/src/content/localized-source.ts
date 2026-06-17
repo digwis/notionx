@@ -103,6 +103,10 @@ export function createLocalizedGenericNotionContentSource<
           getTranslationSourcePageId: (row) => row.sourcePageId,
           applyTranslation: (base, translation) => ({
             ...base,
+            // Preserve the original base page ID so relation-based
+            // lookups (Page → Block relation) can still find the
+            // item after pageId is remapped to the translation page.
+            basePageId: base.pageId,
             // Point pageId at the translation page so getItemBySlug
             // fetches the translation's children blocks (body content
             // lives in page blocks, not a rich_text field).
@@ -127,6 +131,7 @@ export function createLocalizedGenericNotionContentSource<
         getTranslationSourcePageId: (row) => row.sourcePageId,
         applyTranslation: (base, translation) => ({
           ...base,
+          basePageId: base.pageId,
           // Point pageId at the translation page so getItemBySlug
           // fetches the translation's children blocks (body content
           // lives in page blocks, not a rich_text field).
@@ -148,6 +153,29 @@ export function createLocalizedGenericNotionContentSource<
     ): Promise<GenericContentDetail | null> {
       const items = await this.listItems(locale);
       const item = items.find((candidate) => candidate.slug === slug);
+      if (!item) return null;
+      return {
+        ...item,
+        blocks: await deps.getPageBlocks(item.pageId),
+      };
+    },
+
+    /**
+     * Look up a content item by its base page ID. Used by the
+     * Page → Block Notion relation, which stores related block
+     * page IDs (base IDs) on the Pages database. The relation
+     * array order is the native sort order set in Notion.
+     */
+    async getItemByPageId(
+      pageId: string,
+      locale?: string
+    ): Promise<GenericContentDetail | null> {
+      const items = await this.listItems(locale);
+      const item = items.find(
+        (candidate) =>
+          candidate.pageId === pageId ||
+          candidate.basePageId === pageId
+      );
       if (!item) return null;
       return {
         ...item,
@@ -236,4 +264,22 @@ export async function getGenericNotionContentBySlugForLocale<
   const source = await sourceCache(model);
   if (!source) return null;
   return source.getItemBySlug(slug, locale);
+}
+
+/**
+ * Look up a localized content item by its base page ID. Used by
+ * the Page → Block Notion relation: the relation stores base
+ * block page IDs, and this function resolves them to full
+ * content details (with locale-aware translation merging).
+ */
+export async function getGenericNotionContentByIdForLocale<
+  TFields extends NotionFieldMap,
+>(
+  model: NotionGenericContentModel & { source: { fields: TFields } },
+  pageId: string,
+  locale: string
+) {
+  const source = await sourceCache(model);
+  if (!source) return null;
+  return source.getItemByPageId(pageId, locale);
 }

@@ -52,6 +52,7 @@ export {
 export {
   listGenericNotionContentForLocale,
   getGenericNotionContentBySlugForLocale,
+  getGenericNotionContentByIdForLocale,
   createLocalizedGenericNotionContentSource,
   type LocalizedGenericContentSourceDeps,
 } from "./content/localized-source";

@@ -838,11 +838,16 @@ async function provisionNotionContentAndPages({
     seedCount,
   });
 
-  // Pages data source is optional — skip provisioning entirely
-  // when `--no-pages` is set. The fallback `app/page.tsx` doesn't
-  // read from Notion, so no data source is needed.
-  const pages = answers.enablePages
-    ? await ensurePagesDatabase({
+  // Blocks data source is optional — skip provisioning entirely
+  // when `--no-blocks` is set. The fallback `components/page-blocks.tsx`
+  // doesn't read from Notion, so no data source is needed.
+  //
+  // Blocks must be provisioned BEFORE Pages because the Pages
+  // database has a `Blocks` relation property that points to the
+  // Blocks database, and seed pages need block page IDs to set
+  // the relation.
+  const blocks = answers.enableBlocks
+    ? await ensureBlocksDatabase({
         apiToken,
         parentPageId,
         projectName: answers.projectName,
@@ -858,11 +863,17 @@ async function provisionNotionContentAndPages({
         seeded: 0,
       };
 
-  // Blocks data source is optional — skip provisioning entirely
-  // when `--no-blocks` is set. The fallback `components/page-blocks.tsx`
-  // doesn't read from Notion, so no data source is needed.
-  const blocks = answers.enableBlocks
-    ? await ensureBlocksDatabase({
+  // Pages data source is optional — skip provisioning entirely
+  // when `--no-pages` is set. The fallback `app/page.tsx` doesn't
+  // read from Notion, so no data source is needed.
+  const blocksDatabaseId =
+    "databaseId" in blocks ? blocks.databaseId : undefined;
+  const blockPageIdsBySlug =
+    "seededPageIdsBySlug" in blocks
+      ? blocks.seededPageIdsBySlug
+      : undefined;
+  const pages = answers.enablePages
+    ? await ensurePagesDatabase({
         apiToken,
         parentPageId,
         projectName: answers.projectName,
@@ -870,6 +881,8 @@ async function provisionNotionContentAndPages({
         contentSourceTitle: answers.contentSource.title,
         contentSourceListPath: `/${answers.contentSource.id}`,
         locale: answers.defaultLocale,
+        blocksDatabaseId,
+        blockPageIdsBySlug,
       })
     : {
         ok: true,

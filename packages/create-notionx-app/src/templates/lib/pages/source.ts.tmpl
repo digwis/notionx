@@ -2,7 +2,10 @@ import {
   type GenericContentDetail,
   type NotionBlock,
 } from "@notionx/core/notion";
-import { getGenericNotionContentBySlugForLocale } from "@notionx/core";
+import {
+  getGenericNotionContentBySlugForLocale,
+  getGenericNotionContentByIdForLocale,
+} from "@notionx/core";
 import {
   createSitePagesApi,
   type SitePage as BaseSitePage,
@@ -163,9 +166,9 @@ const fallbackPages: BaseSitePage[] = [
     coverImage: null,
     editUrl: null,
     structuredBlocks: [
-      { slug: "home-hero", variant: "hero", order: 10 },
-      { slug: "home-feature-grid", variant: "feature-grid", order: 20 },
-      { slug: "home-latest-posts", order: 30 },
+      { slug: "home-hero" },
+      { slug: "home-feature-grid" },
+      { slug: "home-latest-posts" },
     ],
     blocks: fallbackBlocks("Configure Notion Pages to edit this homepage from Notion."),
   },
@@ -257,6 +260,7 @@ const pagesApi = createSitePagesApi({
 });
 
 function fallbackPageBlock(ref: SitePageBlockRef): StructuredPageBlock | null {
+  if (!ref.slug) return null;
   const fallback = fallbackStructuredBlocks[ref.slug];
   if (!fallback) return null;
   return fallback;
@@ -264,7 +268,8 @@ function fallbackPageBlock(ref: SitePageBlockRef): StructuredPageBlock | null {
 
 function mapGenericBlockToStructuredBlock(
   detail: GenericContentDetail,
-  ref: SitePageBlockRef
+  ref: SitePageBlockRef,
+  index: number
 ): StructuredPageBlock {
   const typeValue = detail.properties.type;
   const variant =
@@ -273,12 +278,11 @@ function mapGenericBlockToStructuredBlock(
     "legacy";
   const orderValue = detail.properties.order;
   const order =
-    ref.order ??
-    (typeof orderValue === "number" && Number.isFinite(orderValue)
+    typeof orderValue === "number" && Number.isFinite(orderValue)
       ? orderValue
-      : 0);
+      : index;
   return {
-    slug: ref.slug,
+    slug: detail.slug,
     variant,
     order,
     coverImage: detail.coverImage,
@@ -289,19 +293,40 @@ function mapGenericBlockToStructuredBlock(
 
 async function resolveStructuredBlock(
   ref: SitePageBlockRef,
-  locale?: string
+  locale: string,
+  index: number
 ): Promise<StructuredPageBlock | null> {
-  const resolvedLocale = locale ?? getRequestLocale(i18n.defaultLocale);
-  const detail = await getGenericNotionContentBySlugForLocale(blocksSource, ref.slug, resolvedLocale);
-  if (!detail) return fallbackPageBlock(ref);
+  // Try by pageId first (from Notion relation — preferred path).
+  if (ref.pageId) {
+    const detail = await getGenericNotionContentByIdForLocale(
+      blocksSource,
+      ref.pageId,
+      locale
+    );
+    if (detail) return mapGenericBlockToStructuredBlock(detail, ref, index);
+  }
 
-  return mapGenericBlockToStructuredBlock(detail, ref);
+  // Try by slug (fallback or legacy rich_text JSON).
+  if (ref.slug) {
+    const detail = await getGenericNotionContentBySlugForLocale(
+      blocksSource,
+      ref.slug,
+      locale
+    );
+    if (detail) return mapGenericBlockToStructuredBlock(detail, ref, index);
+    return fallbackPageBlock(ref);
+  }
+
+  return null;
 }
 
 export async function getPageBlocks(page: BaseSitePage | null, locale?: string) {
   if (!page) return [];
+  const resolvedLocale = locale ?? getRequestLocale(i18n.defaultLocale);
   const resolved = await Promise.all(
-    (page.structuredBlocks ?? []).map((ref) => resolveStructuredBlock(ref, locale))
+    (page.structuredBlocks ?? []).map((ref, index) =>
+      resolveStructuredBlock(ref, resolvedLocale, index)
+    )
   );
   return resolved.filter((block): block is StructuredPageBlock => Boolean(block));
 }

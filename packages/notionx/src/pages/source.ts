@@ -3,6 +3,7 @@ import { coverImageUrlForPage } from "../notion/media";
 import {
   getCheckboxProperty,
   getNumberProperty,
+  getRelationPageIds,
   getRichTextProperty,
   getSelectProperty,
   isRecord,
@@ -56,41 +57,18 @@ function normalizeLayout(value: string): SitePageLayout {
   return "default";
 }
 
-function parseStructuredBlockRefs(raw: string): SitePageBlockRef[] {
-  if (!raw.trim()) return [];
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed
-      .map((item, index): SitePageBlockRef | null => {
-        if (typeof item === "string") {
-          const slug = normalizePageSlug(item);
-          return slug ? { slug, order: index } : null;
-        }
-        if (!isRecord(item) || typeof item.slug !== "string") return null;
-
-        const slug = normalizePageSlug(item.slug);
-        if (!slug) return null;
-
-        return {
-          slug,
-          variant:
-            typeof item.variant === "string" && item.variant.trim()
-              ? item.variant.trim()
-              : undefined,
-          order:
-            typeof item.order === "number" && Number.isFinite(item.order)
-              ? item.order
-              : index,
-        };
-      })
-      .filter((item): item is SitePageBlockRef => Boolean(item))
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  } catch {
-    return [];
-  }
+/**
+ * Read block references from the Pages database's `Blocks` relation
+ * property. The Notion relation array is returned in the order set
+ * by drag-and-drop in the Notion UI — this is the native sort order
+ * for page blocks, so we preserve it as-is.
+ */
+function parseStructuredBlockRefs(
+  properties: Record<string, unknown>,
+  fieldName: string
+): SitePageBlockRef[] {
+  const pageIds = getRelationPageIds(properties, fieldName);
+  return pageIds.map((pageId) => ({ pageId }));
 }
 
 export function mapNotionPageToSitePage(
@@ -145,9 +123,7 @@ export function mapNotionPageToSitePage(
     contentSource: getRichTextProperty(properties, fields.contentSource),
     coverImage: coverImageUrlForPage(page, fields.cover),
     editUrl: notionPageEditUrl(page.id, options?.editBaseUrl),
-    structuredBlocks: parseStructuredBlockRefs(
-      getRichTextProperty(properties, fields.blocks)
-    ),
+    structuredBlocks: parseStructuredBlockRefs(properties, fields.blocks),
     blocks,
   };
 }

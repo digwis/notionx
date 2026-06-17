@@ -3,9 +3,11 @@ import type { NotionBlock } from "../notion/types";
 export type SitePageLayout = "home" | "default" | "legal" | "content-list";
 
 export type SitePageBlockRef = {
-  slug: string;
+  /** Base block page ID from the Notion relation property. */
+  pageId?: string;
+  /** Slug — used for fallback blocks when Notion is not configured. */
+  slug?: string;
   variant?: string;
-  order?: number;
 };
 
 export type SitePageFields = {

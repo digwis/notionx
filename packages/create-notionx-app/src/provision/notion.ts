@@ -19,6 +19,12 @@ export interface NotionProvisionResult {
   created: boolean;
   /** Number of seed pages inserted (0 if seeding was skipped). */
   seeded: number;
+  /**
+   * For the Blocks database: maps block slug → Notion page ID of the
+   * seeded block page. Used by `ensurePagesDatabase` to set the
+   * Page → Block relation on seed pages.
+   */
+  seededPageIdsBySlug?: Record<string, string>;
 }
 
 export interface NotionProvisionInput {
@@ -40,6 +46,10 @@ export interface PagesProvisionInput {
   contentSourceTitle: string;
   contentSourceListPath: string;
   locale?: string;
+  /** Blocks database ID, for the Page → Block Notion relation. */
+  blocksDatabaseId?: string;
+  /** Block page IDs by slug, for seeding the Blocks relation on pages. */
+  blockPageIdsBySlug?: Record<string, string>;
 }
 
 export type NotionPropertyDefinition = Record<string, unknown>;
@@ -1639,7 +1649,7 @@ function buildSamplePage(input: SamplePageInput) {
   };
 }
 
-function buildPageProperties(): NotionPropertyMap {
+function buildPageProperties(blocksDatabaseId?: string): NotionPropertyMap {
   return {
     Name: { title: {} },
     Key: { rich_text: {} },
@@ -1659,7 +1669,12 @@ function buildPageProperties(): NotionPropertyMap {
     "Footer Group": { select: {} },
     "Footer Order": { number: {} },
     "Content Source": { rich_text: {} },
-    Blocks: { rich_text: {} },
+    // Blocks is a Notion relation to the Blocks database. The
+    // relation array order (set by drag-and-drop in Notion) is
+    // the native sort order for page blocks.
+    Blocks: blocksDatabaseId
+      ? { relation: { single_property: { database_id: blocksDatabaseId } } }
+      : { relation: { database_property: {} } },
     Cover: { files: {} },
   };
 }
@@ -1683,9 +1698,15 @@ function buildSitePagePayload(input: {
   databaseId: string;
   projectName: string;
   page: SampleSitePage;
+  /** Block page IDs to link via the Blocks relation, keyed by block slug. */
+  blockPageIdsBySlug?: Record<string, string>;
 }) {
-  const { databaseId, page, projectName } = input;
+  const { databaseId, page, projectName, blockPageIdsBySlug } = input;
   const coverUrl = `https://picsum.photos/seed/${slugify(projectName)}-${page.coverSeed}/1200/600`;
+  const blockRelationIds = (page.blocks ?? [])
+    .map((ref) => blockPageIdsBySlug?.[ref.slug])
+    .filter((id): id is string => Boolean(id))
+    .map((id) => ({ id }));
   return {
     parent: { type: "database_id", database_id: databaseId },
     cover: {
@@ -1711,9 +1732,9 @@ function buildSitePagePayload(input: {
       "Footer Group": { select: { name: page.footerGroup } },
       "Footer Order": { number: page.footerOrder },
       "Content Source": { rich_text: richText(page.contentSource ?? "") },
-      Blocks: {
-        rich_text: richText(JSON.stringify(page.blocks ?? [])),
-      },
+      ...(blockRelationIds.length > 0
+        ? { Blocks: { relation: blockRelationIds } }
+        : {}),
       Cover: {
         files: [
           {
@@ -1918,7 +1939,7 @@ export async function ensurePagesDatabase(
 ): Promise<NotionProvisionResult> {
   const title = `${input.projectName} Pages`;
   const stableKey = "pages:default";
-  const properties = buildPageProperties();
+  const properties = buildPageProperties(input.blocksDatabaseId);
   const existingByStableKey = await findExistingDatabaseByStableKey({
     apiToken: input.apiToken,
     parentPageId: input.parentPageId,
@@ -1975,6 +1996,7 @@ export async function ensurePagesDatabase(
       databaseId,
       projectName: input.projectName,
       page,
+      blockPageIdsBySlug: input.blockPageIdsBySlug,
     });
     const result = await runNtn(["api", "v1/pages", "-d", JSON.stringify(body)], {
       env: { NOTION_API_TOKEN: input.apiToken },
@@ -2055,6 +2077,7 @@ export async function ensureBlocksDatabase(
   });
 
   let seeded = 0;
+  const seededPageIdsBySlug: Record<string, string> = {};
   for (const block of sampleBlocks(input)) {
     const body = buildSiteBlockPayload({
       databaseId,
@@ -2066,6 +2089,16 @@ export async function ensureBlocksDatabase(
     });
     if (result.code === 0) {
       seeded++;
+      // Capture the block page ID so the Pages database can link
+      // to it via the Blocks relation during seeding.
+      try {
+        const created = JSON.parse(result.stdout) as { id?: string };
+        if (created.id) {
+          seededPageIdsBySlug[block.slug] = created.id;
+        }
+      } catch {
+        // Non-fatal: relation seeding is best-effort.
+      }
     } else {
       const detail = (result.stderr || result.stdout).trim().slice(0, 500);
       console.warn(
@@ -2080,6 +2113,7 @@ export async function ensureBlocksDatabase(
     url,
     created: true,
     seeded,
+    seededPageIdsBySlug,
   };
 }
 

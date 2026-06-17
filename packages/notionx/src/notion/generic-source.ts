@@ -28,6 +28,14 @@ type PropertyMap = Record<string, unknown>;
 
 export type GenericContentListItem = {
   pageId: string;
+  /**
+   * The original base page ID. Equal to `pageId` for the default
+   * locale; for translated items, `pageId` is remapped to the
+   * translation page (so children blocks come from the right page),
+   * while `basePageId` retains the source page ID for relation
+   * lookups.
+   */
+  basePageId?: string;
   slug: string;
   title: string;
   description: string;
@@ -159,6 +167,7 @@ export function mapNotionPageToGenericContentItem<
 
   return {
     pageId: page.id,
+    basePageId: page.id,
     slug,
     title,
     description,
