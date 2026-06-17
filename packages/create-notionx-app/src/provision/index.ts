@@ -394,6 +394,16 @@ export async function provision(
           );
         }
 
+        // Persist the base database ids (database_id, not
+        // data_source_id) into registry.json so `notionx locale add`
+        // can read them when creating translation Source relations.
+        await persistBaseDatabaseIdsToRegistry(projectDir, {
+          content: content.databaseId,
+          pages: "databaseId" in pages ? pages.databaseId : undefined,
+          blocks: "databaseId" in blocks ? blocks.databaseId : undefined,
+          siteSettings: siteSettingsDatabaseId,
+        });
+
         // Translation data sources: created when bilingual mode is
         // enabled. Each of the four sources gets its own Notion
         // database with a full property schema.
@@ -453,6 +463,16 @@ export async function provision(
         );
         result._notionToken = notion.apiToken;
         result._blocksDataSourceId = blocks.dataSourceId;
+
+        // Persist the base database ids (database_id, not
+        // data_source_id) into registry.json so `notionx locale add`
+        // can read them when creating translation Source relations.
+        await persistBaseDatabaseIdsToRegistry(projectDir, {
+          content: content.databaseId,
+          pages: "databaseId" in pages ? pages.databaseId : undefined,
+          blocks: "databaseId" in blocks ? blocks.databaseId : undefined,
+          siteSettings: undefined,
+        });
 
         // Translation data sources: created when bilingual mode is
         // enabled. Each of the four sources gets its own Notion
@@ -948,6 +968,43 @@ async function persistTranslationSourcesToMetadata(
     await fs.writeFile(metaPath, JSON.stringify(meta, null, 2) + "\n", "utf8");
   } catch {
     // Best-effort: the metadata file may not exist yet.
+  }
+}
+
+/**
+ * Persist the base (non-translation) Notion database ids into
+ * `.notionx/registry.json` so `notionx locale add` can read the real
+ * `database_id` (not the `data_source_id` stored in env vars) when
+ * creating translation `Source` relation properties.
+ *
+ * Best-effort: the registry manifest may not exist yet (e.g. when
+ * provisioning runs outside the normal scaffold flow), in which case
+ * we silently skip.
+ */
+async function persistBaseDatabaseIdsToRegistry(
+  projectDir: string,
+  ids: {
+    content?: string;
+    pages?: string;
+    blocks?: string;
+    siteSettings?: string;
+  }
+): Promise<void> {
+  try {
+    const { readRegistryManifest, writeRegistryManifest } = await import(
+      "../registry/registry-store.js"
+    );
+    const manifest = await readRegistryManifest(projectDir);
+    if (!manifest) return;
+    manifest.baseDatabaseIds = {
+      content: ids.content,
+      pages: ids.pages,
+      blocks: ids.blocks,
+      siteSettings: ids.siteSettings,
+    };
+    await writeRegistryManifest(projectDir, manifest);
+  } catch {
+    // Best-effort: registry.json may not exist yet.
   }
 }
 

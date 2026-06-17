@@ -275,6 +275,17 @@ export interface RegistryManifest {
    */
   translationSources?: Record<string, TranslationSourceRef>;
   /**
+   * Base database ids (Notion database_id, not data_source_id) for
+   * content/pages/blocks/site-settings. Used by `locale add` to
+   * auto-link translation Source relations.
+   */
+  baseDatabaseIds?: {
+    content?: string;
+    pages?: string;
+    blocks?: string;
+    siteSettings?: string;
+  };
+  /**
    * Optional project-specific hints, never written or rewritten by
    * notionx itself. Survives `update` / `add` / `remove` runs.
    */

@@ -53,6 +53,14 @@ export interface ScaffoldMetadata {
 export interface TranslationSourceRef {
   dataSourceId: string;
   envVar: string;
+  /**
+   * Optional Notion database id (the `database_id`, not the
+   * `data_source_id`). Needed when creating relation properties
+   * that point at this database — Notion's relation API expects the
+   * raw database id, which differs from the data source id exposed
+   * via env vars.
+   */
+  databaseId?: string;
 }
 
 export function buildScaffoldMetadata(
