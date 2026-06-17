@@ -37,167 +37,102 @@ const fallbackBlocks = (text: string): NotionBlock[] => [
   },
 ];
 
-type BlockPropertyValue = string | string[] | number | boolean;
-
-type BlockCta = {
-  label: string;
-  href: string;
-};
-
-type FeatureGridItem = {
-  title: string;
-  description: string;
-  icon: string;
-  href?: string;
-};
-
-export type StructuredHeroBlock = {
-  type: "hero";
+export type StructuredPageBlock = {
   slug: string;
-  title: string;
-  description: string;
-  eyebrow: string;
-  headline: string;
-  subheadline: string;
-  primaryCta: BlockCta | null;
-  secondaryCta: BlockCta | null;
-  alignment: "left" | "center";
-  theme: "default" | "muted" | "inverse";
-  coverImage: string | null;
-  editUrl: string | null;
-};
-
-export type StructuredFeatureGridBlock = {
-  type: "feature-grid";
-  slug: string;
-  title: string;
-  description: string;
-  headline: string;
-  body: string;
-  columns: 2 | 3 | 4;
-  items: FeatureGridItem[];
-  coverImage: string | null;
-  editUrl: string | null;
-};
-
-export type StructuredStoryBlock = {
-  type: "story";
-  slug: string;
-  title: string;
-  description: string;
-  headline: string;
-  body: string;
-  quote: string;
-  quoteAttribution: string;
-  mediaUrl: string | null;
-  layout: "text-left" | "media-left" | "media-right";
-  coverImage: string | null;
-  editUrl: string | null;
-};
-
-export type StructuredLatestPostsBlock = {
-  type: "latest-posts";
-  slug: string;
-  title: string;
-  description: string;
-  headline: string;
-  body: string;
-  count: number;
-  primaryCta: BlockCta | null;
-  coverImage: string | null;
-  editUrl: string | null;
-};
-
-export type LegacyStructuredPageBlock = {
-  type: "legacy";
-  slug: string;
-  title: string;
-  description: string;
   variant: string;
+  order: number;
   coverImage: string | null;
   editUrl: string | null;
   blocks: NotionBlock[];
 };
 
-export type StructuredPageBlock =
-  | StructuredHeroBlock
-  | StructuredFeatureGridBlock
-  | StructuredStoryBlock
-  | StructuredLatestPostsBlock
-  | LegacyStructuredPageBlock;
-
 export type SitePage = Omit<BaseSitePage, "structuredBlocks"> & {
   structuredBlocks: StructuredPageBlock[];
 };
 
-const fallbackStructuredBlocks: Record<
-  string,
-  Exclude<StructuredPageBlock, LegacyStructuredPageBlock>
-> = {
+const fallbackStructuredBlocks: Record<string, StructuredPageBlock> = {
   "home-hero": {
-    type: "hero",
     slug: "home-hero",
-    title: "Homepage Hero",
-    description:
-      "Editable hero module seeded into the reusable blocks source for the homepage.",
-    eyebrow: "Notion + Cloudflare",
-    headline: "Start with a homepage you can keep editing",
-    subheadline:
-      "Keep the layout stable in code while the hero copy, positioning, and primary call to action evolve in Notion.",
-    primaryCta: { label: "Explore the blog", href: "{{contentSourceListPath}}" },
-    secondaryCta: { label: "Read the story", href: "/about" },
-    alignment: "center",
-    theme: "muted",
+    variant: "hero",
+    order: 10,
     coverImage: null,
     editUrl: null,
-  },
-  "home-feature-grid": {
-    type: "feature-grid",
-    slug: "home-feature-grid",
-    title: "Homepage Feature Grid",
-    description:
-      "Reusable mid-page section for capabilities, benefits, or service pillars.",
-    headline: "Show the system working together",
-    body:
-      "Use this grid to explain how editing, infrastructure, and publishing fit together without overwhelming the homepage.",
-    columns: 3,
-    items: [
+    blocks: [
       {
-        title: "Editorial workflows",
-        description:
-          "Use Notion as the editor for pages, posts, and reusable sections.",
-        icon: "pen-square",
-        href: "/about",
+        id: "fallback-hero-heading",
+        type: "heading_1",
+        heading_1: {
+          rich_text: [
+            {
+              type: "text",
+              text: { content: "Start with a homepage you can keep editing" },
+              plain_text: "Start with a homepage you can keep editing",
+            },
+          ],
+        },
       },
       {
-        title: "Cloudflare runtime",
-        description:
-          "Ship on Workers with storage and caching primitives ready to grow.",
-        icon: "cloud",
-      },
-      {
-        title: "{{contentSourceListTitle}} updates",
-        description:
-          "Publish new entries and surface them through the generated routes automatically.",
-        icon: "newspaper",
-        href: "{{contentSourceListPath}}",
+        id: "fallback-hero-sub",
+        type: "paragraph",
+        paragraph: {
+          rich_text: [
+            {
+              type: "text",
+              text: {
+                content:
+                  "Keep the layout stable in code while the hero copy, positioning, and primary call to action evolve in Notion.",
+              },
+              plain_text:
+                "Keep the layout stable in code while the hero copy, positioning, and primary call to action evolve in Notion.",
+            },
+          ],
+        },
       },
     ],
+  },
+  "home-feature-grid": {
+    slug: "home-feature-grid",
+    variant: "feature-grid",
+    order: 20,
     coverImage: null,
     editUrl: null,
+    blocks: [
+      {
+        id: "fallback-feature-heading",
+        type: "heading_2",
+        heading_2: {
+          rich_text: [
+            {
+              type: "text",
+              text: { content: "Show the system working together" },
+              plain_text: "Show the system working together",
+            },
+          ],
+        },
+      },
+    ],
   },
   "home-latest-posts": {
-    type: "latest-posts",
     slug: "home-latest-posts",
-    title: "Homepage Latest Posts",
-    description: "Reusable homepage section for surfacing the latest published posts.",
-    headline: "Read the latest from the blog",
-    body:
-      "Use this section to prove the content model is working with a grid of recent published posts right on the homepage.",
-    count: 6,
-    primaryCta: { label: "View all posts", href: "{{contentSourceListPath}}" },
+    variant: "latest-posts",
+    order: 30,
     coverImage: null,
     editUrl: null,
+    blocks: [
+      {
+        id: "fallback-latest-heading",
+        type: "heading_2",
+        heading_2: {
+          rich_text: [
+            {
+              type: "text",
+              text: { content: "Read the latest from the blog" },
+              plain_text: "Read the latest from the blog",
+            },
+          ],
+        },
+      },
+    ],
   },
 };
 
@@ -327,104 +262,29 @@ function fallbackPageBlock(ref: SitePageBlockRef): StructuredPageBlock | null {
   return fallback;
 }
 
-function fallbackToLegacyNotionBlocks(
+function mapGenericBlockToStructuredBlock(
   detail: GenericContentDetail,
   ref: SitePageBlockRef
-): LegacyStructuredPageBlock | null {
-  if (!detail.blocks.length) return null;
+): StructuredPageBlock {
+  const typeValue = detail.properties.type;
+  const variant =
+    (typeof typeValue === "string" ? typeValue.trim() : "") ||
+    ref.variant ||
+    "legacy";
+  const orderValue = detail.properties.order;
+  const order =
+    ref.order ??
+    (typeof orderValue === "number" && Number.isFinite(orderValue)
+      ? orderValue
+      : 0);
   return {
-    type: "legacy",
-    slug: detail.slug,
-    title: detail.title,
-    description: detail.description,
-    variant: ref.variant ?? "story",
+    slug: ref.slug,
+    variant,
+    order,
     coverImage: detail.coverImage,
     editUrl: detail.editUrl,
     blocks: detail.blocks,
   };
-}
-
-function readString(value: BlockPropertyValue | undefined) {
-  if (Array.isArray(value)) return String(value[0] ?? "").trim();
-  if (typeof value === "string") return value.trim();
-  return "";
-}
-
-function readNumber(value: BlockPropertyValue | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function normalizeAlignment(value: string): StructuredHeroBlock["alignment"] {
-  return value === "left" ? "left" : "center";
-}
-
-function normalizeTheme(value: string): StructuredHeroBlock["theme"] {
-  if (value === "default" || value === "inverse") return value;
-  return "muted";
-}
-
-function normalizeColumns(value: number | null): StructuredFeatureGridBlock["columns"] {
-  if (value === 2 || value === 4) return value;
-  return 3;
-}
-
-function normalizeLayout(value: string): StructuredStoryBlock["layout"] {
-  if (value === "text-left" || value === "media-left") return value;
-  return "media-right";
-}
-
-function normalizeCount(value: number | null) {
-  if (typeof value === "number" && value > 0) return Math.min(Math.floor(value), 12);
-  return 6;
-}
-
-function readCta(
-  labelValue: BlockPropertyValue | undefined,
-  hrefValue: BlockPropertyValue | undefined
-): BlockCta | null {
-  const label = readString(labelValue);
-  const href = readString(hrefValue);
-  return label && href ? { label, href } : null;
-}
-
-function parseFeatureGridItems(
-  value: BlockPropertyValue | undefined
-): FeatureGridItem[] {
-  const raw = readString(value);
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .map((item): FeatureGridItem | null => {
-        if (!item || typeof item !== "object") return null;
-        const typed = item as {
-          title?: unknown;
-          description?: unknown;
-          icon?: unknown;
-          href?: unknown;
-        };
-        const title = typeof typed.title === "string" ? typed.title.trim() : "";
-        const description =
-          typeof typed.description === "string" ? typed.description.trim() : "";
-        if (!title || !description) return null;
-        return {
-          title,
-          description,
-          icon: typeof typed.icon === "string" ? typed.icon.trim() : "sparkles",
-          href: typeof typed.href === "string" ? typed.href.trim() : undefined,
-        };
-      })
-      .filter((item): item is FeatureGridItem => Boolean(item));
-  } catch {
-    return [];
-  }
-}
-
-function resolveBlockType(detail: GenericContentDetail, ref: SitePageBlockRef) {
-  const fromRecord = readString(detail.properties.type);
-  return fromRecord || ref.variant || "";
 }
 
 async function resolveStructuredBlock(
@@ -436,99 +296,6 @@ async function resolveStructuredBlock(
   if (!detail) return fallbackPageBlock(ref);
 
   return mapGenericBlockToStructuredBlock(detail, ref);
-}
-
-function mapGenericBlockToStructuredBlock(
-  detail: GenericContentDetail,
-  ref: SitePageBlockRef
-): StructuredPageBlock | null {
-  const type = resolveBlockType(detail, ref);
-
-  if (type === "hero") {
-    const headline = readString(detail.properties.headline);
-    if (!headline) return fallbackToLegacyNotionBlocks(detail, ref);
-    return {
-      type: "hero",
-      slug: detail.slug,
-      title: detail.title,
-      description: detail.description,
-      eyebrow: readString(detail.properties.eyebrow),
-      headline,
-      subheadline: readString(detail.properties.subheadline),
-      primaryCta: readCta(
-        detail.properties.primaryCtaLabel,
-        detail.properties.primaryCtaHref
-      ),
-      secondaryCta: readCta(
-        detail.properties.secondaryCtaLabel,
-        detail.properties.secondaryCtaHref
-      ),
-      alignment: normalizeAlignment(readString(detail.properties.alignment)),
-      theme: normalizeTheme(readString(detail.properties.theme)),
-      coverImage: detail.coverImage,
-      editUrl: detail.editUrl,
-    };
-  }
-
-  if (type === "feature-grid") {
-    const headline = readString(detail.properties.headline);
-    const items = parseFeatureGridItems(detail.properties.items);
-    if (!headline || !items.length) return fallbackToLegacyNotionBlocks(detail, ref);
-    return {
-      type: "feature-grid",
-      slug: detail.slug,
-      title: detail.title,
-      description: detail.description,
-      headline,
-      body: readString(detail.properties.body),
-      columns: normalizeColumns(readNumber(detail.properties.columns)),
-      items,
-      coverImage: detail.coverImage,
-      editUrl: detail.editUrl,
-    };
-  }
-
-  if (type === "story") {
-    const headline = readString(detail.properties.headline);
-    const body = readString(detail.properties.body);
-    if (!headline || !body) return fallbackToLegacyNotionBlocks(detail, ref);
-    return {
-      type: "story",
-      slug: detail.slug,
-      title: detail.title,
-      description: detail.description,
-      headline,
-      body,
-      quote: readString(detail.properties.quote),
-      quoteAttribution: readString(detail.properties.quoteAttribution),
-      mediaUrl: readString(detail.properties.mediaUrl) || null,
-      layout: normalizeLayout(readString(detail.properties.layout)),
-      coverImage: detail.coverImage,
-      editUrl: detail.editUrl,
-    };
-  }
-
-  if (type === "latest-posts") {
-    const headline = readString(detail.properties.headline);
-    if (!headline) return fallbackToLegacyNotionBlocks(detail, ref);
-    return {
-      type: "latest-posts",
-      slug: detail.slug,
-      title: detail.title,
-      description: detail.description,
-      headline,
-      body: readString(detail.properties.body),
-      count: normalizeCount(readNumber(detail.properties.count)),
-      primaryCta: readCta(
-        detail.properties.primaryCtaLabel,
-        detail.properties.primaryCtaHref
-      ),
-      coverImage: detail.coverImage,
-      editUrl: detail.editUrl,
-    };
-  }
-
-  return fallbackToLegacyNotionBlocks(detail, ref);
 }
 
 export async function getPageBlocks(page: BaseSitePage | null, locale?: string) {

@@ -27,7 +27,11 @@ describe("built-in locale contracts", () => {
       expect.not.arrayContaining(["body"])
     );
     expect(Object.keys(blocksContract.translationFields)).toEqual(
-      expect.arrayContaining(["eyebrow", "headline", "subheadline"])
+      expect.arrayContaining(["locale", "published"])
+    );
+    // Content fields are removed — translations come from page body.
+    expect(Object.keys(blocksContract.translationFields)).toEqual(
+      expect.not.arrayContaining(["eyebrow", "headline", "subheadline"])
     );
     expect(
       Object.keys(siteSettingsContract.translationFields)

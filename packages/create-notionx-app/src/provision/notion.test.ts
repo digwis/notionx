@@ -199,14 +199,14 @@ describe("sample page builders", () => {
 });
 
 describe("blocks data source builders", () => {
-  it("exposes a dedicated schema and starter rows for reusable page blocks", () => {
+  it("exposes a minimal 6-field schema and starter rows for reusable page blocks", () => {
     const helpers = _internal as unknown as {
       buildBlocksProperties?: () => Record<string, unknown>;
       sampleBlocks?: (input: {
         projectName: string;
         contentSourceTitle: string;
         locale?: string;
-      }) => Array<{ slug: string; type: string; pageKeys: string[] }>;
+      }) => Array<{ slug: string; type: string; name: string }>;
     };
 
     expect(typeof helpers.buildBlocksProperties).toBe("function");
@@ -216,8 +216,14 @@ describe("blocks data source builders", () => {
     expect(properties.Name).toEqual({ title: {} });
     expect(properties.Slug).toEqual({ rich_text: {} });
     expect(properties.Type).toEqual({ select: {} });
-    expect(properties["Page Keys"]).toEqual({ rich_text: {} });
     expect(properties.Order).toEqual({ number: {} });
+    expect(properties.Cover).toEqual({ files: {} });
+    expect(properties.Published).toEqual({ checkbox: {} });
+    // The wide content fields are gone — content lives in page body.
+    expect(properties.Eyebrow).toBeUndefined();
+    expect(properties.Headline).toBeUndefined();
+    expect(properties.Body).toBeUndefined();
+    expect(properties["Page Keys"]).toBeUndefined();
 
     const blocks =
       helpers.sampleBlocks?.({
@@ -229,31 +235,18 @@ describe("blocks data source builders", () => {
       expect.arrayContaining(["home-hero", "home-feature-grid", "home-latest-posts"])
     );
     expect(blocks.find((block) => block.slug === "home-hero")?.type).toBe("hero");
-    expect(blocks.find((block) => block.slug === "home-hero")?.pageKeys).toContain(
-      "home"
-    );
   });
 
-  it("builds typed block properties for hero, feature-grid, and story", () => {
+  it("builds a minimal 6-field schema with no content property fields", () => {
     const properties = _internal.buildBlocksProperties();
 
+    expect(Object.keys(properties)).toHaveLength(6);
+    expect(properties.Name).toEqual({ title: {} });
+    expect(properties.Slug).toEqual({ rich_text: {} });
     expect(properties.Type).toEqual({ select: {} });
-    expect(properties.Eyebrow).toEqual({ rich_text: {} });
-    expect(properties.Headline).toEqual({ rich_text: {} });
-    expect(properties.Subheadline).toEqual({ rich_text: {} });
-    expect(properties["Primary CTA Label"]).toEqual({ rich_text: {} });
-    expect(properties["Primary CTA Href"]).toEqual({ url: {} });
-    expect(properties["Secondary CTA Label"]).toEqual({ rich_text: {} });
-    expect(properties["Secondary CTA Href"]).toEqual({ url: {} });
-    expect(properties.Alignment).toEqual({ select: {} });
-    expect(properties.Theme).toEqual({ select: {} });
-    expect(properties.Columns).toEqual({ number: {} });
-    expect(properties.Items).toEqual({ rich_text: {} });
-    expect(properties.Body).toEqual({ rich_text: {} });
-    expect(properties.Quote).toEqual({ rich_text: {} });
-    expect(properties["Quote Attribution"]).toEqual({ rich_text: {} });
-    expect(properties["Media Url"]).toEqual({ url: {} });
-    expect(properties.Layout).toEqual({ select: {} });
+    expect(properties.Order).toEqual({ number: {} });
+    expect(properties.Cover).toEqual({ files: {} });
+    expect(properties.Published).toEqual({ checkbox: {} });
   });
 
   it("seeds semantic homepage blocks and excludes about-story", () => {
@@ -263,7 +256,7 @@ describe("blocks data source builders", () => {
       locale: "en",
     });
 
-    expect(blocks.map((block) => block.title)).toEqual([
+    expect(blocks.map((block) => block.name)).toEqual([
       "Homepage Hero",
       "Homepage Feature Grid",
       "Homepage Latest Posts",
@@ -271,7 +264,7 @@ describe("blocks data source builders", () => {
     expect(blocks.map((block) => block.slug)).not.toContain("about-story");
   });
 
-  it("seeds hero blocks from structured fields instead of page body content", () => {
+  it("seeds hero block content as Notion page body children blocks", () => {
     const [hero] = _internal.sampleBlocks({
       projectName: "Demo",
       contentSourceTitle: "Blog",
@@ -283,18 +276,29 @@ describe("blocks data source builders", () => {
       block: hero,
     });
     const properties = payload.properties as unknown as {
+      Name: { title: Array<{ text: { content: string } }> };
       Type: { select: { name: string } };
-      Headline: { rich_text: Array<{ text: { content: string } }> };
-      "Primary CTA Label": { rich_text: Array<{ text: { content: string } }> };
-      "Primary CTA Href": { url: string };
-      Alignment: { select: { name: string } };
+      Order: { number: number };
+      Published: { checkbox: boolean };
     };
 
+    expect(properties.Name.title[0]?.text.content).toBe("Homepage Hero");
     expect(properties.Type.select.name).toBe("hero");
-    expect(properties.Headline.rich_text[0]?.text.content).toBeTruthy();
-    expect(properties["Primary CTA Label"].rich_text[0]?.text.content).toBeTruthy();
-    expect(properties["Primary CTA Href"].url).toMatch(/^\//);
-    expect(properties.Alignment.select.name).toBe("center");
+    expect(properties.Order.number).toBe(10);
+    expect(properties.Published.checkbox).toBe(true);
+
+    // Content is written as Notion children blocks, not property fields.
+    expect(payload.children.length).toBeGreaterThan(0);
+    expect(
+      payload.children.some(
+        (block: Record<string, unknown>) => block.type === "heading_1"
+      )
+    ).toBe(true);
+    expect(
+      payload.children.some(
+        (block: Record<string, unknown>) => block.type === "paragraph"
+      )
+    ).toBe(true);
   });
 });
 

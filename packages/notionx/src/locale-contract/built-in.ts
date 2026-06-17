@@ -61,31 +61,17 @@ export const pagesTranslationFields = {
 } as const;
 
 export const blocksBaseFields = {
-  key: "Key",
+  name: "Name",
+  slug: "Slug",
   type: "Type",
-  pageKeys: "Page Keys",
   order: "Order",
-  theme: "Theme",
-  layout: "Layout",
-  cover: "Cover",
 } as const;
 
 export const blocksTranslationFields = {
   source: "Source",
   locale: "Locale",
-  title: "Title",
-  description: "Description",
-  eyebrow: "Eyebrow",
-  headline: "Headline",
-  subheadline: "Subheadline",
-  // Body content is read from the translation page's children blocks,
-  // not a Notion property — see createLocalizedGenericNotionContentSource.
-  quote: "Quote",
-  quoteAttribution: "Quote Attribution",
-  primaryCtaLabel: "Primary CTA Label",
-  primaryCtaHref: "Primary CTA Href",
-  secondaryCtaLabel: "Secondary CTA Label",
-  secondaryCtaHref: "Secondary CTA Href",
+  // Translations come from the translation page's children blocks,
+  // not a Notion property — only metadata fields are needed here.
   published: "Published",
 } as const;
 

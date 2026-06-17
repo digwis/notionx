@@ -28,13 +28,20 @@ describe("translation property builders", () => {
     expect(props.Body).toBeUndefined();
   });
 
-  it("buildBlockTranslationProperties includes Eyebrow, Headline, Subheadline, CTAs (no Body field)", () => {
+  it("buildBlockTranslationProperties includes only Title, Source, Locale, Published (no content fields)", () => {
     const props = buildBlockTranslationProperties();
-    expect(props.Eyebrow).toEqual({ rich_text: {} });
-    expect(props.Headline).toEqual({ rich_text: {} });
-    expect(props["Primary CTA Label"]).toEqual({ rich_text: {} });
-    expect(props["Primary CTA Href"]).toEqual({ url: {} });
+    expect(props.Title).toEqual({ title: {} });
+    expect(props.Locale).toEqual({ select: {} });
+    expect(props.Published).toEqual({ checkbox: {} });
+    // Body content lives in the translation page's children blocks,
+    // not a rich_text field — assert the property is absent.
     expect(props.Body).toBeUndefined();
+    expect(props.Eyebrow).toBeUndefined();
+    expect(props.Headline).toBeUndefined();
+    expect(props.Subheadline).toBeUndefined();
+    expect(props["Primary CTA Label"]).toBeUndefined();
+    expect(props["Primary CTA Href"]).toBeUndefined();
+    expect(props.Quote).toBeUndefined();
   });
 
   it("buildSiteSettingsTranslationProperties includes Value (only translatable field)", () => {

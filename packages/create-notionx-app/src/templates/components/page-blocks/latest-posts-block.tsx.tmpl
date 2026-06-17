@@ -3,39 +3,31 @@ import { ArrowRight } from "lucide-react";
 import { listGenericNotionContent } from "@notionx/core/notion";
 import { {{contentSourceVarName}} } from "@/lib/content/models";
 import { PostCard } from "@/components/content/post-card";
-import { Badge } from "@/components/ui/badge";
+import { NotionBlocks } from "@/components/notion-blocks";
 import { Button } from "@/components/ui/button";
-import type { StructuredLatestPostsBlock } from "@/lib/pages/source";
+import type { StructuredPageBlock } from "@/lib/pages/source";
 
 export async function LatestPostsBlock({
   block,
 }: {
-  block: StructuredLatestPostsBlock;
+  block: StructuredPageBlock;
 }) {
   const items = await listGenericNotionContent({{contentSourceVarName}});
-  const visibleItems = items.slice(0, block.count);
+  const visibleItems = items.slice(0, 6);
 
   return (
     <section className="border-t bg-background">
       <div className="container mx-auto max-w-6xl px-4 py-14">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
-            <Badge variant="secondary">Latest Posts</Badge>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
-              {block.headline}
-            </h2>
-            {block.body ? (
-              <p className="mt-4 text-lg text-muted-foreground">{block.body}</p>
-            ) : null}
+            <NotionBlocks blocks={block.blocks} />
           </div>
-          {block.primaryCta ? (
-            <Button asChild variant="outline">
-              <Link href={block.primaryCta.href}>
-                {block.primaryCta.label}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          ) : null}
+          <Button asChild variant="outline">
+            <Link href="{{contentSourceListPath}}">
+              View all posts
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
 
         {visibleItems.length ? (

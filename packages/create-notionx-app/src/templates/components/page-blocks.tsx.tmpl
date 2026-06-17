@@ -14,11 +14,11 @@ export async function PageBlocks({ blocks }: { blocks: StructuredBlock[] }) {
     <>
       {blocks.map((block) => (
         <div key={block.slug}>
-          {block.type === "hero" ? <HeroBlock block={block} /> : null}
-          {block.type === "feature-grid" ? <FeatureGridBlock block={block} /> : null}
-          {block.type === "story" ? <StoryBlock block={block} /> : null}
-          {block.type === "latest-posts" ? <LatestPostsBlock block={block} /> : null}
-          {block.type === "legacy" ? (
+          {block.variant === "hero" ? <HeroBlock block={block} /> : null}
+          {block.variant === "feature-grid" ? <FeatureGridBlock block={block} /> : null}
+          {block.variant === "story" ? <StoryBlock block={block} /> : null}
+          {block.variant === "latest-posts" ? <LatestPostsBlock block={block} /> : null}
+          {block.variant === "legacy" || !["hero", "feature-grid", "story", "latest-posts"].includes(block.variant) ? (
             <section className="border-t bg-muted/10">
               <div className="container mx-auto max-w-5xl px-4 py-14">
                 <NotionBlocks blocks={block.blocks} />

@@ -120,68 +120,15 @@ interface SamplePageBlockRef {
   order?: number;
 }
 
-interface SampleSiteBlockBase {
-  title: string;
+interface SampleSiteBlock {
+  name: string;
   slug: string;
   type: "hero" | "feature-grid" | "story" | "latest-posts";
-  description: string;
-  pageKeys: string[];
   order: number;
   coverSeed: string;
+  /** Content written as Notion page body blocks (children). */
+  children: Record<string, unknown>[];
 }
-
-interface SampleHeroBlock extends SampleSiteBlockBase {
-  type: "hero";
-  eyebrow: string;
-  headline: string;
-  subheadline: string;
-  primaryCtaLabel: string;
-  primaryCtaHref: string;
-  secondaryCtaLabel?: string;
-  secondaryCtaHref?: string;
-  alignment: "left" | "center";
-  theme: "default" | "muted" | "inverse";
-}
-
-interface SampleFeatureGridItem {
-  title: string;
-  description: string;
-  icon: string;
-  href?: string;
-}
-
-interface SampleFeatureGridBlock extends SampleSiteBlockBase {
-  type: "feature-grid";
-  headline: string;
-  body: string;
-  columns: 2 | 3 | 4;
-  items: SampleFeatureGridItem[];
-}
-
-interface SampleStoryBlock extends SampleSiteBlockBase {
-  type: "story";
-  headline: string;
-  body: string;
-  quote?: string;
-  quoteAttribution?: string;
-  mediaUrl?: string;
-  layout: "text-left" | "media-left" | "media-right";
-}
-
-interface SampleLatestPostsBlock extends SampleSiteBlockBase {
-  type: "latest-posts";
-  headline: string;
-  body: string;
-  count: number;
-  primaryCtaLabel: string;
-  primaryCtaHref: string;
-}
-
-type SampleSiteBlock =
-  | SampleHeroBlock
-  | SampleFeatureGridBlock
-  | SampleStoryBlock
-  | SampleLatestPostsBlock;
 
 const ENGLISH_SAMPLE_POSTS: SamplePost[] = [
   {
@@ -816,138 +763,246 @@ function sampleBlocks(input: {
   if (input.locale?.toLowerCase().startsWith("zh")) {
     return [
       {
-        title: "首页 Hero",
+        name: "首页 Hero",
         slug: "home-hero",
         type: "hero",
-        description: "首页顶部主视觉区块，适合放标题、副标题与主行动按钮。",
-        pageKeys: ["home"],
         order: 10,
         coverSeed: "home-hero-zh",
-        eyebrow: "Notion + Cloudflare",
-        headline: "从一个可以持续编辑的首页开始",
-        subheadline:
-          "把首页的一句话价值、介绍文案和主行动按钮交给 Notion，站点布局继续由代码稳定控制。",
-        primaryCtaLabel: "查看内容列表",
-        primaryCtaHref: "/blog",
-        secondaryCtaLabel: "了解项目",
-        secondaryCtaHref: "/about",
-        alignment: "center",
-        theme: "muted",
-      },
-      {
-        title: "首页功能展示",
-        slug: "home-feature-grid",
-        type: "feature-grid",
-        description: "用于首页中段的功能/能力展示区块。",
-        pageKeys: ["home"],
-        order: 20,
-        coverSeed: "home-feature-grid-zh",
-        headline: "把内容、运行时和发布流程串成一个清晰系统",
-        body: "这个区块默认用三列卡片展示项目能力，适合介绍内容工作流、部署基础设施和持续发布能力。",
-        columns: 3,
-        items: [
+        children: [
           {
-            title: "内容编辑",
-            description: "让编辑直接在 Notion 中维护页面与内容，不需要改代码。",
-            icon: "pen-square",
-            href: "/about",
+            type: "heading_1",
+            heading_1: {
+              rich_text: [{ text: { content: "从一个可以持续编辑的首页开始" } }],
+            },
           },
           {
-            title: "云端运行",
-            description: "基于 Cloudflare Workers、D1 和 KV 提供轻量稳定的运行时能力。",
-            icon: "cloud",
+            type: "paragraph",
+            paragraph: {
+              rich_text: [
+                {
+                  text: {
+                    content:
+                      "把首页的一句话价值、介绍文案和主行动按钮交给 Notion，站点布局继续由代码稳定控制。",
+                  },
+                },
+              ],
+            },
           },
           {
-            title: "持续更新",
-            description: `${input.contentSourceTitle} 列表可以持续发布新内容，并自动进入站点路由。`,
-            icon: "newspaper",
-            href: "/blog",
+            type: "callout",
+            callout: {
+              rich_text: [
+                { text: { content: "CTA: 查看内容列表 → /blog" } },
+              ],
+            },
           },
         ],
       },
       {
-        title: "首页最新文章",
+        name: "首页功能展示",
+        slug: "home-feature-grid",
+        type: "feature-grid",
+        order: 20,
+        coverSeed: "home-feature-grid-zh",
+        children: [
+          {
+            type: "heading_2",
+            heading_2: {
+              rich_text: [
+                { text: { content: "把内容、运行时和发布流程串成一个清晰系统" } },
+              ],
+            },
+          },
+          {
+            type: "paragraph",
+            paragraph: {
+              rich_text: [
+                {
+                  text: {
+                    content:
+                      "这个区块默认用三列卡片展示项目能力，适合介绍内容工作流、部署基础设施和持续发布能力。",
+                  },
+                },
+              ],
+            },
+          },
+          {
+            type: "bulleted_list_item",
+            bulleted_list_item: {
+              rich_text: [
+                { text: { content: "内容编辑：让编辑直接在 Notion 中维护页面与内容。" } },
+              ],
+            },
+          },
+          {
+            type: "bulleted_list_item",
+            bulleted_list_item: {
+              rich_text: [
+                { text: { content: "云端运行：基于 Cloudflare Workers、D1 和 KV 提供轻量稳定的运行时。" } },
+              ],
+            },
+          },
+          {
+            type: "bulleted_list_item",
+            bulleted_list_item: {
+              rich_text: [
+                { text: { content: `持续更新：${input.contentSourceTitle} 列表可以持续发布新内容。` } },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        name: "首页最新文章",
         slug: "home-latest-posts",
         type: "latest-posts",
-        description: "在首页展示最近发布内容的文章卡片区块。",
-        pageKeys: ["home"],
         order: 30,
         coverSeed: "home-latest-posts-zh",
-        headline: "看看最近更新了什么",
-        body: "默认展示最新发布的 6 篇内容，既能丰富首页，也能直接验证博客内容链路是否生效。",
-        count: 6,
-        primaryCtaLabel: "查看全部文章",
-        primaryCtaHref: "/blog",
+        children: [
+          {
+            type: "heading_2",
+            heading_2: {
+              rich_text: [{ text: { content: "看看最近更新了什么" } }],
+            },
+          },
+          {
+            type: "paragraph",
+            paragraph: {
+              rich_text: [
+                {
+                  text: {
+                    content:
+                      "默认展示最新发布的 6 篇内容，既能丰富首页，也能直接验证博客内容链路是否生效。",
+                  },
+                },
+              ],
+            },
+          },
+        ],
       },
     ];
   }
 
   return [
     {
-      title: "Homepage Hero",
+      name: "Homepage Hero",
       slug: "home-hero",
       type: "hero",
-      description: "Homepage hero module for headline, supporting copy, and primary CTA.",
-      pageKeys: ["home"],
       order: 10,
       coverSeed: "home-hero",
-      eyebrow: "Notion + Cloudflare",
-      headline: "Start with a homepage you can keep editing",
-      subheadline:
-        "Keep the layout stable in code while the hero copy, positioning, and primary call to action evolve in Notion.",
-      primaryCtaLabel: "Explore the blog",
-      primaryCtaHref: "/blog",
-      secondaryCtaLabel: "Read the story",
-      secondaryCtaHref: "/about",
-      alignment: "center",
-      theme: "muted",
-    },
-    {
-      title: "Homepage Feature Grid",
-      slug: "home-feature-grid",
-      type: "feature-grid",
-      description: "Mid-page feature section for capabilities, benefits, or service pillars.",
-      pageKeys: ["home"],
-      order: 20,
-      coverSeed: "home-feature-grid",
-      headline: "Show the system working together",
-      body:
-        "Use this grid to explain how editing, infrastructure, and publishing fit together without overwhelming the homepage.",
-      columns: 3,
-      items: [
+      children: [
         {
-          title: "Editorial workflows",
-          description: "Use Notion as the editor for pages, posts, and reusable sections.",
-          icon: "pen-square",
-          href: "/about",
+          type: "heading_1",
+          heading_1: {
+            rich_text: [
+              { text: { content: "Start with a homepage you can keep editing" } },
+            ],
+          },
         },
         {
-          title: "Cloudflare runtime",
-          description: "Ship on Workers with storage and caching primitives ready to grow.",
-          icon: "cloud",
+          type: "paragraph",
+          paragraph: {
+            rich_text: [
+              {
+                text: {
+                  content:
+                    "Keep the layout stable in code while the hero copy, positioning, and primary call to action evolve in Notion.",
+                },
+              },
+            ],
+          },
         },
         {
-          title: `${input.contentSourceTitle} updates`,
-          description: "Publish new entries and surface them through the generated routes automatically.",
-          icon: "newspaper",
-          href: "/blog",
+          type: "callout",
+          callout: {
+            rich_text: [{ text: { content: "CTA: Explore the blog → /blog" } }],
+          },
         },
       ],
     },
     {
-      title: "Homepage Latest Posts",
+      name: "Homepage Feature Grid",
+      slug: "home-feature-grid",
+      type: "feature-grid",
+      order: 20,
+      coverSeed: "home-feature-grid",
+      children: [
+        {
+          type: "heading_2",
+          heading_2: {
+            rich_text: [
+              { text: { content: "Show the system working together" } },
+            ],
+          },
+        },
+        {
+          type: "paragraph",
+          paragraph: {
+            rich_text: [
+              {
+                text: {
+                  content:
+                    "Use this grid to explain how editing, infrastructure, and publishing fit together without overwhelming the homepage.",
+                },
+              },
+            ],
+          },
+        },
+        {
+          type: "bulleted_list_item",
+          bulleted_list_item: {
+            rich_text: [
+              { text: { content: "Editorial workflows: Use Notion as the editor for pages, posts, and reusable sections." } },
+            ],
+          },
+        },
+        {
+          type: "bulleted_list_item",
+          bulleted_list_item: {
+            rich_text: [
+              { text: { content: "Cloudflare runtime: Ship on Workers with storage and caching primitives ready to grow." } },
+            ],
+          },
+        },
+        {
+          type: "bulleted_list_item",
+          bulleted_list_item: {
+            rich_text: [
+              { text: { content: `${input.contentSourceTitle} updates: Publish new entries and surface them through the generated routes automatically.` } },
+            ],
+          },
+        },
+      ],
+    },
+    {
+      name: "Homepage Latest Posts",
       slug: "home-latest-posts",
       type: "latest-posts",
-      description: "Homepage latest-posts block for previewing the newest published content.",
-      pageKeys: ["home"],
       order: 30,
       coverSeed: "home-latest-posts",
-      headline: "Read the latest from the blog",
-      body:
-        "Use this section to prove the content model is working with a grid of recent published posts right on the homepage.",
-      count: 6,
-      primaryCtaLabel: "View all posts",
-      primaryCtaHref: "/blog",
+      children: [
+        {
+          type: "heading_2",
+          heading_2: {
+            rich_text: [
+              { text: { content: "Read the latest from the blog" } },
+            ],
+          },
+        },
+        {
+          type: "paragraph",
+          paragraph: {
+            rich_text: [
+              {
+                text: {
+                  content:
+                    "Use this section to prove the content model is working with a grid of recent published posts right on the homepage.",
+                },
+              },
+            ],
+          },
+        },
+      ],
     },
   ];
 }
@@ -1613,46 +1668,15 @@ function buildBlocksProperties(): NotionPropertyMap {
   return {
     Name: { title: {} },
     Slug: { rich_text: {} },
-    Status: { select: {} },
     Type: { select: {} },
-    Description: { rich_text: {} },
-    "Page Keys": { rich_text: {} },
     Order: { number: {} },
     Cover: { files: {} },
-    Eyebrow: { rich_text: {} },
-    Headline: { rich_text: {} },
-    Subheadline: { rich_text: {} },
-    "Primary CTA Label": { rich_text: {} },
-    "Primary CTA Href": { url: {} },
-    "Secondary CTA Label": { rich_text: {} },
-    "Secondary CTA Href": { url: {} },
-    Alignment: { select: {} },
-    Theme: { select: {} },
-    Columns: { number: {} },
-    Count: { number: {} },
-    Items: { rich_text: {} },
-    Body: { rich_text: {} },
-    Quote: { rich_text: {} },
-    "Quote Attribution": { rich_text: {} },
-    "Media Url": { url: {} },
-    Layout: { select: {} },
+    Published: { checkbox: {} },
   };
 }
 
 function richText(content: string) {
   return content ? [{ text: { content } }] : [];
-}
-
-function selectPropertyValue(name?: string) {
-  return name ? { select: { name } } : { select: null };
-}
-
-function urlPropertyValue(url?: string) {
-  return { url: url ?? null };
-}
-
-function numberPropertyValue(value?: number) {
-  return { number: value ?? null };
 }
 
 function buildSitePagePayload(input: {
@@ -1740,93 +1764,11 @@ function buildSiteBlockPayload(input: {
       external: { url: coverUrl },
     },
     properties: {
-      Name: { title: richText(block.title) },
+      Name: { title: richText(block.name) },
       Slug: { rich_text: richText(block.slug) },
-      Status: { select: { name: "Published" } },
       Type: { select: { name: block.type } },
-      Description: { rich_text: richText(block.description) },
-      "Page Keys": { rich_text: richText(JSON.stringify(block.pageKeys)) },
       Order: { number: block.order },
-      Eyebrow: {
-        rich_text: richText(block.type === "hero" ? block.eyebrow : ""),
-      },
-      Headline: {
-        rich_text: richText(
-          block.type === "hero" ||
-            block.type === "feature-grid" ||
-            block.type === "story" ||
-            block.type === "latest-posts"
-            ? block.headline
-            : ""
-        ),
-      },
-      Subheadline: {
-        rich_text: richText(block.type === "hero" ? block.subheadline : ""),
-      },
-      "Primary CTA Label": {
-        rich_text: richText(
-          block.type === "hero"
-            ? block.primaryCtaLabel
-            : block.type === "latest-posts"
-              ? block.primaryCtaLabel
-              : ""
-        ),
-      },
-      "Primary CTA Href": urlPropertyValue(
-        block.type === "hero"
-          ? block.primaryCtaHref
-          : block.type === "latest-posts"
-            ? block.primaryCtaHref
-            : undefined
-      ),
-      "Secondary CTA Label": {
-        rich_text: richText(
-          block.type === "hero" ? block.secondaryCtaLabel ?? "" : ""
-        ),
-      },
-      "Secondary CTA Href": urlPropertyValue(
-        block.type === "hero" ? block.secondaryCtaHref : undefined
-      ),
-      Alignment: selectPropertyValue(
-        block.type === "hero" ? block.alignment : undefined
-      ),
-      Theme: selectPropertyValue(
-        block.type === "hero" ? block.theme : undefined
-      ),
-      Columns: numberPropertyValue(
-        block.type === "feature-grid" ? block.columns : undefined
-      ),
-      Count: numberPropertyValue(
-        block.type === "latest-posts" ? block.count : undefined
-      ),
-      Items: {
-        rich_text: richText(
-          block.type === "feature-grid" ? JSON.stringify(block.items) : ""
-        ),
-      },
-      Body: {
-        rich_text: richText(
-          block.type === "feature-grid" ||
-            block.type === "story" ||
-            block.type === "latest-posts"
-            ? block.body
-            : ""
-        ),
-      },
-      Quote: {
-        rich_text: richText(block.type === "story" ? block.quote ?? "" : ""),
-      },
-      "Quote Attribution": {
-        rich_text: richText(
-          block.type === "story" ? block.quoteAttribution ?? "" : ""
-        ),
-      },
-      "Media Url": urlPropertyValue(
-        block.type === "story" ? block.mediaUrl : undefined
-      ),
-      Layout: selectPropertyValue(
-        block.type === "story" ? block.layout : undefined
-      ),
+      Published: { checkbox: true },
       Cover: {
         files: [
           {
@@ -1837,7 +1779,7 @@ function buildSiteBlockPayload(input: {
         ],
       },
     },
-    children: [],
+    children: block.children,
   };
 }
 
@@ -2554,18 +2496,8 @@ export function buildBlockTranslationProperties(
       ? { relation: { single_property: { database_id: baseDatabaseId } } }
       : { relation: { database_property: {} } },
     Locale: { select: {} },
-    Description: { rich_text: {} },
-    Eyebrow: { rich_text: {} },
-    Headline: { rich_text: {} },
-    Subheadline: { rich_text: {} },
     // Body content lives in the translation page's children blocks,
     // not a rich_text field — removes the 2000-char limit.
-    Quote: { rich_text: {} },
-    "Quote Attribution": { rich_text: {} },
-    "Primary CTA Label": { rich_text: {} },
-    "Primary CTA Href": { url: {} },
-    "Secondary CTA Label": { rich_text: {} },
-    "Secondary CTA Href": { url: {} },
     Published: { checkbox: {} },
   };
 }

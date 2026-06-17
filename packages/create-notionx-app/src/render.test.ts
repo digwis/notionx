@@ -282,11 +282,11 @@ describe("template token substitution", () => {
     await render(answers, templatesDir, outDir);
 
     const source = await fs.readFile(path.join(outDir, "lib/pages/source.ts"), "utf8");
-    expect(source).toContain('type: "hero"');
-    expect(source).toContain('type: "feature-grid"');
-    expect(source).toContain('type: "story"');
-    expect(source).toContain("primaryCta");
-    expect(source).toContain("fallbackToLegacyNotionBlocks");
+    expect(source).toContain('variant: "hero"');
+    expect(source).toContain('variant: "feature-grid"');
+    expect(source).toContain('variant: "latest-posts"');
+    expect(source).toContain("blocks: NotionBlock[]");
+    expect(source).toContain("mapGenericBlockToStructuredBlock");
   });
 
   it("renders dedicated structured block component files", async () => {
@@ -340,11 +340,12 @@ describe("template token substitution", () => {
     await render(answers, templatesDir, outDir);
 
     const source = await fs.readFile(path.join(outDir, "lib/pages/source.ts"), "utf8");
-    expect(source).toContain('title: "Homepage Hero"');
-    expect(source).toContain('title: "Homepage Feature Grid"');
-    expect(source).toContain('title: "Homepage Latest Posts"');
+    expect(source).toContain('slug: "home-hero"');
+    expect(source).toContain('slug: "home-feature-grid"');
+    expect(source).toContain('slug: "home-latest-posts"');
     expect(source).toContain('{ slug: "home-latest-posts", order: 30 }');
-    expect(source).not.toContain('title: "About Story"');
+    // Fallback blocks carry content as Notion page body blocks.
+    expect(source).toContain("Start with a homepage you can keep editing");
   });
 
   it("renders a latest-posts page block component and removes the extra homepage hero copy", async () => {
