@@ -16,8 +16,8 @@ const baseMetadata: ScaffoldMetadata = {
 };
 
 describe("buildLocaleAddPlan", () => {
-  it("returns metadata + i18n + site-config changes by default", () => {
-    const plan = buildLocaleAddPlan({
+  it("returns metadata + i18n + site-config changes by default", async () => {
+    const plan = await buildLocaleAddPlan({
       projectDir: "/tmp/proj",
       metadata: baseMetadata,
       locale: "zh-CN",
@@ -32,8 +32,8 @@ describe("buildLocaleAddPlan", () => {
     );
   });
 
-  it("does not include any notion changes when --with-notion is omitted", () => {
-    const plan = buildLocaleAddPlan({
+  it("does not include any notion changes when --with-notion is omitted", async () => {
+    const plan = await buildLocaleAddPlan({
       projectDir: "/tmp/proj",
       metadata: baseMetadata,
       locale: "zh-CN",
@@ -41,8 +41,8 @@ describe("buildLocaleAddPlan", () => {
     expect(plan.changes.some((change) => change.kind === "notion")).toBe(false);
   });
 
-  it("includes notion changes for each built-in model when --with-notion is set", () => {
-    const plan = buildLocaleAddPlan({
+  it("includes notion changes for each built-in model when --with-notion is set", async () => {
+    const plan = await buildLocaleAddPlan({
       projectDir: "/tmp/proj",
       metadata: baseMetadata,
       locale: "zh-CN",
@@ -59,8 +59,8 @@ describe("buildLocaleAddPlan", () => {
     );
   });
 
-  it("includes cloudflare-secret changes for the new translation data source ids", () => {
-    const plan = buildLocaleAddPlan({
+  it("includes cloudflare-secret changes for the new translation data source ids", async () => {
+    const plan = await buildLocaleAddPlan({
       projectDir: "/tmp/proj",
       metadata: baseMetadata,
       locale: "zh-CN",
@@ -78,8 +78,8 @@ describe("buildLocaleAddPlan", () => {
     ).toBe(true);
   });
 
-  it("yields a plan that records the requested locale in supportedLocales metadata", () => {
-    const plan = buildLocaleAddPlan({
+  it("yields a plan that records the requested locale in supportedLocales metadata", async () => {
+    const plan = await buildLocaleAddPlan({
       projectDir: "/tmp/proj",
       metadata: baseMetadata,
       locale: "fr",

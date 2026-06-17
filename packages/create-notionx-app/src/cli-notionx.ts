@@ -74,7 +74,7 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       }
     }
 
-    const plan = buildLocaleAddPlan({
+    const plan = await buildLocaleAddPlan({
       projectDir: process.cwd(),
       // `RegistryManifest` (v2) is a superset of `ScaffoldMetadata`
       // (v1) for the fields `buildLocaleAddPlan` actually reads

@@ -82,9 +82,9 @@ const BUILT_IN_NOTION_SOURCES = [
   "site-settings-translations",
 ] as const;
 
-export function buildLocaleAddPlan(
+export async function buildLocaleAddPlan(
   input: BuildLocaleAddPlanInput
-): LocaleAddPlan {
+): Promise<LocaleAddPlan> {
   const changes: LocaleAddChange[] = [];
   const { projectDir, metadata, locale } = input;
   const i18nPath = "lib/i18n/config.ts";
@@ -232,6 +232,7 @@ export function buildLocaleAddPlan(
   // dry-run summary.
   if (input.withNotion) {
     const existingSources = input.metadata.translationSources ?? {};
+    const baseDatabaseIds = await readBaseDatabaseIds(input.projectDir);
     const plans =
       input.notionApiToken && input.notionParentPageId
         ? planNotionTranslationSources({
@@ -240,6 +241,7 @@ export function buildLocaleAddPlan(
             apiToken: input.notionApiToken,
             copyFrom: input.copyFrom,
             existingTranslationSources: existingSources,
+            baseDatabaseIds,
           })
         : [];
 
@@ -322,4 +324,95 @@ function sourceNameToEnvVar(
       "NOTION_SITE_SETTINGS_TRANSLATIONS_DATA_SOURCE_ID",
   };
   return map[sourceName] ?? null;
+}
+
+/**
+ * Read the base (non-translation) Notion database ids for each
+ * built-in translation model from the project's env files.
+ *
+ * The base databases (blog, pages, blocks, site-settings) have their
+ * ids stored as env vars in `.dev.vars` (KEY=VALUE format) or
+ * `wrangler.jsonc` (`"KEY": "VALUE"` inside a `vars` block). The
+ * translation `Source` relation property needs the base database id
+ * to auto-link translation rows to their base rows.
+ *
+ * NOTE: The env vars store `data_source_id`, not `database_id`. In
+ * the 2025-09-03+ Notion API these are different objects. Notion's
+ * relation property officially expects a `database_id`. We pass the
+ * `data_source_id` as a best-effort fallback — Notion currently
+ * accepts it for relation creation in most workspaces. If the
+ * relation creation fails, the `Source` property falls back to an
+ * un-configured relation.
+ *
+ * TODO: Store the actual `database_id` (from `db.id` in
+ * `createDatabaseWithProperties`) in `registry.json` or a sidecar
+ * file so we can pass the correct id here without an extra API
+ * call. See `provision/notion.ts` for the `databaseId` vs
+ * `dataSourceId` split.
+ *
+ * Returns an empty object when neither file exists or the env vars
+ * are missing — the planner treats missing base ids as "create
+ * relation without explicit target", which is the existing
+ * behaviour.
+ */
+async function readBaseDatabaseIds(
+  projectDir: string
+): Promise<{
+  "blog-translations"?: string;
+  "page-translations"?: string;
+  "block-translations"?: string;
+  "site-settings-translations"?: string;
+}> {
+  const fs = await import("node:fs/promises");
+  const path = await import("node:path");
+
+  // Try .dev.vars first (KEY=VALUE format), then wrangler.jsonc
+  // ("KEY": "VALUE" inside a vars block).
+  let devVarsContent = "";
+  try {
+    devVarsContent = await fs.readFile(
+      path.join(projectDir, ".dev.vars"),
+      "utf8",
+    );
+  } catch {
+    // .dev.vars may not exist; fall through to wrangler.jsonc.
+  }
+
+  let wranglerContent = "";
+  try {
+    wranglerContent = await fs.readFile(
+      path.join(projectDir, "wrangler.jsonc"),
+      "utf8",
+    );
+  } catch {
+    // wrangler.jsonc may not exist; that's fine.
+  }
+
+  const readVar = (key: string): string | undefined => {
+    // .dev.vars: KEY=VALUE (one per line).
+    const devVarsMatch = devVarsContent.match(
+      new RegExp(`^${key}=(.+)$`, "m"),
+    );
+    if (devVarsMatch) return devVarsMatch[1].trim();
+    // wrangler.jsonc: "KEY": "VALUE" (inside a vars block or top-level).
+    const jsoncMatch = wranglerContent.match(
+      new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`),
+    );
+    if (jsoncMatch) return jsoncMatch[1];
+    return undefined;
+  };
+
+  // The env var names for the base (non-translation) data sources.
+  // These are the ids the scaffolder writes when it first provisions
+  // the blog / pages / blocks / site-settings databases.
+  // TODO: These store data_source_id; see the function-level comment
+  // about resolving the actual database_id.
+  return {
+    "blog-translations": readVar("NOTION_DATA_SOURCE_ID"),
+    "page-translations": readVar("NOTION_PAGES_DATA_SOURCE_ID"),
+    "block-translations": readVar("NOTION_BLOCKS_DATA_SOURCE_ID"),
+    "site-settings-translations": readVar(
+      "NOTION_SITE_SETTINGS_DATA_SOURCE_ID",
+    ),
+  };
 }

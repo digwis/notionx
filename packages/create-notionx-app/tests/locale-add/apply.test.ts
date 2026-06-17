@@ -45,7 +45,7 @@ export const i18n = defineI18nConfig({
         )
       );
 
-      const plan = buildLocaleAddPlan({
+      const plan = await buildLocaleAddPlan({
         projectDir: dir,
         metadata: JSON.parse(
           await readFile(`${dir}/.notionx/scaffold.json`, "utf8")
@@ -64,7 +64,7 @@ export const i18n = defineI18nConfig({
 
       // Idempotent re-run: locale is now in the list. The runner
       // must still not break.
-      const plan2 = buildLocaleAddPlan({
+      const plan2 = await buildLocaleAddPlan({
         projectDir: dir,
         metadata: JSON.parse(
           await readFile(`${dir}/.notionx/scaffold.json`, "utf8")
