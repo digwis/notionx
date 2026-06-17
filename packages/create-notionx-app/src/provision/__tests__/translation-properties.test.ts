@@ -44,3 +44,44 @@ describe("translation property builders", () => {
     expect(typeof ensureTranslationDatabase).toBe("function");
   });
 });
+
+describe("build*TranslationProperties with baseDatabaseId", () => {
+  const baseDbId = "abc123-base-db-id";
+
+  it("buildBlogTranslationProperties links Source to base database", () => {
+    const props = buildBlogTranslationProperties(baseDbId);
+    expect(props.Source).toEqual({
+      relation: { single_property: { database_id: baseDbId } },
+    });
+  });
+
+  it("buildPageTranslationProperties links Source to base database", () => {
+    const props = buildPageTranslationProperties(baseDbId);
+    expect(props.Source).toEqual({
+      relation: { single_property: { database_id: baseDbId } },
+    });
+  });
+
+  it("buildBlockTranslationProperties links Source to base database", () => {
+    const props = buildBlockTranslationProperties(baseDbId);
+    expect(props.Source).toEqual({
+      relation: { single_property: { database_id: baseDbId } },
+    });
+  });
+
+  it("buildSiteSettingsTranslationProperties links Source to base database", () => {
+    const props = buildSiteSettingsTranslationProperties(baseDbId);
+    expect(props.Source).toEqual({
+      relation: { single_property: { database_id: baseDbId } },
+    });
+  });
+
+  it("falls back to database_property when baseDatabaseId is undefined", () => {
+    expect(buildBlogTranslationProperties().Source).toEqual({
+      relation: { database_property: {} },
+    });
+    expect(buildBlogTranslationProperties(undefined).Source).toEqual({
+      relation: { database_property: {} },
+    });
+  });
+});
