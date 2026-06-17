@@ -2217,28 +2217,29 @@ export const _internal = {
   mergeDescriptionWithScaffoldMarker,
   missingPropertiesForPatch,
   buildSiteSettingsProperties,
-  buildSiteSettingsSeedPage,
+  buildSiteSettingsSeedPages,
 };
 
 // ---------------------------------------------------------------------------
-// Site settings (singleton row)
+// Site settings (multi-row key-value)
 //
 // The generated project reads site-level config (name, tagline, description,
-// default locale, social image) from a dedicated Notion data source. The
+// SEO, navigation, theme, footer) from a dedicated Notion data source. The
 // scaffolder creates that data source here, with a fixed schema the runtime
-// loader knows how to read, and seeds a single row pre-populated with the
-// project name + a placeholder description. Operators can edit the row in
-// Notion after scaffolding; changes show up within 5 minutes (KV cache TTL)
-// or immediately via the admin revalidate endpoint.
+// loader knows how to read, and seeds multiple rows — one per setting item —
+// pre-populated with the project name and sensible defaults. Operators can
+// edit rows in Notion after scaffolding; changes show up within 5 minutes
+// (KV cache TTL) or immediately via the admin revalidate endpoint.
 // ---------------------------------------------------------------------------
 
 /** Field names the runtime loader reads in `lib/site/settings.ts`. */
 export const SITE_SETTINGS_FIELDS = [
-  "Site Name", // title
-  "Tagline", // rich_text
-  "Description", // rich_text
-  "Default Locale", // select
-  "Social Image", // url
+  "Name", // title
+  "Section", // select
+  "Key", // rich_text
+  "Value", // rich_text
+  "Type", // select
+  "Published", // checkbox
 ] as const;
 
 export interface SiteSettingsProvisionInput {
@@ -2264,51 +2265,34 @@ export interface SiteSettingsProvisionResult {
 /**
  * Build the Notion `properties` object for the site-settings data source.
  *
- * Mirrors `siteSettingsSource.fields` in the generated
- * `lib/content/models.ts`:
- *   - `Site Name` → title (Notion's only title column)
- *   - `Tagline`   → rich_text
- *   - `Description` → rich_text
- *   - `Default Locale` → select
- *   - `Social Image` → url
+ * Multi-row key-value design: each row is one setting item grouped by
+ * `Section`. This is more intuitive for operators to edit in Notion —
+ * they see a clean table grouped by section instead of one wide row
+ * with 17 columns.
  *
- * Keep the `SITE_SETTINGS_FIELDS` array in sync with this map. The
- * scaffolder's seed row and the runtime loader both depend on it.
+ * Fields:
+ *   - `Name` (title) — human-readable label, e.g. "Site Name"
+ *   - `Section` (select) — grouping: branding/seo/theme/nav/footer
+ *   - `Key` (rich_text) — machine key: name/tagline/description/...
+ *   - `Value` (rich_text) — the setting value (text, JSON, etc.)
+ *   - `Type` (select) — text/url/json/color/select
+ *   - `Published` (checkbox) — whether this setting is active
  */
 export function buildSiteSettingsProperties(): NotionPropertyMap {
-  const props: NotionPropertyMap = {
-    // 5 pre-existing
-    "Site Name": { title: {} },
-    Tagline: { rich_text: {} },
-    Description: { rich_text: {} },
-    "Default Locale": { select: {} },
-    "Social Image": { url: {} },
-    // 12 new (0.5.4) — SEO, navigation, theme, footer
-    "Meta Title": { rich_text: {} },
-    "Meta Description": { rich_text: {} },
-    "OG Image": { url: {} },
-    Nav: { rich_text: {} },
-    "Nav CTA": { rich_text: {} },
-    "Primary Color": { select: {} },
-    "Accent Color": { select: {} },
-    "Font Family": { select: {} },
-    "Footer Columns": { rich_text: {} },
-    "Footer Copyright": { rich_text: {} },
-    "Footer Social Links": { rich_text: {} },
-    "Footer Tagline": { rich_text: {} },
+  return {
+    Name: { title: {} },
+    Section: { select: {} },
+    Key: { rich_text: {} },
+    Value: { rich_text: {} },
+    Type: { select: {} },
+    Published: { checkbox: {} },
   };
-  return props;
 }
 
 /**
- * Build the single seed page for the site-settings data source.
- *
- * The page carries the project name and a placeholder description so
- * the home page renders something useful before the operator customizes
- * it in Notion. The runtime loader falls back to
- * `fallbackSiteConfig` if the row is missing, so an unedited seed
- * page is fine — but a populated one means the very first request
- * after scaffolding already shows the right site name everywhere.
+ * Seed rows for the site-settings data source — one page per setting
+ * item. Each row carries a Section/Key/Value/Type tuple so the
+ * runtime loader can aggregate them into a single `SiteConfig`.
  *
  * `parent` uses `data_source_id` (Notion's 2025-09-03 schema).
  * Passing the legacy `database_id` here silently fails with
@@ -2316,7 +2300,26 @@ export function buildSiteSettingsProperties(): NotionPropertyMap {
  * is exactly the bug we hit when the Notion API started requiring
  * data sources for page parents.
  */
-export function buildSiteSettingsSeedPage(input: {
+const SETTINGS_SEED_ROWS = [
+  { name: "Site Name", section: "branding", key: "name", value: "My NotionX Site", type: "text" },
+  { name: "Tagline", section: "branding", key: "tagline", value: "Built with NotionX", type: "text" },
+  { name: "Description", section: "branding", key: "description", value: "", type: "text" },
+  { name: "Meta Title", section: "seo", key: "metaTitle", value: "", type: "text" },
+  { name: "Meta Description", section: "seo", key: "metaDescription", value: "", type: "text" },
+  { name: "Social Image", section: "seo", key: "socialImage", value: "", type: "url" },
+  { name: "OG Image", section: "seo", key: "ogImage", value: "", type: "url" },
+  { name: "Primary Color", section: "theme", key: "primaryColor", value: "blue", type: "select" },
+  { name: "Accent Color", section: "theme", key: "accentColor", value: "green", type: "select" },
+  { name: "Font Family", section: "theme", key: "fontFamily", value: "Inter", type: "select" },
+  { name: "Nav Items", section: "nav", key: "items", value: "[]", type: "json" },
+  { name: "Nav CTA", section: "nav", key: "cta", value: "{}", type: "json" },
+  { name: "Footer Columns", section: "footer", key: "columns", value: "[]", type: "json" },
+  { name: "Footer Copyright", section: "footer", key: "copyright", value: "", type: "text" },
+  { name: "Footer Social Links", section: "footer", key: "socialLinks", value: "[]", type: "json" },
+  { name: "Footer Tagline", section: "footer", key: "footerTagline", value: "", type: "text" },
+] as const;
+
+export function buildSiteSettingsSeedPages(input: {
   projectName: string;
   description: string;
   defaultLocale: string;
@@ -2347,58 +2350,56 @@ export function buildSiteSettingsSeedPage(input: {
   const footerCopyright = `© ${new Date().getFullYear()} ${input.projectName}`;
   const socialImageUrl = `https://picsum.photos/seed/${slugify(input.projectName)}-social/1200/630`;
   const tagline = `${input.projectName} on Notion and Cloudflare`;
-  return {
+
+  // Override seed defaults with project-specific values where
+  // available so the very first request after scaffolding already
+  // shows the right site name everywhere.
+  const valueOverrides: Record<string, string> = {
+    name: input.projectName,
+    tagline,
+    description: input.description,
+    metaTitle: input.projectName,
+    metaDescription: input.description,
+    socialImage: socialImageUrl,
+    ogImage: socialImageUrl,
+    items: defaultNav,
+    cta: "{}",
+    columns: defaultFooterColumns,
+    copyright: footerCopyright,
+    socialLinks: "[]",
+    footerTagline: tagline,
+  };
+
+  return SETTINGS_SEED_ROWS.map((row) => ({
     parent: { type: "data_source_id", data_source_id: input.dataSourceId },
     properties: {
-      "Site Name": {
-        title: [{ text: { content: input.projectName } }],
+      Name: {
+        title: [{ text: { content: row.name } }],
       },
-      Tagline: {
-        rich_text: [{ text: { content: tagline } }],
+      Section: {
+        select: { name: row.section },
       },
-      Description: {
-        rich_text: [{ text: { content: input.description } }],
+      Key: {
+        rich_text: [{ text: { content: row.key } }],
       },
-      "Default Locale": {
-        select: { name: input.defaultLocale },
+      Value: {
+        rich_text: [
+          { text: { content: valueOverrides[row.key] ?? row.value } },
+        ],
       },
-      "Meta Title": {
-        rich_text: [{ text: { content: input.projectName } }],
+      Type: {
+        select: { name: row.type },
       },
-      "Meta Description": {
-        rich_text: [{ text: { content: input.description } }],
-      },
-      "Social Image": { url: socialImageUrl },
-      "OG Image": { url: socialImageUrl },
-      Nav: {
-        rich_text: [{ text: { content: defaultNav } }],
-      },
-      "Nav CTA": { rich_text: [] },
-      "Primary Color": { select: { name: "slate" } },
-      "Accent Color": { select: { name: "blue" } },
-      "Font Family": { select: { name: "inter" } },
-      "Footer Columns": {
-        rich_text: [{ text: { content: defaultFooterColumns } }],
-      },
-      "Footer Copyright": {
-        rich_text: [{ text: { content: footerCopyright } }],
-      },
-      "Footer Social Links": {
-        rich_text: [{ text: { content: "[]" } }],
-      },
-      "Footer Tagline": {
-        rich_text: [{ text: { content: tagline } }],
-      },
+      Published: { checkbox: true },
     },
-  };
+  }));
 }
 
 /**
  * Create the site-settings data source under the given parent page and
- * insert the seed row. Same Notion API dance as
- * `ensureNotionDatabase`, minus the multi-page seeding — the singleton
- * row is created up front so the home page works before the operator
- * has opened Notion.
+ * insert the seed rows — one page per setting item. Same Notion API
+ * dance as `ensureNotionDatabase`, but with multi-row seeding so the
+ * home page works before the operator has opened Notion.
  */
 export async function ensureSiteSettingsDatabase(
   input: SiteSettingsProvisionInput
@@ -2424,7 +2425,7 @@ export async function ensureSiteSettingsDatabase(
     }));
 
   if (existing) {
-    // Make sure the schema has every property the 0.5.4+ schema
+    // Make sure the schema has every property the current schema
     // expects. Notion adds new properties with no destructive
     // effect on existing rows.
     await ensureDataSourceProperties({
@@ -2464,22 +2465,27 @@ export async function ensureSiteSettingsDatabase(
     stableKey,
   });
 
-  // 4) Seed the singleton row.
-  const seed = buildSiteSettingsSeedPage({
+  // 4) Seed one page per setting item.
+  const seeds = buildSiteSettingsSeedPages({
     projectName: input.projectName,
     description: input.description,
     defaultLocale: input.defaultLocale,
     dataSourceId,
   });
-  const seedResult = await runNtn(
-    ["api", "v1/pages", "-d", JSON.stringify(seed)],
-    { env: { NOTION_API_TOKEN: input.apiToken } }
-  );
-  if (seedResult.code !== 0) {
-    const detail = (seedResult.stderr || seedResult.stdout).trim().slice(0, 500);
-    console.warn(
-      `[notion site-settings seed] failed (code ${seedResult.code}): ${detail}`
+  let seeded = 0;
+  for (const seed of seeds) {
+    const seedResult = await runNtn(
+      ["api", "v1/pages", "-d", JSON.stringify(seed)],
+      { env: { NOTION_API_TOKEN: input.apiToken } }
     );
+    if (seedResult.code !== 0) {
+      const detail = (seedResult.stderr || seedResult.stdout).trim().slice(0, 500);
+      console.warn(
+        `[notion site-settings seed] failed (code ${seedResult.code}): ${detail}`
+      );
+    } else {
+      seeded++;
+    }
   }
 
   return {
@@ -2487,7 +2493,7 @@ export async function ensureSiteSettingsDatabase(
     databaseId,
     url,
     reused: false,
-    seeded: seedResult.code === 0 ? 1 : 0,
+    seeded,
   };
 }
 
@@ -2573,13 +2579,7 @@ export function buildSiteSettingsTranslationProperties(
       ? { relation: { single_property: { database_id: baseDatabaseId } } }
       : { relation: { database_property: {} } },
     Locale: { select: {} },
-    Tagline: { rich_text: {} },
-    Description: { rich_text: {} },
-    "SEO Title": { rich_text: {} },
-    "SEO Description": { rich_text: {} },
-    "Nav Labels": { rich_text: {} },
-    "Footer Labels": { rich_text: {} },
-    "Global Fallback Copy": { rich_text: {} },
+    Value: { rich_text: {} },
     Published: { checkbox: {} },
   };
 }

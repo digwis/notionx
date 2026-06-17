@@ -312,27 +312,44 @@ describe("default content and site settings seeds", () => {
   });
 
   it("seeds site settings with nav, footer, and icon defaults", () => {
-    const payload = _internal.buildSiteSettingsSeedPage({
+    const pages = _internal.buildSiteSettingsSeedPages({
       projectName: "newpj",
       description: "An editable site",
       defaultLocale: "en",
       dataSourceId: "site-settings-ds",
     });
-    const properties = payload.properties as unknown as {
-      Nav: { rich_text: Array<{ text: { content: string } }> };
-      "Footer Columns": { rich_text: Array<{ text: { content: string } }> };
-      "Social Image": { url: string | null };
-      "OG Image": { url: string | null };
-    };
+    const byKey: Record<string, (typeof pages)[number]> = {};
+    for (const page of pages) {
+      const props = page.properties as {
+        Key: { rich_text: Array<{ text: { content: string } }> };
+      };
+      const key = props.Key.rich_text[0]?.text.content ?? "";
+      byKey[key] = page;
+    }
 
-    expect(properties.Nav.rich_text[0]?.text.content).toContain('"label":"Home"');
-    expect(properties.Nav.rich_text[0]?.text.content).toContain('"label":"About"');
-    expect(properties.Nav.rich_text[0]?.text.content).toContain('"label":"Blog"');
-    expect(properties["Footer Columns"].rich_text[0]?.text.content).toContain(
+    const navProps = byKey.items!.properties as {
+      Value: { rich_text: Array<{ text: { content: string } }> };
+    };
+    expect(navProps.Value.rich_text[0]?.text.content).toContain('"label":"Home"');
+    expect(navProps.Value.rich_text[0]?.text.content).toContain('"label":"About"');
+    expect(navProps.Value.rich_text[0]?.text.content).toContain('"label":"Blog"');
+
+    const footerProps = byKey.columns!.properties as {
+      Value: { rich_text: Array<{ text: { content: string } }> };
+    };
+    expect(footerProps.Value.rich_text[0]?.text.content).toContain(
       '"label":"Company"'
     );
-    expect(properties["Social Image"].url).toContain("picsum.photos");
-    expect(properties["OG Image"].url).toContain("picsum.photos");
+
+    const socialProps = byKey.socialImage!.properties as {
+      Value: { rich_text: Array<{ text: { content: string } }> };
+    };
+    expect(socialProps.Value.rich_text[0]?.text.content).toContain("picsum.photos");
+
+    const ogProps = byKey.ogImage!.properties as {
+      Value: { rich_text: Array<{ text: { content: string } }> };
+    };
+    expect(ogProps.Value.rich_text[0]?.text.content).toContain("picsum.photos");
   });
 });
 
@@ -499,23 +516,12 @@ describe("site-settings reuse", () => {
     runOrThrowNtnMock.mockResolvedValueOnce(
       JSON.stringify({
         properties: {
-          "Site Name": { title: {} },
-          Tagline: { rich_text: {} },
-          Description: { rich_text: {} },
-          "Default Locale": { select: {} },
-          "Social Image": { url: {} },
-          "Meta Title": { rich_text: {} },
-          "Meta Description": { rich_text: {} },
-          "OG Image": { url: {} },
-          Nav: { rich_text: {} },
-          "Nav CTA": { rich_text: {} },
-          "Primary Color": { select: {} },
-          "Accent Color": { select: {} },
-          "Font Family": { select: {} },
-          "Footer Columns": { rich_text: {} },
-          "Footer Copyright": { rich_text: {} },
-          "Footer Social Links": { rich_text: {} },
-          "Footer Tagline": { rich_text: {} },
+          Name: { title: {} },
+          Section: { select: {} },
+          Key: { rich_text: {} },
+          Value: { rich_text: {} },
+          Type: { select: {} },
+          Published: { checkbox: {} },
         },
       })
     );
@@ -557,27 +563,16 @@ describe("site-settings reuse", () => {
       })
     );
     // Third call: ensureDataSourceProperties → getDataSourceSchema
-    // (all 17 properties present → no PATCH needed).
+    // (all 6 properties present → no PATCH needed).
     runOrThrowNtnMock.mockResolvedValueOnce(
       JSON.stringify({
         properties: {
-          "Site Name": { title: {} },
-          Tagline: { rich_text: {} },
-          Description: { rich_text: {} },
-          "Default Locale": { select: {} },
-          "Social Image": { url: {} },
-          "Meta Title": { rich_text: {} },
-          "Meta Description": { rich_text: {} },
-          "OG Image": { url: {} },
-          Nav: { rich_text: {} },
-          "Nav CTA": { rich_text: {} },
-          "Primary Color": { select: {} },
-          "Accent Color": { select: {} },
-          "Font Family": { select: {} },
-          "Footer Columns": { rich_text: {} },
-          "Footer Copyright": { rich_text: {} },
-          "Footer Social Links": { rich_text: {} },
-          "Footer Tagline": { rich_text: {} },
+          Name: { title: {} },
+          Section: { select: {} },
+          Key: { rich_text: {} },
+          Value: { rich_text: {} },
+          Type: { select: {} },
+          Published: { checkbox: {} },
         },
       })
     );
@@ -613,15 +608,22 @@ describe("site-settings reuse", () => {
         url: "https://www.notion.so/db-new",
       })
     );
-    // createDatabaseWithProperties PATCH (adds the 4 non-title
+    // createDatabaseWithProperties PATCH (adds the 5 non-title
     // properties to the new data source).
     runOrThrowNtnMock.mockResolvedValueOnce(
       JSON.stringify({ properties: {} })
     );
     // patchDatabaseDescription (description contains the stable key marker).
     runOrThrowNtnMock.mockResolvedValueOnce(JSON.stringify({ id: "db-new" }));
-    // seed page insert (uses runNtn, not runOrThrowNtn).
-    runNtnMock.mockResolvedValueOnce({ code: 0, stdout: JSON.stringify({ id: "page-new", object: "page" }), stderr: "" });
+    // seed page inserts (uses runNtn, not runOrThrowNtn) — one per row.
+    const seedCount = 16;
+    for (let i = 0; i < seedCount; i++) {
+      runNtnMock.mockResolvedValueOnce({
+        code: 0,
+        stdout: JSON.stringify({ id: `page-new-${i}`, object: "page" }),
+        stderr: "",
+      });
+    }
 
     const result = await ensureSiteSettingsDatabase({
       apiToken: "token",
@@ -632,7 +634,7 @@ describe("site-settings reuse", () => {
     });
 
     expect(result.reused).toBe(false);
-    expect(result.seeded).toBe(1);
+    expect(result.seeded).toBe(seedCount);
     expect(result.dataSourceId).toBe("ds-new");
 
     // The description PATCH payload must include the scaffold marker.
@@ -654,68 +656,81 @@ describe("site-settings reuse", () => {
 });
 
 describe("site-settings builders", () => {
-  it("emits a 17-property schema covering the full editor surface", () => {
+  it("emits a 6-property multi-row key-value schema", () => {
     const properties = _internal.buildSiteSettingsProperties();
     const keys = Object.keys(properties);
-    expect(keys).toHaveLength(17);
-    // Existing 5
-    expect(properties["Site Name"]).toEqual({ title: {} });
-    expect(properties.Tagline).toEqual({ rich_text: {} });
-    expect(properties.Description).toEqual({ rich_text: {} });
-    expect(properties["Default Locale"]).toEqual({ select: {} });
-    expect(properties["Social Image"]).toEqual({ url: {} });
-    // 12 new (SEO / Nav / Theme / Footer)
-    expect(properties["Meta Title"]).toEqual({ rich_text: {} });
-    expect(properties["Meta Description"]).toEqual({ rich_text: {} });
-    expect(properties["OG Image"]).toEqual({ url: {} });
-    expect(properties.Nav).toEqual({ rich_text: {} });
-    expect(properties["Nav CTA"]).toEqual({ rich_text: {} });
-    expect(properties["Primary Color"]).toEqual({ select: {} });
-    expect(properties["Accent Color"]).toEqual({ select: {} });
-    expect(properties["Font Family"]).toEqual({ select: {} });
-    expect(properties["Footer Columns"]).toEqual({ rich_text: {} });
-    expect(properties["Footer Copyright"]).toEqual({ rich_text: {} });
-    expect(properties["Footer Social Links"]).toEqual({ rich_text: {} });
-    expect(properties["Footer Tagline"]).toEqual({ rich_text: {} });
+    expect(keys).toHaveLength(6);
+    expect(properties.Name).toEqual({ title: {} });
+    expect(properties.Section).toEqual({ select: {} });
+    expect(properties.Key).toEqual({ rich_text: {} });
+    expect(properties.Value).toEqual({ rich_text: {} });
+    expect(properties.Type).toEqual({ select: {} });
+    expect(properties.Published).toEqual({ checkbox: {} });
   });
 
-  it("seeds the singleton row with all 17 properties", () => {
-    const seed = _internal.buildSiteSettingsSeedPage({
+  it("seeds one page per setting item with Section/Key/Value/Type", () => {
+    const seeds = _internal.buildSiteSettingsSeedPages({
       projectName: "digwis",
       description: "A demo description.",
       defaultLocale: "en",
       dataSourceId: "ds-id",
     });
-    const properties = seed.properties as Record<string, unknown>;
-    const titleProps = properties["Site Name"] as {
-      title: Array<{ text: { content: string } }>;
-    };
-    expect(titleProps.title[0].text.content).toBe("digwis");
-    const metaTitle = properties["Meta Title"] as {
-      rich_text: Array<{ text: { content: string } }>;
-    };
-    expect(metaTitle.rich_text[0].text.content).toBe("digwis");
-    const nav = properties.Nav as {
-      rich_text: Array<{ text: { content: string } }>;
-    };
-    const parsed = JSON.parse(nav.rich_text[0].text.content);
-    expect(parsed[0]).toEqual({ label: "Home", href: "/" });
-    const theme = properties["Primary Color"] as {
-      select: { name: string };
-    };
-    expect(theme.select.name).toBe("slate");
-    const accent = properties["Accent Color"] as {
-      select: { name: string };
-    };
-    expect(accent.select.name).toBe("blue");
-    const font = properties["Font Family"] as {
-      select: { name: string };
-    };
-    expect(font.select.name).toBe("inter");
-    // Notion's 2025-09-03 schema requires `data_source_id` here.
-    expect(seed.parent).toEqual({
-      type: "data_source_id",
-      data_source_id: "ds-id",
+    expect(seeds).toHaveLength(16);
+
+    // Every seed uses data_source_id as parent.
+    for (const seed of seeds) {
+      expect(seed.parent).toEqual({
+        type: "data_source_id",
+        data_source_id: "ds-id",
+      });
+    }
+
+    // The "name" row carries the project name as its Value.
+    const nameRow = seeds.find((s) => {
+      const props = s.properties as {
+        Key: { rich_text: Array<{ text: { content: string } }> };
+      };
+      return props.Key.rich_text[0]?.text.content === "name";
     });
+    expect(nameRow).toBeDefined();
+    const nameProps = nameRow!.properties as {
+      Name: { title: Array<{ text: { content: string } }> };
+      Section: { select: { name: string } };
+      Value: { rich_text: Array<{ text: { content: string } }> };
+      Type: { select: { name: string } };
+      Published: { checkbox: boolean };
+    };
+    expect(nameProps.Name.title[0].text.content).toBe("Site Name");
+    expect(nameProps.Section.select.name).toBe("branding");
+    expect(nameProps.Value.rich_text[0].text.content).toBe("digwis");
+    expect(nameProps.Type.select.name).toBe("text");
+    expect(nameProps.Published.checkbox).toBe(true);
+
+    // The "items" row carries the default nav JSON.
+    const itemsRow = seeds.find((s) => {
+      const props = s.properties as {
+        Key: { rich_text: Array<{ text: { content: string } }> };
+      };
+      return props.Key.rich_text[0]?.text.content === "items";
+    });
+    expect(itemsRow).toBeDefined();
+    const itemsProps = itemsRow!.properties as {
+      Value: { rich_text: Array<{ text: { content: string } }> };
+    };
+    const parsed = JSON.parse(itemsProps.Value.rich_text[0].text.content);
+    expect(parsed[0]).toEqual({ label: "Home", href: "/" });
+
+    // The "primaryColor" row carries the default theme color.
+    const colorRow = seeds.find((s) => {
+      const props = s.properties as {
+        Key: { rich_text: Array<{ text: { content: string } }> };
+      };
+      return props.Key.rich_text[0]?.text.content === "primaryColor";
+    });
+    expect(colorRow).toBeDefined();
+    const colorProps = colorRow!.properties as {
+      Value: { rich_text: Array<{ text: { content: string } }> };
+    };
+    expect(colorProps.Value.rich_text[0].text.content).toBe("blue");
   });
 });

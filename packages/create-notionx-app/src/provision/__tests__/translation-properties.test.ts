@@ -37,11 +37,15 @@ describe("translation property builders", () => {
     expect(props.Body).toBeUndefined();
   });
 
-  it("buildSiteSettingsTranslationProperties includes Tagline, Nav Labels, Footer Labels", () => {
+  it("buildSiteSettingsTranslationProperties includes Value (only translatable field)", () => {
     const props = buildSiteSettingsTranslationProperties();
-    expect(props.Tagline).toEqual({ rich_text: {} });
-    expect(props["Nav Labels"]).toEqual({ rich_text: {} });
-    expect(props["Footer Labels"]).toEqual({ rich_text: {} });
+    expect(props.Value).toEqual({ rich_text: {} });
+    expect(props.Locale).toEqual({ select: {} });
+    expect(props.Published).toEqual({ checkbox: {} });
+    // Section, Key, Type are NOT translated — only Value is.
+    expect(props.Tagline).toBeUndefined();
+    expect(props["Nav Labels"]).toBeUndefined();
+    expect(props["Footer Labels"]).toBeUndefined();
   });
 
   it("ensureTranslationDatabase is exported", () => {

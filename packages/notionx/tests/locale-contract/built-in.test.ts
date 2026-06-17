@@ -31,6 +31,6 @@ describe("built-in locale contracts", () => {
     );
     expect(
       Object.keys(siteSettingsContract.translationFields)
-    ).toEqual(expect.arrayContaining(["tagline", "footerLabels"]));
+    ).toEqual(expect.arrayContaining(["value", "locale", "published"]));
   });
 });

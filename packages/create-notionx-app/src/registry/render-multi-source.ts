@@ -398,12 +398,15 @@ const SITE_SETTINGS_SOURCE_DECLARATION = `export const siteSettingsSource: Conte
     tokenEnv: "NOTION_TOKEN",
     dataSourceEnv: "NOTION_SITE_SETTINGS_DATA_SOURCE_ID",
     fields: {
-      title: "Site Name",
-      description: "Description",
-      cover: "Social Image",
+      title: "Name",
+      section: "Section",
+      key: "Key",
+      value: "Value",
+      type: "Type",
+      published: "Published",
     },
     query: {
-      pageSize: 1,
+      pageSize: 100,
     },
   },
   routes: {
@@ -418,12 +421,12 @@ const SITE_SETTINGS_SOURCE_DECLARATION = `export const siteSettingsSource: Conte
     navLabel: "Site Settings",
     listTitle: "Site Settings",
     listDescription:
-      "Singleton row in Notion that powers the site name, tagline, description, default locale, and social image.",
-    emptyState: "No site settings row found — re-run provisioning.",
+      "Multi-row key-value table in Notion that powers the site name, tagline, description, SEO, navigation, theme, and footer. Each row is one setting item grouped by Section.",
+    emptyState: "No site settings rows found — re-run provisioning.",
   },
   capabilities: {
     richBlocks: false,
-    coverImages: true,
+    coverImages: false,
     gatedAssets: false,
   },
 });`;

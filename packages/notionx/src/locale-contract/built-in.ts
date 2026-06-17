@@ -91,26 +91,16 @@ export const blocksTranslationFields = {
 
 export const siteSettingsBaseFields = {
   name: "Name",
-  defaultLocale: "Default Locale",
-  supportedLocales: "Supported Locales",
-  theme: "Theme",
-  typography: "Typography",
-  socialLinks: "Social Links",
-  navigation: "Navigation",
-  defaultSocialImage: "Default Social Image",
-  featureSwitches: "Feature Switches",
+  section: "Section",
+  key: "Key",
+  value: "Value",
+  type: "Type",
 } as const;
 
 export const siteSettingsTranslationFields = {
   source: "Source",
   locale: "Locale",
-  tagline: "Tagline",
-  description: "Description",
-  seoTitle: "SEO Title",
-  seoDescription: "SEO Description",
-  navLabels: "Nav Labels",
-  footerLabels: "Footer Labels",
-  globalFallbackCopy: "Global Fallback Copy",
+  value: "Value",
   published: "Published",
 } as const;
 

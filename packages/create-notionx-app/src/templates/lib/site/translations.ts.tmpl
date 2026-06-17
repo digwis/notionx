@@ -1,7 +1,9 @@
-// Locale-aware site settings merge. The `site-settings` Notion row
-// holds the global config; the `site-settings-translations` row
-// holds locale-specific copy. Missing locale copy falls back to the
-// default-locale translation.
+// Locale-aware site settings merge. The `site-settings` Notion rows
+// hold the global config (key-value pairs grouped by section); the
+// `site-settings-translations` rows hold locale-specific `Value`
+// overrides. `Section`, `Key`, and `Type` are the same across
+// locales — only `Value` is translated. Missing locale copy falls
+// back to the default-locale translation.
 
 import {
   mapNotionPageToLocalizedContentTranslation,
@@ -16,13 +18,7 @@ export type SiteSettingsTranslation = {
   pageId: string;
   sourcePageId: string;
   locale: string;
-  tagline: string;
-  description: string;
-  seoTitle: string;
-  seoDescription: string;
-  navLabels: Record<string, string>;
-  footerLabels: Record<string, string>;
-  globalFallbackCopy: string;
+  value: string;
   published: boolean;
 };
 
@@ -46,8 +42,11 @@ export async function listSiteSettingsTranslations(
         title: "Title",
         source: "Source",
         locale: "Locale",
-        slug: "Slug",
+        slug: "Title",
         published: "Published",
+      },
+      extraFields: {
+        value: "Value",
       },
     }))
     .filter((row): row is SiteSettingsTranslation => row !== null);
