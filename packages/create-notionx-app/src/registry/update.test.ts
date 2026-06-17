@@ -73,6 +73,8 @@ async function seedProject(
       projectKind: "notionx",
       scaffoldVersion: "2.0.0",
       notionxCore: "^2.0.0",
+      defaultLocale: "en",
+      supportedLocales: ["en"],
       compat: { mode: "v2-native" },
       registries: {},
       installed,
