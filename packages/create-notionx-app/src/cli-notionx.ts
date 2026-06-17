@@ -96,6 +96,26 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
 
     const summary = await runLocaleAddPlan(plan);
     logLocaleAddSummary(summary);
+
+    // Persist created translation source ids to registry.json so
+    // future `locale add` / `notionx update` / `notionx doctor` can
+    // find and reuse them. Also patch wrangler.jsonc and .dev.vars
+    // so the worker can bind to them at runtime.
+    if (Object.keys(summary.translationSourceIds).length > 0) {
+      const {
+        persistTranslationSourcesToRegistry,
+        updateEnvFilesForTranslationSources,
+      } = await import("./locale-add/persist.js");
+      await persistTranslationSourcesToRegistry(
+        process.cwd(),
+        summary.translationSourceIds,
+      );
+      await updateEnvFilesForTranslationSources(
+        process.cwd(),
+        summary.translationSourceIds,
+      );
+    }
+
     return;
   }
 
