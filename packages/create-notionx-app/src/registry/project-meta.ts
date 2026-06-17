@@ -44,8 +44,8 @@ export async function readProjectMeta(
   return {
     projectName,
     targetDir: projectDir,
-    defaultLocale: "en", // TODO: read from a future v2 i18n block
-    supportedLocales: ["en"],
+    defaultLocale: manifest.defaultLocale,
+    supportedLocales: manifest.supportedLocales,
     notionxSource: manifest.notionxCore,
     adminEmail: "admin@example.com", // placeholder; not used by add/remove/update
     adminPassword: "", // placeholder; not used by add/remove/update
@@ -75,6 +75,15 @@ export async function rerenderModelsFile(input: {
    * current configuration.
    */
   internalSources?: { siteSettings?: boolean; blocks?: boolean };
+  /**
+   * When true, the rendered file emits
+   * `defineContentSource({...})` declarations for the four
+   * translation data sources instead of `null` stubs. Defaults to
+   * `project.supportedLocales.length > 1` so callers that pass a
+   * freshly-read manifest get bilingual mode automatically once a
+   * second locale is added.
+   */
+  bilingual?: boolean;
 }): Promise<{ wrote: boolean }> {
   const target = path.join(input.projectDir, "lib/content/models.ts");
   const tplPath = path.join(input.templatesDir, "lib/content/models.ts.tmpl");
@@ -89,6 +98,8 @@ export async function rerenderModelsFile(input: {
     project: input.project,
     installed: input.installed,
     internalSources: input.internalSources,
+    bilingual:
+      input.bilingual ?? input.project.supportedLocales.length > 1,
   });
 
   const flat: Record<string, string> = {

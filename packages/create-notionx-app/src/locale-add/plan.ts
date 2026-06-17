@@ -17,6 +17,11 @@ import {
   readRegistryManifest,
   writeRegistryManifest,
 } from "../registry/registry-store.js";
+import {
+  readProjectMeta,
+  rerenderModelsFile,
+} from "../registry/project-meta.js";
+import { resolveTemplatesDir } from "../render.js";
 
 export type LocaleAddChange =
   | {
@@ -101,7 +106,77 @@ export function buildLocaleAddPlan(
     },
   });
 
-  // 2. lib/i18n/config.ts — append the locale to supportedLocalesJson.
+  // 2. Re-render middleware.ts so SUPPORTED_LOCALES includes the new
+  // locale. The middleware template uses {{supportedLocalesJson}}
+  // and {{defaultLocale}} tokens. Runs after the metadata change so
+  // the freshly-written registry.json is the source of truth.
+  changes.push({
+    kind: "file",
+    label: `file:middleware.ts`,
+    description: `Re-render middleware.ts with updated supportedLocales.`,
+    risk: "safe",
+    filePath: "middleware.ts",
+    async apply() {
+      const manifest = await readRegistryManifest(projectDir);
+      if (!manifest) return;
+      const { readFile, writeFile } = await import("node:fs/promises");
+      const path = await import("node:path");
+      const templatesDir = await resolveTemplatesDir();
+      let template: string;
+      try {
+        template = await readFile(
+          path.join(templatesDir, "middleware.ts.tmpl"),
+          "utf8",
+        );
+      } catch {
+        return; // Template not found; skip silently.
+      }
+      const rendered = template
+        .replaceAll("{{defaultLocale}}", manifest.defaultLocale)
+        .replaceAll(
+          "{{supportedLocalesJson}}",
+          JSON.stringify(manifest.supportedLocales),
+        );
+      await writeFile(
+        path.join(projectDir, "middleware.ts"),
+        rendered,
+        "utf8",
+      );
+    },
+  });
+
+  // 3. Re-render lib/content/models.ts so translation source
+  // declarations reflect bilingual mode (null → defineContentSource).
+  // `rerenderModelsFile` derives `bilingual` from
+  // `supportedLocales.length > 1` when not passed explicitly.
+  changes.push({
+    kind: "file",
+    label: `file:lib/content/models.ts`,
+    description: `Re-render models.ts with translation source declarations.`,
+    risk: "safe",
+    filePath: "lib/content/models.ts",
+    async apply() {
+      const manifest = await readRegistryManifest(projectDir);
+      if (!manifest) return;
+      try {
+        await rerenderModelsFile({
+          projectDir,
+          templatesDir: await resolveTemplatesDir(),
+          project: await readProjectMeta(projectDir, manifest),
+          installed: manifest.installed,
+          internalSources: {
+            siteSettings: manifest.enableSiteSettings,
+            blocks: manifest.enableBlocks,
+          },
+        });
+      } catch {
+        // Best-effort: if rerender fails (e.g. template not found),
+        // skip silently.
+      }
+    },
+  });
+
+  // 4. lib/i18n/config.ts — append the locale to supportedLocalesJson.
   changes.push({
     kind: "file",
     label: `file:${i18nPath}`,
@@ -125,7 +200,7 @@ export function buildLocaleAddPlan(
     },
   });
 
-  // 3. lib/site/config.ts — append the locale to the locales list.
+  // 5. lib/site/config.ts — append the locale to the locales list.
   changes.push({
     kind: "file",
     label: `file:${siteConfigPath}`,
@@ -149,7 +224,7 @@ export function buildLocaleAddPlan(
     },
   });
 
-  // 4. (optional) Notion translation data sources. When the Notion
+  // 6. (optional) Notion translation data sources. When the Notion
   // api token and parent page id are available, the planner produces
   // real create/reuse plans and the `apply` closure runs them via
   // `applyNotionTranslationSources`. When the Notion context is
@@ -212,7 +287,7 @@ export function buildLocaleAddPlan(
     }
   }
 
-  // 5. (optional) Cloudflare secrets for the new translation source ids.
+  // 7. (optional) Cloudflare secrets for the new translation source ids.
   if (input.withNotion && input.translationSourceIds) {
     for (const [sourceName, dataSourceId] of Object.entries(
       input.translationSourceIds
