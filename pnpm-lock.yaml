@@ -36,7 +36,7 @@ importers:
   packages/create-notionx:
     dependencies:
       '@notionx/create-notionx-app':
-        specifier: ^0.9.0
+        specifier: ^1.0.0
         version: link:../create-notionx-app
 
   packages/create-notionx-app:
