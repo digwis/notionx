@@ -83,6 +83,17 @@ jobs:
         if: steps.pending_changesets.outputs.has_changesets == 'true'
         run: pnpm changeset version
 
+      # `pnpm changeset version` bumps package.json versions but does
+      # NOT update pnpm-lock.yaml. Without this sync step the next
+      # push's `pnpm install --frozen-lockfile` (in ci.yml and the
+      # install step above) fails with ERR_PNPM_OUTDATED_LOCKFILE
+      # because the lockfile still records the pre-bump version range.
+      # `--lockfile-only` avoids reinstalling node_modules — it only
+      # rewrites pnpm-lock.yaml to match the bumped package.json files.
+      - name: Sync pnpm-lock.yaml after version bump
+        if: steps.pending_changesets.outputs.has_changesets == 'true'
+        run: pnpm install --lockfile-only
+
       - name: Commit + push version bump
         if: steps.pending_changesets.outputs.has_changesets == 'true'
         run: |
