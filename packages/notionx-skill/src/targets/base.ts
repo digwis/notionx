@@ -18,13 +18,22 @@ import type {
 export function resolveBaseDir(target: Target, scope: Scope, cwd: string): string {
   if (scope === "user") {
     const home = homedir();
+    const codexHome = process.env.CODEX_HOME?.trim()
+      ? resolve(process.env.CODEX_HOME)
+      : join(home, ".codex");
     switch (target) {
       case "claude":
         return join(home, ".claude", "skills", "notionx");
       case "trae":
         return join(home, ".trae", "skills", "notionx");
+      case "trae-cn":
+        return join(home, ".trae-cn", "skills", "notionx");
       case "codex":
-        return join(home, ".codex");
+        return join(codexHome, "skills", "notionx");
+      case "shared":
+        return join(home, ".agents", "skills", "notionx");
+      case "codex-rules":
+        return codexHome;
     }
   }
   // scope === "project"
@@ -32,8 +41,12 @@ export function resolveBaseDir(target: Target, scope: Scope, cwd: string): strin
     case "claude":
       return join(cwd, ".claude", "skills", "notionx");
     case "trae":
+    case "trae-cn":
       return join(cwd, ".trae", "skills", "notionx");
     case "codex":
+    case "shared":
+      return join(cwd, ".agents", "skills", "notionx");
+    case "codex-rules":
       // AGENTS.md lives at the repo root.
       return cwd;
   }
@@ -92,10 +105,47 @@ export function planDirectoryFiles(
     { path: join(baseDir, "SKILL.md"), content: bundle.skill },
     { path: join(baseDir, "INSTALL.md"), content: bundle.installGuide },
   ];
+  if (bundle.openaiYaml) {
+    files.push({ path: join(baseDir, "agents", "openai.yaml"), content: bundle.openaiYaml });
+  }
   for (const [name, content] of Object.entries(bundle.references)) {
     files.push({ path: join(baseDir, "references", `${name}.md`), content });
   }
   return files;
+}
+
+/** Install a full SKILL.md directory for agents that read the common format. */
+export async function installDirectoryTarget(
+  target: Target,
+  bundle: SkillBundle,
+  opts: { scope: Scope; cwd: string; force?: boolean; dryRun?: boolean },
+): Promise<{
+  target: Target;
+  scope: Scope;
+  filesWritten: FileWrite[];
+  filesSkipped: FileSkip[];
+}> {
+  const baseDir = resolveBaseDir(target, opts.scope, opts.cwd);
+  const files = planDirectoryFiles(baseDir, bundle);
+
+  const written: FileWrite[] = [];
+  const skipped: FileSkip[] = [];
+
+  for (const file of files) {
+    const result = await writeUnlessExists(file.path, file.content, opts);
+    if ("bytes" in result) {
+      written.push(result);
+    } else {
+      skipped.push(result);
+    }
+  }
+
+  return {
+    target,
+    scope: opts.scope,
+    filesWritten: written,
+    filesSkipped: skipped,
+  };
 }
 
 /** Resolve and validate a working directory for project-scope installs. */

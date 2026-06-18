@@ -2,11 +2,7 @@
  * Trae IDE installer: same shape as Claude Code (Trae reads SKILL.md format).
  */
 import type { InstallResult, Scope, SkillBundle } from "../types.js";
-import {
-  planDirectoryFiles,
-  resolveBaseDir,
-  writeUnlessExists,
-} from "./base.js";
+import { installDirectoryTarget } from "./base.js";
 
 export interface InstallTraeOptions {
   scope: Scope;
@@ -19,20 +15,12 @@ export async function installTrae(
   bundle: SkillBundle,
   opts: InstallTraeOptions,
 ): Promise<InstallResult> {
-  const baseDir = resolveBaseDir("trae", opts.scope, opts.cwd);
-  const files = planDirectoryFiles(baseDir, bundle);
+  return await installDirectoryTarget("trae", bundle, opts);
+}
 
-  const written: InstallResult["filesWritten"] = [];
-  const skipped: InstallResult["filesSkipped"] = [];
-
-  for (const file of files) {
-    const result = await writeUnlessExists(file.path, file.content, opts);
-    if ("bytes" in result) {
-      written.push(result);
-    } else {
-      skipped.push(result);
-    }
-  }
-
-  return { target: "trae", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
+export async function installTraeCn(
+  bundle: SkillBundle,
+  opts: InstallTraeOptions,
+): Promise<InstallResult> {
+  return await installDirectoryTarget("trae-cn", bundle, opts);
 }

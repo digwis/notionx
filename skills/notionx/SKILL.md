@@ -1,6 +1,6 @@
 ---
 name: "notionx"
-description: "notionx is a Next.js App Router framework running on Cloudflare Workers via vinext, with Notion as the CMS and @notionx/core providing auth, admin, D1/R2, media routes, content registration, search, and diagnostics. Invoke when the user wants to create or update a notionx/vinext project, scaffold with `pnpm create notionx-app`, add/replace/remove/customize a Notion-backed content source (`defineContentSource`, routes, APIs, domain UI, search/sort/filter), run `pnpm notionx:doctor`, upgrade `@notionx/core`, run `notionx update` or `notionx provision repair`, configure Cloudflare / Notion / Turnstile / Resend / Google OAuth, or debug deploy / webhook / cache / auth issues in a notionx-based project. Do NOT invoke for plain Next.js apps, plain Cloudflare Workers without the notionx wrapper, or for editing Notion content itself."
+description: "notionx is a Next.js App Router framework running on Cloudflare Workers via vinext, with Notion as the CMS and @notionx/core providing auth, admin, D1/R2, media routes, content registration, search, and diagnostics. Invoke when the user wants to create or update a notionx/vinext project, scaffold with `npm create notionx@latest`, add/replace/remove/customize a Notion-backed content source (`defineContentSource`, routes, APIs, domain UI, search/sort/filter), run `pnpm notionx:doctor`, upgrade `@notionx/core`, run `notionx update` or `notionx provision repair`, configure Cloudflare / Notion / Turnstile / Resend / Google OAuth, or debug deploy / webhook / cache / auth issues in a notionx-based project. Do NOT invoke for plain Next.js apps, plain Cloudflare Workers without the notionx wrapper, or for editing Notion content itself."
 ---
 
 # notionx
@@ -9,8 +9,8 @@ Use this skill to work on modern **notionx** projects and the notionx monorepo.
 notionx has two moving parts:
 
 - `@notionx/core`: reusable runtime/platform package in `packages/notionx/src`.
-- `@notionx/create-notionx-app`: scaffolder and maintenance CLI in
-  `packages/create-notionx-app/src`, including `notionx update` and
+- `@notionx/cli`: scaffolder and maintenance CLI in
+  `packages/notionx-cli/src`, including `notionx update` and
   `notionx provision repair`.
 
 Consumer projects are regular source-code apps. They configure the package and
@@ -44,12 +44,10 @@ For a consumer project, read in this order:
 For the notionx monorepo itself, use these as authority:
 
 - Runtime code: `packages/notionx/src/**`.
-- Scaffolder/update/provision code: `packages/create-notionx-app/src/**`.
+- Scaffolder/update/provision code: `packages/notionx-cli/src/**`.
 - Current docs: `docs/architecture/notionx-package.md`,
   `creating-new-project.md`, `customizing-content-source.md`, and
   `upgrading-notionx.md`.
-- Do not treat `docs/architecture/content-notionx.md` as current authority; it
-  documents the pre-package foundation split.
 
 ## Current contracts
 
@@ -70,8 +68,8 @@ code and update the skill.
 
 | Goal | Command |
 |---|---|
-| Create project | `pnpm create notionx-app my-new-site` |
-| Non-interactive scaffold | `pnpm create notionx-app my-site -- --project-name my-site --admin-email admin@example.com --yes` |
+| Create project | `npm create notionx@latest my-new-site` |
+| Non-interactive scaffold | `npm create notionx@latest my-site -- --project-name my-site --admin-email admin@example.com --yes` |
 | Install deps | `pnpm install` |
 | Dev server | `pnpm dev` |
 | Build | `pnpm build` |
@@ -91,12 +89,12 @@ code and update the skill.
 
 ### Create or update a project
 
-Use `pnpm create notionx-app`. The generated project includes vinext scripts,
+Use `npm create notionx@latest`. The generated project includes vinext scripts,
 `worker/index.ts`, auth/admin route re-exports, shadcn/Tailwind source, Notion
 page helpers, migrations, `.notionx/scaffold.json`, and a first content source.
 For current scaffold behavior, read
 [references/architecture.md](references/architecture.md) and the templates in
-`packages/create-notionx-app/src/templates`.
+`packages/notionx-cli/src/templates`.
 
 ### Add or change a content source
 

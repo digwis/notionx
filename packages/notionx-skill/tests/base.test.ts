@@ -39,8 +39,18 @@ describe("resolveBaseDir", () => {
     expect(dir).toMatch(/\.trae[\\/]skills[\\/]notionx$/);
   });
 
-  it("user scope: codex -> ~/.codex", () => {
+  it("user scope: codex -> ~/.codex/skills/notionx", () => {
     const dir = resolveBaseDir("codex", "user", cwd);
+    expect(dir).toMatch(/\.codex[\\/]skills[\\/]notionx$/);
+  });
+
+  it("user scope: shared -> ~/.agents/skills/notionx", () => {
+    const dir = resolveBaseDir("shared", "user", cwd);
+    expect(dir).toMatch(/\.agents[\\/]skills[\\/]notionx$/);
+  });
+
+  it("user scope: codex-rules -> ~/.codex", () => {
+    const dir = resolveBaseDir("codex-rules", "user", cwd);
     expect(dir).toMatch(/\.codex$/);
   });
 
@@ -49,8 +59,13 @@ describe("resolveBaseDir", () => {
     expect(dir).toBe(resolve(cwd, ".claude", "skills", "notionx"));
   });
 
-  it("project scope: codex -> <cwd> (AGENTS.md lives at repo root)", () => {
+  it("project scope: codex -> <cwd>/.agents/skills/notionx", () => {
     const dir = resolveBaseDir("codex", "project", cwd);
+    expect(dir).toBe(resolve(cwd, ".agents", "skills", "notionx"));
+  });
+
+  it("project scope: codex-rules -> <cwd> (AGENTS.md lives at repo root)", () => {
+    const dir = resolveBaseDir("codex-rules", "project", cwd);
     expect(dir).toBe(resolve(cwd));
   });
 });
@@ -131,13 +146,15 @@ describe("planDirectoryFiles", () => {
       skill: "SKILL",
       installGuide: "INSTALL",
       references: { architecture: "ARCH", deploy: "DEPLOY" },
-      rules: { claude: "", codex: "", trae: "" },
+      rules: { claude: "", codex: "", trae: "", "codex-rules": "" },
+      openaiYaml: "interface:\n  display_name: Test",
       version: "0.0.0",
     };
     const files = planDirectoryFiles("/base", bundle);
     const paths = files.map((f) => f.path);
     expect(paths).toContain("/base/SKILL.md");
     expect(paths).toContain("/base/INSTALL.md");
+    expect(paths).toContain("/base/agents/openai.yaml");
     expect(paths).toContain("/base/references/architecture.md");
     expect(paths).toContain("/base/references/deploy.md");
   });

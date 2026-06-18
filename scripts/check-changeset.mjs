@@ -92,7 +92,8 @@ function listChangedFiles(diffBase) {
 
 const PACKAGE_DIR_TO_NAME = {
   notionx: "@notionx/core",
-  "create-notionx-app": "@notionx/create-notionx-app",
+  "create-notionx-app": "@notionx/cli",
+  "notionx-cli": "@notionx/cli",
   "create-notionx": "create-notionx",
   "notionx-skill": "@notionx/skill",
 };
@@ -156,7 +157,9 @@ function currentVersions() {
   // changesets will bump to.
   const versions = {};
   for (const [dir, name] of Object.entries(PACKAGE_DIR_TO_NAME)) {
-    const raw = readFileSync(resolve(ROOT, "packages", dir, "package.json"), "utf8");
+    const packageJson = resolve(ROOT, "packages", dir, "package.json");
+    if (!existsSync(packageJson)) continue;
+    const raw = readFileSync(packageJson, "utf8");
     versions[name] = JSON.parse(raw).version;
   }
   return versions;

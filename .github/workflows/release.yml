@@ -6,7 +6,7 @@ on:
     branches: [main]
     paths:
       - "packages/notionx/**"
-      - "packages/create-notionx-app/**"
+      - "packages/notionx-cli/**"
       - "packages/create-notionx/**"
       - "packages/notionx-skill/**"
       - ".changeset/**"
@@ -42,8 +42,8 @@ jobs:
 
       - name: Build notionx
         run: pnpm --filter @notionx/core build
-      - name: Build create-notionx-app
-        run: pnpm --filter @notionx/create-notionx-app build
+      - name: Build notionx CLI
+        run: pnpm --filter @notionx/cli build
       - name: Build notionx-skill
         run: pnpm --filter @notionx/skill build
 

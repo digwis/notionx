@@ -115,8 +115,8 @@ fi
 cd ../..
 echo ""
 
-echo "📦 @notionx/create-notionx-app"
-cd packages/create-notionx-app
+echo "📦 @notionx/cli"
+cd packages/notionx-cli
 CREATE_VERSION=$(node -p "require('./package.json').version")
 CREATE_PRIVATE=$(node -p "require('./package.json').private || 'false'")
 echo "   版本: $CREATE_VERSION"
@@ -148,5 +148,5 @@ echo "4. GitHub Actions 会自动处理发布"
 echo ""
 echo "或手动发布："
 echo "  pnpm --filter @notionx/core publish"
-echo "  pnpm --filter @notionx/create-notionx-app publish"
+echo "  pnpm --filter @notionx/cli publish"
 echo ""

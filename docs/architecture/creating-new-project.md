@@ -5,7 +5,7 @@
 ## 1. 运行脚手架
 
 ```bash
-pnpm create notionx-app my-new-site
+npm create notionx@latest my-new-site
 ```
 
 交互式提示会按顺序询问：

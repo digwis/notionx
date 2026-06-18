@@ -99,7 +99,7 @@ update the public site.
 
 ## "Build fails with type errors after upgrading `@notionx/core`"
 
-1. Read the [Notionx Changelog](https://github.com/digwis/nextion/blob/main/docs/architecture/notionx-changelog.md)
+1. Read the [Notionx Changelog](https://github.com/digwis/notionx/blob/main/docs/architecture/notionx-changelog.md)
    for the new version. Major versions include migration notes.
 2. The most common cause is that a subpath got renamed. Check the
    `exports` field of `node_modules/@notionx/core/package.json` for the
@@ -134,5 +134,5 @@ lives in the lower layer.
    server output (for local).
 4. The exact `wrangler.jsonc` binding names and `.dev.vars` env names.
 
-Then file an issue at https://github.com/digwis/nextion/issues with those
+Then file an issue at https://github.com/digwis/notionx/issues with those
 artifacts. Never paste secrets.

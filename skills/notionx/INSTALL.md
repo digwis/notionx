@@ -1,7 +1,7 @@
 # Installing the notionx skill manually
 
 The official notionx skill is shipped from the
-[notionx repository](https://github.com/digwis/nextion) under `skills/notionx/`.
+[notionx repository](https://github.com/digwis/notionx) under `skills/notionx/`.
 The recommended install is via the `@notionx/skill` CLI package (see below), but every
 target also supports a **manual install** that you can do without any extra
 tooling.
@@ -9,36 +9,38 @@ tooling.
 ## TL;DR — the CLI
 
 ```bash
-# User-scope (applies to every project you open in this editor)
-npx @notionx/skill install --target <editor>
+# User-scope (installs the primary editors)
+npx @notionx/skill install --target all
 
-# Project-scope (committed to the repo so the whole team gets it)
-npx @notionx/skill install --target <editor> --scope project
+# Project-scope shared skill
+npx @notionx/skill install --target shared --scope project
 ```
 
-Supported `--target` values: `claude`, `trae`, `codex`, `all`.
+Supported `--target` values: `claude`, `codex`, `trae`, `trae-cn`, `shared`, `codex-rules`, `all`.
+Aliases: `claude-code` -> `claude`, `agents`/`universal` -> `shared`.
 
 ## What gets installed
 
 | Target | User-scope path | Project-scope path |
 |---|---|---|
 | `claude` (Claude Code) | `~/.claude/skills/notionx/` | `./.claude/skills/notionx/` |
+| `codex` (OpenAI Codex) | `${CODEX_HOME:-~/.codex}/skills/notionx/` | `./.agents/skills/notionx/` |
 | `trae` (Trae IDE) | `~/.trae/skills/notionx/` | `./.trae/skills/notionx/` |
-| `codex` (OpenAI Codex) | `~/.codex/AGENTS.md` | `./AGENTS.md` |
+| `trae-cn` (Trae CN) | `~/.trae-cn/skills/notionx/` | `./.trae/skills/notionx/` |
+| `shared` (generic `.agents` skill) | `~/.agents/skills/notionx/` | `./.agents/skills/notionx/` |
+| `codex-rules` (project rules) | `${CODEX_HOME:-~/.codex}/AGENTS.md` | `./AGENTS.md` |
 
 The project-scope paths are designed to be **committed to the repo** so every
-contributor picks up the rule automatically.
+contributor picks up the skill or rule automatically.
 
-> **Codex note:** `AGENTS.md` is a shared file. If `./AGENTS.md` already
-> exists, the installer **appends** a `## notionx` section instead of
-> overwriting, so you can keep your other project conventions. Pass
-> `--force` to overwrite.
+`codex` installs a real Codex skill directory. Use `codex-rules` only if you
+also want the optional `AGENTS.md` convention block.
 
 ## Manual install — Claude Code
 
 ```bash
 mkdir -p ~/.claude/skills/notionx
-curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/SKILL.md \
+curl -L https://raw.githubusercontent.com/digwis/notionx/main/skills/notionx/SKILL.md \
   -o ~/.claude/skills/notionx/SKILL.md
 ```
 
@@ -48,7 +50,7 @@ Optionally also pull the references:
 cd ~/.claude/skills/notionx
 mkdir -p references
 for f in architecture content-source domain-module deploy troubleshooting four-contracts; do
-  curl -L "https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/references/${f}.md" \
+  curl -L "https://raw.githubusercontent.com/digwis/notionx/main/skills/notionx/references/${f}.md" \
     -o "references/${f}.md"
 done
 ```
@@ -57,7 +59,7 @@ done
 
 ```bash
 mkdir -p ~/.trae/skills/notionx
-curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/SKILL.md \
+curl -L https://raw.githubusercontent.com/digwis/notionx/main/skills/notionx/SKILL.md \
   -o ~/.trae/skills/notionx/SKILL.md
 ```
 
@@ -65,26 +67,35 @@ curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/SKI
 
 ## Manual install — OpenAI Codex
 
-Codex reads `AGENTS.md` files. User-scope lives at `~/.codex/AGENTS.md`;
-project-scope at the repo root as `./AGENTS.md`.
+Codex reads skill directories from `${CODEX_HOME:-~/.codex}/skills/notionx/`.
 
 ```bash
 # User-scope (applies to every project on this machine):
-mkdir -p ~/.codex
-curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/rules/codex.md \
-  -o ~/.codex/AGENTS.md
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills/notionx"
+curl -L https://raw.githubusercontent.com/digwis/notionx/main/skills/notionx/SKILL.md \
+  -o "${CODEX_HOME:-$HOME/.codex}/skills/notionx/SKILL.md"
 
-# Project-scope (commit the file to the repo):
-curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/rules/codex.md \
+# Project-scope (commit the shared skill directory to the repo):
+mkdir -p .agents/skills/notionx
+curl -L https://raw.githubusercontent.com/digwis/notionx/main/skills/notionx/SKILL.md \
+  -o .agents/skills/notionx/SKILL.md
+```
+
+To also add the optional AGENTS.md conventions block:
+
+```bash
+curl -L https://raw.githubusercontent.com/digwis/notionx/main/skills/notionx/rules/codex.md \
+  -o "${CODEX_HOME:-$HOME/.codex}/AGENTS.md"
+curl -L https://raw.githubusercontent.com/digwis/notionx/main/skills/notionx/rules/codex.md \
   -o AGENTS.md
 ```
 
-If `AGENTS.md` already exists and you want to keep its content, append
-the rule to it instead of overwriting:
+If `AGENTS.md` already exists and you want to keep its content, append the rule
+to it instead of overwriting:
 
 ```bash
 printf "\n\n## notionx\n\n" >> AGENTS.md
-curl -L https://raw.githubusercontent.com/digwis/nextion/main/skills/notionx/rules/codex.md \
+curl -L https://raw.githubusercontent.com/digwis/notionx/main/skills/notionx/rules/codex.md \
   >> AGENTS.md
 ```
 
@@ -104,8 +115,11 @@ and overwrite is safe.
 | Target | Command |
 |---|---|
 | Claude Code | `rm -rf ~/.claude/skills/notionx` |
+| Codex | `rm -rf "${CODEX_HOME:-$HOME/.codex}/skills/notionx"` |
 | Trae | `rm -rf ~/.trae/skills/notionx` |
-| Codex | Edit `~/.codex/AGENTS.md` (or `./AGENTS.md`) and remove the `## notionx` section |
+| Trae CN | `rm -rf ~/.trae-cn/skills/notionx` |
+| Shared | `rm -rf ~/.agents/skills/notionx` |
+| AGENTS.md rules | Edit `~/.codex/AGENTS.md` (or `./AGENTS.md`) and remove the `## notionx` section |
 
 ## Verifying the install
 

@@ -53,12 +53,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/digwis/nextion.git",
+    "url": "git+https://github.com/digwis/notionx.git",
     "directory": "packages/notionx-skill"
   },
   "author": "zhaofilms",
-  "homepage": "https://github.com/digwis/nextion#readme",
+  "homepage": "https://github.com/digwis/notionx#readme",
   "bugs": {
-    "url": "https://github.com/digwis/nextion/issues"
+    "url": "https://github.com/digwis/notionx/issues"
   }
 }

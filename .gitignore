@@ -35,7 +35,7 @@ yarn-error.log*
 .dev.vars
 .dev.vars.*
 # The scaffolder template file `.dev.vars.example.tmpl` (under
-# `packages/create-nextion-app/src/templates/`) must be committed so
+# `packages/notionx-cli/src/templates/`) must be committed so
 # downstream users can render their own `.dev.vars.example` at scaffold
 # time. The matching rendered file in *their* project is whitelisted by
 # the per-project `.gitignore` the scaffolder writes.
@@ -71,7 +71,7 @@ dist/
 **/.wrangler/
 .playwright-cli/
 
-# Consumer apps scaffolded via `npm create nextion-app` are kept locally
+# Consumer apps scaffolded via `npm create notionx@latest` are kept locally
 # as working references and never pushed; downstream users scaffold
 # their own apps from the published packages.
 apps/

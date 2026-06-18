@@ -1,0 +1,63 @@
+{
+  "name": "@notionx/cli",
+  "version": "2.0.4",
+  "description": "Create, update, diagnose, and provision Notionx projects backed by @notionx/core.",
+  "type": "module",
+  "bin": {
+    "create-notionx": "./dist/index.js",
+    "notionx": "./dist/cli-notionx.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-templates.mjs",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:scaffold": "pnpm run build && node dist/index.js",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "vinext",
+    "notionx",
+    "notionx",
+    "nextjs",
+    "cloudflare",
+    "workers",
+    "d1",
+    "r2",
+    "turnstile",
+    "notion",
+    "scaffold",
+    "cli",
+    "create-notionx"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx": "^4",
+    "typescript": "^5.5",
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/digwis/notionx.git",
+    "directory": "packages/notionx-cli"
+  },
+  "author": "zhaofilms",
+  "homepage": "https://github.com/digwis/notionx#readme",
+  "bugs": {
+    "url": "https://github.com/digwis/notionx/issues"
+  }
+}

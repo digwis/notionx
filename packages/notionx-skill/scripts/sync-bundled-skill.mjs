@@ -3,7 +3,7 @@
 // before build/test via npm scripts.
 import { cp, rename, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -19,7 +19,10 @@ if (!existsSync(src)) {
 }
 
 await rm(tmp, { recursive: true, force: true });
-await cp(src, tmp, { recursive: true });
+await cp(src, tmp, {
+  recursive: true,
+  filter: (source) => basename(source) !== ".DS_Store",
+});
 await rm(dest, { recursive: true, force: true });
 try {
   await rename(tmp, dest);

@@ -1,7 +1,7 @@
 {
   "name": "create-notionx",
   "version": "1.0.2",
-  "description": "Unscoped npm create alias for @notionx/create-notionx-app.",
+  "description": "Unscoped npm create alias for @notionx/cli.",
   "type": "module",
   "bin": {
     "create-notionx": "./bin/index.js"
@@ -30,12 +30,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/digwis/nextion.git",
+    "url": "https://github.com/digwis/notionx.git",
     "directory": "packages/create-notionx"
   },
   "author": "zhaofilms",
-  "homepage": "https://github.com/digwis/nextion#readme",
+  "homepage": "https://github.com/digwis/notionx#readme",
   "bugs": {
-    "url": "https://github.com/digwis/nextion/issues"
+    "url": "https://github.com/digwis/notionx/issues"
   }
 }

@@ -3,7 +3,7 @@
  * CLI entry point for `notionx-skill`.
  *
  * Usage:
- *   notionx-skill install --target <claude|trae|codex|all>
+ *   notionx-skill install --target <claude|codex|trae|trae-cn|shared|codex-rules|all>
  *                        [--scope <user|project>]
  *                        [--source <local|github|npm>]
  *                        [--ref <github-ref>]
@@ -21,7 +21,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runInstall } from "./install.js";
-import { ALL_TARGETS, isTarget } from "./types.js";
+import { ALL_TARGETS, DEFAULT_TARGETS, isTarget } from "./types.js";
 import type { Scope, Source, Target } from "./types.js";
 import { resolveBaseDir } from "./targets/base.js";
 
@@ -39,7 +39,8 @@ COMMANDS
   help        Show this help
 
 OPTIONS (install / uninstall)
-  --target <id>         claude | codex | trae | all  (default: all)
+  --target <id>         claude | codex | trae | trae-cn | shared | codex-rules | all
+                                                                (default: all = claude,codex,trae)
   --scope <scope>       user | project                                     (default: user)
   --source <source>     local | github | npm                               (default: npm)
   --ref <git-ref>       GitHub ref when --source=github                    (default: main)
@@ -52,8 +53,17 @@ EXAMPLES
   # Install the skill for Claude Code globally:
   npx notionx-skill install --target claude --scope user
 
-  # Install for every supported editor, project-scope, from the npm package:
+  # Install the real Codex skill globally:
+  npx notionx-skill install --target codex --scope user
+
+  # Install for the primary editors, project-scope, from the npm package:
   npx notionx-skill install --target all --scope project
+
+  # Install a shared project skill for agents that read .agents/skills:
+  npx notionx-skill install --target shared --scope project
+
+  # Append notionx project rules to AGENTS.md (explicit, rule-only target):
+  npx notionx-skill install --target codex-rules --scope project
 
   # Try the latest skill from main branch (requires network):
   npx notionx-skill install --target claude --source github --ref main
@@ -62,7 +72,7 @@ EXAMPLES
   npx notionx-skill info
 
 For a manual install per editor, see:
-  https://github.com/digwis/nextion/blob/main/skills/notionx/INSTALL.md
+  https://github.com/digwis/notionx/blob/main/skills/notionx/INSTALL.md
 `;
 
 // -------- arg parsing -----------------------------------------------------
@@ -79,6 +89,13 @@ type ParsedArgs = {
   json: boolean;
   showHelp: boolean;
 };
+
+function normalizeTarget(value: string): Target | "all" | undefined {
+  if (value === "all" || isTarget(value)) return value;
+  if (value === "claude-code") return "claude";
+  if (value === "agents" || value === "universal") return "shared";
+  return undefined;
+}
 
 function parseArgs(argv: string[]): ParsedArgs {
   const result: ParsedArgs = {
@@ -122,11 +139,18 @@ function parseArgs(argv: string[]): ParsedArgs {
     switch (key) {
       case "target": {
         const v = consume(next ?? "");
-        if (v === "all" || isTarget(v)) {
-          result.target = v;
+        const normalized = normalizeTarget(v);
+        if (normalized) {
+          result.target = normalized;
         } else {
           throw new Error(
-            `Invalid --target: ${v}. Expected one of: ${[...ALL_TARGETS, "all"].join(", ")}.`,
+            `Invalid --target: ${v}. Expected one of: ${[
+              ...ALL_TARGETS,
+              "all",
+              "claude-code",
+              "agents",
+              "universal",
+            ].join(", ")}.`,
           );
         }
         break;
@@ -187,8 +211,8 @@ function parseArgs(argv: string[]): ParsedArgs {
 function describePaths(scope: Scope, cwd: string): Array<{ target: Target; paths: string[] }> {
   return ALL_TARGETS.map((target) => {
     const base = resolveBaseDir(target, scope, cwd);
-    if (target === "codex") {
-      // Codex reads a single AGENTS.md.
+    if (target === "codex-rules") {
+      // Rule-only target appends to AGENTS.md.
       return { target, paths: [resolve(base, "AGENTS.md")] };
     }
     return {
@@ -196,6 +220,7 @@ function describePaths(scope: Scope, cwd: string): Array<{ target: Target; paths
       paths: [
         resolve(base, "SKILL.md"),
         resolve(base, "INSTALL.md"),
+        resolve(base, "agents", "openai.yaml"),
         resolve(base, "references"),
       ],
     };
@@ -203,7 +228,7 @@ function describePaths(scope: Scope, cwd: string): Array<{ target: Target; paths
 }
 
 async function runInfo(args: ParsedArgs): Promise<number> {
-  const targets = args.target === "all" ? [...ALL_TARGETS] : [args.target as Target];
+  const targets = args.target === "all" ? [...DEFAULT_TARGETS] : [args.target as Target];
   const allPaths = describePaths(args.scope, args.cwd);
   const filtered = allPaths.filter((p) => targets.includes(p.target));
 
@@ -241,20 +266,20 @@ async function runInfo(args: ParsedArgs): Promise<number> {
 }
 
 async function runUninstall(args: ParsedArgs): Promise<number> {
-  const targets = args.target === "all" ? [...ALL_TARGETS] : [args.target as Target];
+  const targets = args.target === "all" ? [...DEFAULT_TARGETS] : [args.target as Target];
   const removed: string[] = [];
   const missing: string[] = [];
   const manualEdits: string[] = [];
 
   for (const target of targets) {
-    if (target === "codex") {
+    if (target === "codex-rules") {
       // Codex's AGENTS.md is a shared file; we never auto-delete it.
       // We only remind the user which file to edit.
-      const base = resolveBaseDir("codex", args.scope, args.cwd);
+      const base = resolveBaseDir("codex-rules", args.scope, args.cwd);
       const file = resolve(base, "AGENTS.md");
       if (existsSync(file)) {
         manualEdits.push(
-          `codex: edit ${file} and remove the "## notionx" section`,
+          `codex-rules: edit ${file} and remove the "## notionx" section`,
         );
       } else {
         missing.push(file);
@@ -263,7 +288,7 @@ async function runUninstall(args: ParsedArgs): Promise<number> {
     }
 
     const base = resolveBaseDir(target, args.scope, args.cwd);
-    // claude / trae: full directory
+    // Skill targets install full directories.
     if (existsSync(base)) {
       if (!args.dryRun) await rm(base, { recursive: true, force: true });
       removed.push(base);

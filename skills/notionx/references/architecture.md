@@ -1,7 +1,5 @@
 # Architecture reference
 
-> Detailed design rationale lives in
-> [`docs/superpowers/specs/2026-06-10-notionx-package-design.md`](../../docs/superpowers/specs/2026-06-10-notionx-package-design.md).
 > This file is the **operational summary** an AI needs to navigate any notionx
 > project.
 
@@ -14,16 +12,16 @@
                                    admin, storage, media, cache, email,
                                    worker, doctor, i18n, util, hooks
 
-@notionx/create-notionx-app   ← compiled from packages/create-notionx-app/src/
+@notionx/cli   ← compiled from packages/notionx-cli/src/
                                 published to npm
                                 contains: scaffolder, `notionx update`,
                                           `notionx provision` commands
 ```
 
-A **consumer project** (what `pnpm create notionx-app` produces) depends on
+A **consumer project** (what `npm create notionx@latest` produces) depends on
 `@notionx/core` at runtime and uses vinext for the Cloudflare/Next.js app-router
-server. `create-notionx-app` is invoked at scaffold time and later through the
-`notionx` CLI for `notionx update` / `notionx provision repair`.
+server. `@notionx/cli` is invoked at scaffold time and later through the
+`notionx` maintenance command for `notionx update` / `notionx provision repair`.
 
 ## Repository layout of a notionx project (consumer view)
 

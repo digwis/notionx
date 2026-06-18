@@ -8,8 +8,8 @@ import { join, resolve } from "node:path";
 import { existsSync } from "node:fs";
 
 import { installClaude } from "../src/targets/claude.js";
-import { installTrae } from "../src/targets/trae.js";
-import { installCodex } from "../src/targets/codex.js";
+import { installTrae, installTraeCn } from "../src/targets/trae.js";
+import { installCodex, installCodexRules } from "../src/targets/codex.js";
 import type { SkillBundle } from "../src/types.js";
 
 function fakeBundle(): SkillBundle {
@@ -21,10 +21,14 @@ function fakeBundle(): SkillBundle {
       "content-source": "# CS",
       "domain-module": "# Domain",
     },
+    openaiYaml: "interface:\n  display_name: Test",
     rules: {
       claude: "",
       codex: "# Codex rule\n\nnotionx conventions go here.",
+      "codex-rules": "# Codex rule\n\nnotionx conventions go here.",
       trae: "",
+      "trae-cn": "",
+      shared: "",
     },
     version: "0.0.0-test",
   };
@@ -49,6 +53,7 @@ describe("installClaude", () => {
     expect(result.scope).toBe("project");
     const baseDir = resolve(cwd, ".claude", "skills", "notionx");
     expect(existsSync(join(baseDir, "SKILL.md"))).toBe(true);
+    expect(existsSync(join(baseDir, "agents", "openai.yaml"))).toBe(true);
     expect(existsSync(join(baseDir, "INSTALL.md"))).toBe(true);
     expect(existsSync(join(baseDir, "references", "architecture.md"))).toBe(true);
     expect(existsSync(join(baseDir, "references", "content-source.md"))).toBe(true);
@@ -103,10 +108,34 @@ describe("installTrae", () => {
   });
 });
 
+describe("installTraeCn", () => {
+  it("writes SKILL.md and references/ in project scope", async () => {
+    const result = await installTraeCn(fakeBundle(), { scope: "project", cwd });
+    expect(result.target).toBe("trae-cn");
+    const baseDir = resolve(cwd, ".trae", "skills", "notionx");
+    expect(existsSync(join(baseDir, "SKILL.md"))).toBe(true);
+    expect(existsSync(join(baseDir, "references", "architecture.md"))).toBe(true);
+  });
+});
+
 describe("installCodex", () => {
-  it("creates AGENTS.md when it does not exist (project scope)", async () => {
+  it("writes SKILL.md and references/ in project scope", async () => {
     const result = await installCodex(fakeBundle(), { scope: "project", cwd });
     expect(result.target).toBe("codex");
+    expect(result.filesSkipped).toHaveLength(0);
+    expect(result.filesWritten.length).toBeGreaterThan(1);
+    const baseDir = resolve(cwd, ".agents", "skills", "notionx");
+    expect(existsSync(join(baseDir, "SKILL.md"))).toBe(true);
+    expect(existsSync(join(baseDir, "references", "architecture.md"))).toBe(true);
+    const skill = await readFile(join(baseDir, "SKILL.md"), "utf8");
+    expect(skill).toContain("# Test skill");
+  });
+});
+
+describe("installCodexRules", () => {
+  it("creates AGENTS.md when it does not exist (project scope)", async () => {
+    const result = await installCodexRules(fakeBundle(), { scope: "project", cwd });
+    expect(result.target).toBe("codex-rules");
     expect(result.filesSkipped).toHaveLength(0);
     expect(result.filesWritten).toHaveLength(1);
     const file = resolve(cwd, "AGENTS.md");
@@ -118,7 +147,7 @@ describe("installCodex", () => {
   it("appends a ## notionx section when AGENTS.md already exists", async () => {
     const file = resolve(cwd, "AGENTS.md");
     await writeFile(file, "# Existing project conventions\n\nSome stuff.\n", "utf8");
-    const result = await installCodex(fakeBundle(), { scope: "project", cwd });
+    const result = await installCodexRules(fakeBundle(), { scope: "project", cwd });
     expect(result.filesSkipped).toHaveLength(0);
     const after = await readFile(file, "utf8");
     expect(after).toContain("Existing project conventions");
@@ -134,7 +163,7 @@ describe("installCodex", () => {
       "# Project\n\n## notionx\n\nAlready installed.\n",
       "utf8",
     );
-    const result = await installCodex(fakeBundle(), { scope: "project", cwd });
+    const result = await installCodexRules(fakeBundle(), { scope: "project", cwd });
     expect(result.filesWritten).toHaveLength(0);
     expect(result.filesSkipped).toHaveLength(1);
     expect(result.filesSkipped[0]?.reason).toContain("already present");
@@ -145,7 +174,7 @@ describe("installCodex", () => {
   it("overwrites with --force", async () => {
     const file = resolve(cwd, "AGENTS.md");
     await writeFile(file, "# Old content\n", "utf8");
-    const result = await installCodex(fakeBundle(), {
+    const result = await installCodexRules(fakeBundle(), {
       scope: "project",
       cwd,
       force: true,
@@ -158,7 +187,7 @@ describe("installCodex", () => {
 
   it("dry-run reports the would-be write without touching disk", async () => {
     const file = resolve(cwd, "AGENTS.md");
-    const result = await installCodex(fakeBundle(), {
+    const result = await installCodexRules(fakeBundle(), {
       scope: "project",
       cwd,
       dryRun: true,
@@ -170,7 +199,7 @@ describe("installCodex", () => {
   it("dry-run on existing file reports an append", async () => {
     const file = resolve(cwd, "AGENTS.md");
     await writeFile(file, "# Existing\n", "utf8");
-    const result = await installCodex(fakeBundle(), {
+    const result = await installCodexRules(fakeBundle(), {
       scope: "project",
       cwd,
       dryRun: true,

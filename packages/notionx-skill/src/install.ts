@@ -15,7 +15,7 @@ import type {
   SkillBundle,
   Target,
 } from "./types.js";
-import { ALL_TARGETS } from "./types.js";
+import { DEFAULT_TARGETS } from "./types.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -35,7 +35,7 @@ async function readSelfVersion(): Promise<string> {
 
 /** Resolve the targets to install, expanding "all" into the full list. */
 function expandTargets(target: InstallOptions["target"]): Target[] {
-  if (target === "all") return [...ALL_TARGETS];
+  if (target === "all") return [...DEFAULT_TARGETS];
   return [target];
 }
 

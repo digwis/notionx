@@ -9,7 +9,7 @@ to publish those packages to npm.
 ## What Lives Here
 
 - `@notionx/core`: the runtime and framework primitives for Cloudflare Workers
-- `@notionx/create-notionx-app`: the scaffolder and `notionx` maintenance CLI
+- `@notionx/cli`: the scaffolder and `notionx` maintenance CLI
 - `create-notionx`: the unscoped shim behind `npm create notionx`
 - `@notionx/skill`: the packaged notionx skill installer
 
@@ -21,8 +21,8 @@ framework and release work.
 
 ```text
 packages/notionx/                 # Published as @notionx/core
-packages/create-notionx-app/      # Published scaffolder + `notionx` CLI
-packages/create-notionx/ # Published `npm create notionx-app` shim
+packages/notionx-cli/             # Published as @notionx/cli
+packages/create-notionx/          # Published `npm create notionx` shim
 packages/notionx-skill/           # Published skill installer
 scripts/                          # Release and repository automation
 docs/                             # Architecture, publishing, and design docs
@@ -44,7 +44,7 @@ skills/                           # Skill source material bundled by the install
 ```bash
 pnpm install
 pnpm --filter @notionx/core build
-pnpm --filter @notionx/create-notionx-app test
+pnpm --filter @notionx/cli test
 pnpm --filter @notionx/skill test
 ```
 

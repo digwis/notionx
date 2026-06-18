@@ -1,5 +1,9 @@
 /**
- * OpenAI Codex installer: writes the notionx rule to `AGENTS.md`.
+ * OpenAI Codex installers.
+ *
+ * `codex` writes a real Codex skill directory containing SKILL.md and
+ * references. `codex-rules` keeps the older AGENTS.md append behavior as an
+ * explicit rule-only target.
  *
  * Codex's project-level AGENTS.md is a *shared* conventions file. We do not
  * silently overwrite it. Instead:
@@ -19,10 +23,14 @@
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { homedir } from "node:os";
 
 import type { InstallResult, Scope, SkillBundle } from "../types.js";
-import { writeUtf8, writeUnlessExists } from "./base.js";
+import {
+  installDirectoryTarget,
+  resolveBaseDir,
+  writeUtf8,
+  writeUnlessExists,
+} from "./base.js";
 
 export interface InstallCodexOptions {
   scope: Scope;
@@ -39,10 +47,7 @@ const NOTIONX_SECTION_HEADER = "## notionx";
 
 /** Resolve the full path to the AGENTS.md file. */
 function resolveAgentsPath(scope: Scope, cwd: string): string {
-  if (scope === "user") {
-    return join(homedir(), ".codex", CODEX_AGENTS_FILE);
-  }
-  return join(cwd, CODEX_AGENTS_FILE);
+  return join(resolveBaseDir("codex-rules", scope, cwd), CODEX_AGENTS_FILE);
 }
 
 /**
@@ -76,8 +81,15 @@ export async function installCodex(
   bundle: SkillBundle,
   opts: InstallCodexOptions,
 ): Promise<InstallResult> {
+  return await installDirectoryTarget("codex", bundle, opts);
+}
+
+export async function installCodexRules(
+  bundle: SkillBundle,
+  opts: InstallCodexOptions,
+): Promise<InstallResult> {
   const filePath = resolve(resolveAgentsPath(opts.scope, opts.cwd));
-  const content = bundle.rules.codex;
+  const content = bundle.rules["codex-rules"] ?? bundle.rules.codex ?? "";
 
   const written: InstallResult["filesWritten"] = [];
   const skipped: InstallResult["filesSkipped"] = [];
@@ -94,7 +106,7 @@ export async function installCodex(
     } else {
       skipped.push(result);
     }
-    return { target: "codex", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
+    return { target: "codex-rules", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
   }
 
   // No-force path: branch on whether the file exists.
@@ -108,7 +120,7 @@ export async function installCodex(
     } else {
       skipped.push(result);
     }
-    return { target: "codex", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
+    return { target: "codex-rules", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
   }
 
   // File exists. Read it and check whether notionx is already there.
@@ -126,7 +138,7 @@ export async function installCodex(
       path: filePath,
       reason: "notionx section already present in AGENTS.md (use --force to overwrite)",
     });
-    return { target: "codex", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
+    return { target: "codex-rules", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
   }
 
   if (opts.dryRun) {
@@ -135,7 +147,7 @@ export async function installCodex(
       path: filePath,
       bytes: Buffer.byteLength(existing, "utf8") + Buffer.byteLength(appended, "utf8"),
     });
-    return { target: "codex", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
+    return { target: "codex-rules", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
   }
 
   const appended = buildAppendedSection(content);
@@ -143,5 +155,5 @@ export async function installCodex(
   const bytes = await writeUtf8(filePath, newBody);
   written.push({ path: filePath, bytes });
 
-  return { target: "codex", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
+  return { target: "codex-rules", scope: opts.scope, filesWritten: written, filesSkipped: skipped };
 }

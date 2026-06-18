@@ -3,7 +3,13 @@
  */
 
 /** Platforms we can install the skill into. */
-export type Target = "claude" | "codex" | "trae";
+export type Target =
+  | "claude"
+  | "codex"
+  | "trae"
+  | "trae-cn"
+  | "shared"
+  | "codex-rules";
 
 /** Install scope: `user` = editor's global config dir; `project` = current working dir. */
 export type Scope = "user" | "project";
@@ -11,8 +17,18 @@ export type Scope = "user" | "project";
 /** Where the skill content is read from. */
 export type Source = "local" | "github" | "npm";
 
-/** All platforms including the pseudo-target. */
+/** Canonical target ids accepted by the CLI. */
 export const ALL_TARGETS: readonly Target[] = [
+  "claude",
+  "codex",
+  "trae",
+  "trae-cn",
+  "shared",
+  "codex-rules",
+] as const;
+
+/** The targets installed by `--target all`; rule-only targets stay explicit. */
+export const DEFAULT_TARGETS: readonly Target[] = [
   "claude",
   "codex",
   "trae",
@@ -28,8 +44,10 @@ export interface SkillBundle {
   skill: string;
   /** Map of reference filename (without .md) -> content. */
   references: Record<string, string>;
-  /** Map of target id -> rule file content. */
-  rules: Record<Target, string>;
+  /** Map of rule target id -> rule file content. */
+  rules: Partial<Record<Target, string>>;
+  /** Optional OpenAI/Codex UI metadata from agents/openai.yaml. */
+  openaiYaml?: string;
   /** Content of INSTALL.md. */
   installGuide: string;
   /** Version of the skill (e.g. the npm package version, or git sha). */

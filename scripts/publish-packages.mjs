@@ -15,8 +15,8 @@ export const RELEASE_PACKAGES = [
     directory: "packages/notionx",
   },
   {
-    name: "@notionx/create-notionx-app",
-    directory: "packages/create-notionx-app",
+    name: "@notionx/cli",
+    directory: "packages/notionx-cli",
   },
   {
     name: "create-notionx",

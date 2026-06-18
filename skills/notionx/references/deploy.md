@@ -123,17 +123,17 @@ updates:
 
 Pair it with a `dependabot-auto-merge.yml` that auto-merges patch/minor on
 green CI; **major upgrades must always be reviewed by hand** after reading
-the [Notionx Changelog](https://github.com/digwis/nextion/blob/main/docs/architecture/notionx-changelog.md).
+the [Notionx Changelog](https://github.com/digwis/notionx/blob/main/docs/architecture/notionx-changelog.md).
 
 ## Scaffolder-driven sync
 
 Two scaffolder commands that are part of the deploy story:
 
-- `npx notionx update` — sync scaffold-owned files with the latest
-  `create-notionx-app` templates. Current managed files are `package.json`,
+- `pnpm exec notionx update` — sync scaffold-owned files with the latest
+  `@notionx/cli` templates. Current managed files are `package.json`,
   `wrangler.jsonc`, `README.md`, `.notionx/scaffold.json`, and
   `.dev.vars.example`. Default: no cloud side effects.
-- `npx notionx provision repair` — reconcile Notion schemas, Cloudflare
+- `pnpm exec notionx provision repair` — reconcile Notion schemas, Cloudflare
   bindings, and secrets. Does write to cloud resources (only the diff).
   Default: no deploy.
 

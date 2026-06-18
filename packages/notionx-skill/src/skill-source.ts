@@ -3,7 +3,7 @@
  *
  * - `local`:  read from the monorepo's `skills/notionx/` (dev / CI)
  * - `npm`:    read from the package's bundled `skill/` directory (production)
- * - `github`: fetch raw files from `digwis/nextion` on GitHub
+ * - `github`: fetch raw files from `digwis/notionx` on GitHub
  *
  * The returned `SkillBundle` is then handed to the platform installers.
  */
@@ -51,19 +51,23 @@ async function loadFromDir(
 ): Promise<SkillBundle> {
   const skill = (await readText(resolve(dir, "SKILL.md"))) ?? "";
   const references = await readMarkdownDir(resolve(dir, "references"));
-  const rules: Record<Target, string> = {
+  const rules: Partial<Record<Target, string>> = {
     claude: skill, // Claude / Trae use the SKILL.md itself, not a separate rule.
     codex: (await readText(resolve(dir, "rules", "codex.md"))) ?? "",
+    "codex-rules": (await readText(resolve(dir, "rules", "codex.md"))) ?? "",
     trae: skill,
+    "trae-cn": skill,
+    shared: skill,
   };
   const installGuide =
     (await readText(resolve(dir, "INSTALL.md"))) ?? "";
+  const openaiYaml = await readText(resolve(dir, "agents", "openai.yaml"));
 
   if (!skill) {
     throw new Error(`No SKILL.md found in ${dir}; refusing to install.`);
   }
 
-  return { skill, references, rules, installGuide, version };
+  return { skill, references, rules, openaiYaml, installGuide, version };
 }
 
 /** Resolve the bundled skill directory (the `skill/` folder shipped with the npm package). */
@@ -99,7 +103,7 @@ export async function loadBundled(version: string): Promise<SkillBundle> {
     throw new Error(
       `Bundled skill content missing at ${dir}. ` +
         `This usually means the package was published without running the sync-bundled-skill script. ` +
-        `Please report this at https://github.com/digwis/nextion/issues.`,
+        `Please report this at https://github.com/digwis/notionx/issues.`,
     );
   }
   return await loadFromDir(dir, version);
@@ -113,7 +117,7 @@ export async function loadFromGithub(
   ref: string = "main",
   version: string = `github:${ref}`,
 ): Promise<SkillBundle> {
-  const base = `https://raw.githubusercontent.com/digwis/nextion/${ref}/skills/notionx`;
+  const base = `https://raw.githubusercontent.com/digwis/notionx/${ref}/skills/notionx`;
   const fetchText = async (path: string): Promise<string> => {
     const res = await fetch(`${base}/${path}`);
     if (!res.ok) {
@@ -126,6 +130,12 @@ export async function loadFromGithub(
 
   const skill = await fetchText("SKILL.md");
   const installGuide = await fetchText("INSTALL.md");
+  let openaiYaml: string | undefined;
+  try {
+    openaiYaml = await fetchText("agents/openai.yaml");
+  } catch {
+    // UI metadata is optional.
+  }
 
   const references: Record<string, string> = {};
   for (const name of [
@@ -143,13 +153,17 @@ export async function loadFromGithub(
     }
   }
 
-  const rules: Record<Target, string> = {
+  const codexRule = await fetchText("rules/codex.md");
+  const rules: Partial<Record<Target, string>> = {
     claude: skill,
-    codex: await fetchText("rules/codex.md"),
+    codex: codexRule,
+    "codex-rules": codexRule,
     trae: skill,
+    "trae-cn": skill,
+    shared: skill,
   };
 
-  return { skill, references, rules, installGuide, version };
+  return { skill, references, rules, openaiYaml, installGuide, version };
 }
 
 /** Public dispatcher. */

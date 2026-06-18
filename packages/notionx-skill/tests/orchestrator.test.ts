@@ -60,8 +60,22 @@ describe("runInstall", () => {
       expect(r.filesWritten.length).toBeGreaterThan(0);
     }
     expect(existsSync(resolve(cwd, ".claude", "skills", "notionx", "SKILL.md"))).toBe(true);
+    expect(existsSync(resolve(cwd, ".agents", "skills", "notionx", "SKILL.md"))).toBe(true);
     expect(existsSync(resolve(cwd, ".trae", "skills", "notionx", "SKILL.md"))).toBe(true);
+    expect(existsSync(resolve(cwd, "AGENTS.md"))).toBe(false);
+  });
+
+  it("installs AGENTS.md only when --target=codex-rules", async () => {
+    const { results } = await runInstall({
+      target: "codex-rules",
+      scope: "project",
+      source: "npm",
+      cwd,
+    });
+    expect(results).toHaveLength(1);
+    expect(results[0]?.target).toBe("codex-rules");
     expect(existsSync(resolve(cwd, "AGENTS.md"))).toBe(true);
+    expect(existsSync(resolve(cwd, ".agents"))).toBe(false);
   });
 
   it("installs only the requested target", async () => {
@@ -75,6 +89,7 @@ describe("runInstall", () => {
     expect(results[0]?.target).toBe("trae");
     expect(existsSync(resolve(cwd, ".trae", "skills", "notionx", "SKILL.md"))).toBe(true);
     expect(existsSync(resolve(cwd, ".claude"))).toBe(false);
+    expect(existsSync(resolve(cwd, ".agents"))).toBe(false);
     expect(existsSync(resolve(cwd, "AGENTS.md"))).toBe(false);
   });
 
@@ -90,6 +105,7 @@ describe("runInstall", () => {
       expect(r.filesWritten.length).toBeGreaterThan(0);
     }
     expect(existsSync(resolve(cwd, ".claude"))).toBe(false);
+    expect(existsSync(resolve(cwd, ".agents"))).toBe(false);
     expect(existsSync(resolve(cwd, ".trae"))).toBe(false);
     expect(existsSync(resolve(cwd, "AGENTS.md"))).toBe(false);
   });

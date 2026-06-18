@@ -7,7 +7,7 @@
 
 This project is a **notionx** site: a Next.js App Router app running on
 Cloudflare Workers, with Notion as the CMS. The reusable platform lives in
-`@notionx/core`; the scaffolder is `@notionx/create-notionx-app`.
+`@notionx/core`; the scaffolder is `@notionx/cli`.
 
 Older prompts may say **vinext**. Treat that as notionx when the project imports
 `@notionx/core` or calls `createNotionxWorker`. "Domain" means a content module
@@ -38,7 +38,7 @@ doctor. This project declares configuration; the package provides behavior.
 
 | Goal | Command |
 |---|---|
-| Create a new project | `pnpm create notionx-app my-new-site` |
+| Create a new project | `npm create notionx@latest my-new-site` |
 | Dev server | `pnpm dev` |
 | Build | `pnpm build` |
 | Tests | `pnpm test` |
@@ -100,7 +100,7 @@ is private.
 
 1. `pnpm update @notionx/core`
 2. Read
-   [Notionx Changelog](https://github.com/digwis/nextion/blob/main/docs/architecture/notionx-changelog.md)
+   [Notionx Changelog](https://github.com/digwis/notionx/blob/main/docs/architecture/notionx-changelog.md)
    for breaking changes.
 3. `pnpm test && pnpm dev` — verify `/admin/content-models`, `/login`,
    `/api/health`.
@@ -119,7 +119,7 @@ you go into source.
 
 If a specific symptom matches a recipe in the upstream troubleshooting
 guide, follow it before guessing:
-https://github.com/digwis/nextion/blob/main/skills/notionx/references/troubleshooting.md
+https://github.com/digwis/notionx/blob/main/skills/notionx/references/troubleshooting.md
 
 ## Anti-patterns (refuse these)
 
@@ -155,4 +155,4 @@ https://github.com/digwis/nextion/blob/main/skills/notionx/references/troublesho
 For the full guides referenced above (architecture, content-source and domain
 module workflows, deploy & CI, troubleshooting recipes, four-contracts detail),
 see:
-https://github.com/digwis/nextion/tree/main/skills/notionx/references
+https://github.com/digwis/notionx/tree/main/skills/notionx/references
