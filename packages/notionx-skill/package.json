@@ -1,6 +1,6 @@
 {
   "name": "@notionx/skill",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "One-command installer for the official notionx AI agent skill (Claude Code, Trae IDE, OpenAI Codex).",
   "type": "module",
   "bin": {

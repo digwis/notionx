@@ -1,6 +1,6 @@
 {
   "name": "create-notionx",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Unscoped npm create alias for @notionx/cli.",
   "type": "module",
   "bin": {
